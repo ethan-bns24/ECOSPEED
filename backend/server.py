@@ -985,6 +985,16 @@ async def get_route_kpis(route_id: str) -> KPIResponse:
     # For simplicity, we're returning placeholder KPIs
     raise HTTPException(status_code=501, detail="KPI calculation should be done on frontend based on route segments")
 
+# Root endpoint
+@app.get("/")
+async def root():
+    return {
+        "message": "ECOSPEED API",
+        "version": "1.2.0",
+        "docs": "/docs",
+        "api": "/api"
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
