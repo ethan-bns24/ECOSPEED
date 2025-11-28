@@ -11,6 +11,9 @@ import uuid
 from datetime import datetime, timezone
 import math
 import random
+import requests
+import time
+from geopy.geocoders import Nominatim
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -39,19 +42,28 @@ AIR_DENSITY = 1.225  # kg/m³
 class VehicleProfile(BaseModel):
     """Electric vehicle parameters for energy consumption calculations"""
     name: str
-    empty_mass: float  # kg
-    extra_load: float  # kg
+    empty_mass: float  # kg (mass_kg)
+    extra_load: float  # kg (passengers weight)
     drag_coefficient: float  # Cd
     frontal_area: float  # m²
     rolling_resistance: float  # Crr
-    motor_efficiency: float  # 0-1
+    motor_efficiency: float  # 0-1 (eta_drive)
     regen_efficiency: float  # 0-1
+    aux_power_kw: float = 2.0  # kW (auxiliary power for HVAC, etc.)
+    battery_kwh: float = 60.0  # kWh (battery capacity)
 
 class RouteRequest(BaseModel):
     start: str
     end: str
-    use_demo: bool = False
     vehicle_profile: VehicleProfile
+    user_max_speed: int = 130  # Maximum speed limit in km/h
+    num_passengers: int = 1  # Number of passengers (driver included)
+    avg_weight_kg: float = 75.0  # Average weight per person in kg
+    use_climate: bool = False  # Use HVAC
+    climate_intensity: float = 50.0  # HVAC intensity (0-100%)
+    battery_start_pct: float = 100.0  # Battery percentage at departure
+    battery_end_pct: float = 20.0  # Target battery percentage on arrival
+    rho_air: float = 1.225  # Air density (kg/m³)
 
 class Segment(BaseModel):
     index: int
@@ -76,7 +88,6 @@ class RouteResponse(BaseModel):
     route_id: str
     segments: List[Segment]
     total_distance: float  # km
-    demo_mode: bool
     start_location: str
     end_location: str
 
@@ -93,73 +104,6 @@ class KPIResponse(BaseModel):
     real_time: float  # minutes
     limit_time: float  # minutes
 
-# ============================================================================
-# DEMO DATA - Le Havre → Versailles route
-# ============================================================================
-
-def get_demo_route() -> List[Dict[str, Any]]:
-    """
-    Returns a realistic Le Havre → Versailles route with ~200km distance.
-    This is mock data for demo mode when API keys are not available.
-    """
-    # Approximate route: Le Havre → A13 → Versailles (200km)
-    # Split into ~40 segments of 5km each
-    
-    base_segments = [
-        # Le Havre exit (flat, urban)
-        {"lat": 49.4944, "lon": 0.1079, "elevation": 5, "speed_limit": 50},
-        {"lat": 49.4850, "lon": 0.1300, "elevation": 8, "speed_limit": 70},
-        {"lat": 49.4700, "lon": 0.1600, "elevation": 12, "speed_limit": 90},
-        
-        # A13 motorway - slight hills
-        {"lat": 49.4500, "lon": 0.2200, "elevation": 20, "speed_limit": 130},
-        {"lat": 49.4300, "lon": 0.3000, "elevation": 35, "speed_limit": 130},
-        {"lat": 49.4100, "lon": 0.3800, "elevation": 45, "speed_limit": 130},
-        {"lat": 49.3900, "lon": 0.4600, "elevation": 40, "speed_limit": 130},
-        {"lat": 49.3700, "lon": 0.5400, "elevation": 30, "speed_limit": 130},
-        {"lat": 49.3500, "lon": 0.6200, "elevation": 25, "speed_limit": 130},
-        {"lat": 49.3300, "lon": 0.7000, "elevation": 35, "speed_limit": 130},
-        
-        # Continuing on A13
-        {"lat": 49.3100, "lon": 0.7800, "elevation": 50, "speed_limit": 130},
-        {"lat": 49.2900, "lon": 0.8600, "elevation": 60, "speed_limit": 130},
-        {"lat": 49.2700, "lon": 0.9400, "elevation": 55, "speed_limit": 130},
-        {"lat": 49.2500, "lon": 1.0200, "elevation": 45, "speed_limit": 130},
-        {"lat": 49.2300, "lon": 1.1000, "elevation": 40, "speed_limit": 130},
-        {"lat": 49.2100, "lon": 1.1800, "elevation": 50, "speed_limit": 130},
-        {"lat": 49.1900, "lon": 1.2600, "elevation": 65, "speed_limit": 130},
-        {"lat": 49.1700, "lon": 1.3400, "elevation": 70, "speed_limit": 130},
-        {"lat": 49.1500, "lon": 1.4200, "elevation": 60, "speed_limit": 130},
-        {"lat": 49.1300, "lon": 1.5000, "elevation": 50, "speed_limit": 130},
-        
-        # Mid-route
-        {"lat": 49.1100, "lon": 1.5800, "elevation": 55, "speed_limit": 130},
-        {"lat": 49.0900, "lon": 1.6600, "elevation": 65, "speed_limit": 130},
-        {"lat": 49.0700, "lon": 1.7400, "elevation": 75, "speed_limit": 130},
-        {"lat": 49.0500, "lon": 1.8200, "elevation": 80, "speed_limit": 130},
-        {"lat": 49.0300, "lon": 1.9000, "elevation": 75, "speed_limit": 130},
-        {"lat": 49.0100, "lon": 1.9800, "elevation": 65, "speed_limit": 130},
-        {"lat": 48.9900, "lon": 2.0600, "elevation": 60, "speed_limit": 130},
-        {"lat": 48.9700, "lon": 2.1400, "elevation": 70, "speed_limit": 130},
-        {"lat": 48.9500, "lon": 2.2200, "elevation": 85, "speed_limit": 130},
-        {"lat": 48.9300, "lon": 2.3000, "elevation": 90, "speed_limit": 130},
-        
-        # Approaching Versailles area
-        {"lat": 48.9100, "lon": 2.3800, "elevation": 85, "speed_limit": 130},
-        {"lat": 48.8950, "lon": 2.4500, "elevation": 80, "speed_limit": 110},
-        {"lat": 48.8800, "lon": 2.5000, "elevation": 75, "speed_limit": 90},
-        {"lat": 48.8650, "lon": 2.5500, "elevation": 70, "speed_limit": 90},
-        {"lat": 48.8500, "lon": 2.6000, "elevation": 80, "speed_limit": 90},
-        {"lat": 48.8350, "lon": 2.6500, "elevation": 95, "speed_limit": 90},
-        {"lat": 48.8200, "lon": 2.7000, "elevation": 110, "speed_limit": 90},
-        
-        # Entering Versailles (hills, slower)
-        {"lat": 48.8100, "lon": 2.7500, "elevation": 120, "speed_limit": 70},
-        {"lat": 48.8050, "lon": 2.8000, "elevation": 130, "speed_limit": 50},
-        {"lat": 48.8014, "lon": 2.1301, "elevation": 135, "speed_limit": 50},  # Versailles center
-    ]
-    
-    return base_segments
 
 # ============================================================================
 # PHYSICS CALCULATIONS
@@ -187,7 +131,10 @@ def calculate_energy_consumption(
     speed_kmh: float,
     distance_m: float,
     elevation_change_m: float,
-    vehicle: VehicleProfile
+    vehicle: VehicleProfile,
+    total_mass_kg: float = None,
+    aux_power_kw: float = None,
+    rho_air: float = 1.225,
 ) -> float:
     """
     Calculate energy consumption for a segment using physics-based model.
@@ -206,8 +153,20 @@ def calculate_energy_consumption(
     # Convert speed to m/s
     speed_ms = speed_kmh / 3.6
     
-    # Total vehicle mass
-    total_mass = vehicle.empty_mass + vehicle.extra_load
+    # Total vehicle mass (use provided or calculate from vehicle profile)
+    if total_mass_kg is None:
+        total_mass = vehicle.empty_mass + vehicle.extra_load
+    else:
+        total_mass = total_mass_kg
+    
+    # Use provided aux_power or vehicle default
+    if aux_power_kw is None:
+        aux_power = vehicle.aux_power_kw
+    else:
+        aux_power = aux_power_kw
+    
+    # Use provided air density or default
+    air_density = rho_air if rho_air else AIR_DENSITY
     
     # Time to travel this segment (seconds)
     time_s = distance_m / speed_ms if speed_ms > 0 else 0
@@ -215,6 +174,8 @@ def calculate_energy_consumption(
     # Calculate slope angle
     if distance_m > 0:
         slope = elevation_change_m / distance_m
+        # Limit slope to realistic values (-50% to +50%)
+        slope = max(-0.5, min(0.5, slope))
     else:
         slope = 0
     
@@ -224,28 +185,44 @@ def calculate_energy_consumption(
     # 2. Rolling resistance force
     F_rolling = vehicle.rolling_resistance * total_mass * GRAVITY * math.cos(math.atan(slope))
     
-    # 3. Aerodynamic drag force
-    F_aero = 0.5 * AIR_DENSITY * vehicle.drag_coefficient * vehicle.frontal_area * (speed_ms ** 2)
+    # 3. Aerodynamic drag force (using CdA directly from drag_coefficient)
+    # Note: In Streamlit code, drag_coefficient is actually CdA (Cd × A)
+    F_aero = 0.5 * air_density * vehicle.drag_coefficient * (speed_ms ** 2)
     
     # Total resistance force
     F_total = F_gravity + F_rolling + F_aero
     
-    # Power required (Watts)
-    power_w = F_total * speed_ms
+    # Power required at wheels (Watts)
+    power_wheels_w = F_total * speed_ms
     
-    # Energy (Watt-seconds = Joules)
-    energy_j = power_w * time_s
+    # Electrical power (accounting for motor efficiency or regen)
+    # IMPORTANT: This correctly separates uphill and downhill segments:
+    # - Uphill (power_wheels_w > 0): Energy consumed with motor efficiency (e.g., 95%)
+    #   → If we need 100W at wheels, we consume 100/0.95 = 105.3W electrical
+    # - Downhill (power_wheels_w < 0): Energy recovered with regen efficiency (e.g., 85%)
+    #   → If we can recover 100W at wheels, we only get 100*0.85 = 85W electrical
+    # This means even with equal uphill/downhill (net slope = 0), we still consume energy
+    # because motor efficiency < 100% and regen efficiency < 100%
+    if power_wheels_w >= 0:
+        # Consuming energy (uphill/flat) - divide by efficiency (losses)
+        power_elec_w = power_wheels_w / max(vehicle.motor_efficiency, 1e-6)
+    else:
+        # Recovering energy (downhill) - multiply by regen efficiency (losses)
+        # Note: power_wheels_w is negative here, so result is still negative (recovered energy)
+        power_elec_w = power_wheels_w * vehicle.regen_efficiency
+    
+    # Add auxiliary power (HVAC, etc.) - always positive (consumed)
+    power_aux_w = aux_power * 1000  # Convert kW to W
+    power_total_w = power_elec_w + power_aux_w
+    
+    # Energy (Watt-hours)
+    # Note: power_total_w can be negative for downhill segments (recovered energy)
+    # but will be less negative than power_wheels_w due to regen efficiency < 100%
+    energy_wh = power_total_w * (time_s / 3600.0)
     
     # Convert to kWh
-    energy_kwh = energy_j / (3600 * 1000)
-    
-    # Apply motor efficiency (or regen efficiency if negative)
-    if energy_kwh > 0:
-        # Consuming energy (uphill/flat)
-        energy_kwh = energy_kwh / vehicle.motor_efficiency
-    else:
-        # Recovering energy (downhill)
-        energy_kwh = energy_kwh * vehicle.regen_efficiency
+    # Result: positive for consumption, negative for recovery (but less than ideal due to losses)
+    energy_kwh = energy_wh / 1000.0
     
     return energy_kwh
 
@@ -254,15 +231,17 @@ def calculate_eco_speed(
     elevation_change_m: float,
     speed_limit_kmh: float,
     vehicle: VehicleProfile,
-    min_speed_kmh: float = 60.0
+    min_speed_kmh: float = 30.0
 ) -> float:
     """
     Calculate optimized eco-speed for a segment.
     
     Strategy:
     - Uphill: reduce speed to minimize power demand (but not below min_speed)
-    - Downhill: moderate speed to maximize regen benefits
+    - Downhill: moderate speed to maximize regen benefits (but never exceed speed limit)
     - Flat: slightly below speed limit for optimal efficiency
+    
+    IMPORTANT: eco_speed must NEVER exceed speed_limit_kmh (legal requirement)
     
     Returns speed in km/h.
     """
@@ -272,16 +251,84 @@ def calculate_eco_speed(
         # Reduce speed significantly on uphill
         eco_speed = max(min_speed_kmh, speed_limit_kmh * 0.65)
     elif slope < -0.02:  # Significant downhill
-        # Moderate speed to balance safety and regen
-        eco_speed = min(speed_limit_kmh * 0.85, 110)
+        # Moderate speed to balance safety and regen, but never exceed limit
+        eco_speed = min(speed_limit_kmh * 0.85, speed_limit_kmh)
     else:  # Flat terrain
         # Slightly below limit for efficiency
         eco_speed = speed_limit_kmh * 0.88
     
-    # Ensure eco_speed is within reasonable bounds
+    # CRITICAL: Ensure eco_speed NEVER exceeds speed_limit_kmh (legal requirement)
+    # Also ensure it's not below minimum safe speed
     eco_speed = max(min_speed_kmh, min(eco_speed, speed_limit_kmh))
     
     return round(eco_speed, 1)
+
+def _merge_segments(segment_group: List[Segment], index: int) -> Segment:
+    """
+    Merge a group of consecutive segments with the same speed limit into a single segment.
+    """
+    if not segment_group:
+        raise ValueError("Cannot merge empty segment group")
+    
+    if len(segment_group) == 1:
+        # Single segment, just update index
+        seg = segment_group[0]
+        return Segment(
+            index=index,
+            distance=seg.distance,
+            elevation_start=seg.elevation_start,
+            elevation_end=seg.elevation_end,
+            speed_limit=seg.speed_limit,
+            eco_speed=seg.eco_speed,
+            real_speed=seg.real_speed,
+            limit_energy=seg.limit_energy,
+            eco_energy=seg.eco_energy,
+            real_energy=seg.real_energy,
+            limit_time=seg.limit_time,
+            eco_time=seg.eco_time,
+            real_time=seg.real_time,
+            lat_start=seg.lat_start,
+            lon_start=seg.lon_start,
+            lat_end=seg.lat_end,
+            lon_end=seg.lon_end
+        )
+    
+    # Merge multiple segments
+    first_seg = segment_group[0]
+    last_seg = segment_group[-1]
+    
+    # Sum all values
+    total_distance = sum(s.distance for s in segment_group)
+    total_limit_energy = sum(s.limit_energy for s in segment_group)
+    total_eco_energy = sum(s.eco_energy for s in segment_group)
+    total_real_energy = sum(s.real_energy for s in segment_group)
+    total_limit_time = sum(s.limit_time for s in segment_group)
+    total_eco_time = sum(s.eco_time for s in segment_group)
+    total_real_time = sum(s.real_time for s in segment_group)
+    
+    # Calculate weighted average speeds (weighted by distance)
+    total_eco_speed = sum(s.eco_speed * s.distance for s in segment_group) / total_distance if total_distance > 0 else first_seg.eco_speed
+    total_real_speed = sum(s.real_speed * s.distance for s in segment_group) / total_distance if total_distance > 0 else first_seg.real_speed
+    
+    return Segment(
+        index=index,
+        distance=total_distance,
+        elevation_start=first_seg.elevation_start,
+        elevation_end=last_seg.elevation_end,
+        speed_limit=first_seg.speed_limit,  # Same for all in group
+        eco_speed=round(total_eco_speed, 1),
+        real_speed=round(total_real_speed, 1),
+        limit_energy=total_limit_energy,
+        eco_energy=total_eco_energy,
+        real_energy=total_real_energy,
+        limit_time=total_limit_time,
+        eco_time=total_eco_time,
+        real_time=total_real_time,
+        lat_start=first_seg.lat_start,
+        lon_start=first_seg.lon_start,
+        lat_end=last_seg.lat_end,
+        lon_end=last_seg.lon_end
+    )
 
 def simulate_real_speed(
     speed_limit_kmh: float,
@@ -322,70 +369,504 @@ async def root():
 @api_router.get("/vehicle-profiles")
 async def get_vehicle_profiles() -> List[VehicleProfile]:
     """
-    Get predefined EV vehicle profiles.
+    Get predefined EV vehicle profiles from Streamlit code.
     """
     profiles = [
         VehicleProfile(
             name="Tesla Model 3",
-            empty_mass=1611,
+            empty_mass=1850,
             extra_load=150,
-            drag_coefficient=0.23,
-            frontal_area=2.22,
-            rolling_resistance=0.007,
-            motor_efficiency=0.90,
-            regen_efficiency=0.70
+            drag_coefficient=0.58,  # CdA (Cd × A)
+            frontal_area=1.0,  # Not used when CdA is provided
+            rolling_resistance=0.008,
+            motor_efficiency=0.95,
+            regen_efficiency=0.85,
+            aux_power_kw=2.0,
+            battery_kwh=75
         ),
         VehicleProfile(
-            name="Nissan Leaf",
-            empty_mass=1580,
+            name="Tesla Model Y",
+            empty_mass=2000,
             extra_load=150,
-            drag_coefficient=0.28,
-            frontal_area=2.27,
+            drag_coefficient=0.62,
+            frontal_area=1.0,
             rolling_resistance=0.008,
-            motor_efficiency=0.87,
-            regen_efficiency=0.65
+            motor_efficiency=0.95,
+            regen_efficiency=0.85,
+            aux_power_kw=2.2,
+            battery_kwh=75
+        ),
+        VehicleProfile(
+            name="Audi Q4 e-tron",
+            empty_mass=2100,
+            extra_load=150,
+            drag_coefficient=0.70,
+            frontal_area=1.0,
+            rolling_resistance=0.009,
+            motor_efficiency=0.92,
+            regen_efficiency=0.80,
+            aux_power_kw=2.5,
+            battery_kwh=82
+        ),
+        VehicleProfile(
+            name="BMW iX3",
+            empty_mass=2180,
+            extra_load=150,
+            drag_coefficient=0.68,
+            frontal_area=1.0,
+            rolling_resistance=0.009,
+            motor_efficiency=0.93,
+            regen_efficiency=0.82,
+            aux_power_kw=2.3,
+            battery_kwh=80
+        ),
+        VehicleProfile(
+            name="Mercedes EQC",
+            empty_mass=2425,
+            extra_load=150,
+            drag_coefficient=0.72,
+            frontal_area=1.0,
+            rolling_resistance=0.010,
+            motor_efficiency=0.91,
+            regen_efficiency=0.78,
+            aux_power_kw=2.8,
+            battery_kwh=80
+        ),
+        VehicleProfile(
+            name="Volkswagen ID.4",
+            empty_mass=2120,
+            extra_load=150,
+            drag_coefficient=0.66,
+            frontal_area=1.0,
+            rolling_resistance=0.009,
+            motor_efficiency=0.90,
+            regen_efficiency=0.75,
+            aux_power_kw=2.0,
+            battery_kwh=77
         ),
         VehicleProfile(
             name="Renault Zoe",
-            empty_mass=1468,
+            empty_mass=1500,
             extra_load=150,
-            drag_coefficient=0.29,
-            frontal_area=2.13,
-            rolling_resistance=0.0075,
+            drag_coefficient=0.65,
+            frontal_area=1.0,
+            rolling_resistance=0.010,
+            motor_efficiency=0.90,
+            regen_efficiency=0.70,
+            aux_power_kw=1.5,
+            battery_kwh=52
+        ),
+        VehicleProfile(
+            name="BMW i3",
+            empty_mass=1200,
+            extra_load=150,
+            drag_coefficient=0.50,
+            frontal_area=1.0,
+            rolling_resistance=0.008,
+            motor_efficiency=0.92,
+            regen_efficiency=0.80,
+            aux_power_kw=1.8,
+            battery_kwh=42
+        ),
+        VehicleProfile(
+            name="Nissan Leaf",
+            empty_mass=1600,
+            extra_load=150,
+            drag_coefficient=0.68,
+            frontal_area=1.0,
+            rolling_resistance=0.010,
             motor_efficiency=0.88,
-            regen_efficiency=0.68
+            regen_efficiency=0.75,
+            aux_power_kw=1.7,
+            battery_kwh=40
+        ),
+        VehicleProfile(
+            name="Hyundai IONIQ 5",
+            empty_mass=1950,
+            extra_load=150,
+            drag_coefficient=0.64,
+            frontal_area=1.0,
+            rolling_resistance=0.008,
+            motor_efficiency=0.94,
+            regen_efficiency=0.83,
+            aux_power_kw=2.1,
+            battery_kwh=73
+        ),
+        VehicleProfile(
+            name="Kia EV6",
+            empty_mass=1980,
+            extra_load=150,
+            drag_coefficient=0.63,
+            frontal_area=1.0,
+            rolling_resistance=0.008,
+            motor_efficiency=0.94,
+            regen_efficiency=0.83,
+            aux_power_kw=2.1,
+            battery_kwh=77
         ),
         VehicleProfile(
             name="Custom",
-            empty_mass=1600,
+            empty_mass=1900,
             extra_load=150,
-            drag_coefficient=0.28,
-            frontal_area=2.2,
-            rolling_resistance=0.008,
-            motor_efficiency=0.88,
-            regen_efficiency=0.68
+            drag_coefficient=0.62,
+            frontal_area=1.0,
+            rolling_resistance=0.010,
+            motor_efficiency=0.90,
+            regen_efficiency=0.60,
+            aux_power_kw=2.0,
+            battery_kwh=60
         )
     ]
     return profiles
 
+def get_speed_limit_by_road_type(road_type: str, user_max_speed: int = 130) -> int:
+    """
+    Retourne la limitation de vitesse typique selon le type de route.
+    Mapping des types de route ORS vers limitations de vitesse en France.
+    """
+    speed_mapping = {
+        "motorway": min(130, user_max_speed),  # Autoroute
+        "trunk": min(110, user_max_speed),     # Route express
+        "primary": min(90, user_max_speed),    # Route nationale
+        "secondary": min(90, user_max_speed),  # Route départementale principale
+        "tertiary": min(90, user_max_speed),   # Route départementale secondaire
+        "unclassified": 50,                    # Route non classée
+        "residential": 50,                     # Zone résidentielle
+        "service": 30,                         # Route de service
+    }
+    
+    # Recherche par préfixe (car ORS peut retourner "motorway_link", etc.)
+    if road_type:
+        road_type_lower = road_type.lower()
+        for key, speed in speed_mapping.items():
+            if key in road_type_lower:
+                return speed
+    
+    # Par défaut, utiliser 50 km/h (zone urbaine)
+    return 50
+
+async def get_route_from_ors(start: str, end: str, user_max_speed: int = 130) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """
+    Get route from OpenRouteService API with detailed segments and speed limits.
+    Returns tuple: (points, detailed_segments)
+    - points: list of points with coordinates, elevation, and speed_limit
+    - detailed_segments: list of route segments with road type information
+    """
+    ors_api_key = os.environ.get('ORS_API_KEY', '').strip()
+    
+    if not ors_api_key:
+        raise HTTPException(
+            status_code=400,
+            detail="OpenRouteService API key not configured. Please add ORS_API_KEY to .env file or use demo mode."
+        )
+    
+    # Geocode addresses to coordinates
+    # Use a longer timeout and add retry logic for Nominatim
+    geolocator = Nominatim(user_agent="ecospeed", timeout=10)
+    
+    def geocode_with_retry(location: str, max_retries: int = 3) -> Any:
+        """Geocode a location with retry logic"""
+        for attempt in range(max_retries):
+            try:
+                result = geolocator.geocode(location, timeout=10)
+                if result:
+                    return result
+                # If no result, wait a bit before retrying
+                if attempt < max_retries - 1:
+                    time.sleep(1)
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    logger.warning(f"Geocoding attempt {attempt + 1} failed for '{location}': {str(e)}. Retrying...")
+                    time.sleep(2)  # Wait longer between retries
+                else:
+                    raise e
+        return None
+    
+    try:
+        start_location = geocode_with_retry(start)
+        # Small delay between requests to respect Nominatim rate limits
+        time.sleep(1)
+        end_location = geocode_with_retry(end)
+        
+        if not start_location:
+            raise HTTPException(status_code=400, detail=f"Could not find location: {start}. Please try a more specific address.")
+        if not end_location:
+            raise HTTPException(status_code=400, detail=f"Could not find location: {end}. Please try a more specific address.")
+        
+        start_coords = [start_location.longitude, start_location.latitude]
+        end_coords = [end_location.longitude, end_location.latitude]
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Geocoding error: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Geocoding error: {str(e)}. Please check your internet connection and try again.")
+    
+    # Call OpenRouteService Directions API with instructions
+    url = "https://api.openrouteservice.org/v2/directions/driving-car"
+    headers = {
+        "Authorization": ors_api_key,
+        "Content-Type": "application/json; charset=utf-8"
+    }
+    
+    body = {
+        "coordinates": [start_coords, end_coords],
+        "elevation": True,
+        "instructions": True,
+        "geometry": True,
+        "format": "geojson",  # Request GeoJSON format explicitly
+        "extra_info": ["waytype", "surface"]  # Request road type information
+    }
+    
+    try:
+        # Try POST with format in params
+        response = requests.post(url, json=body, headers=headers, params={"format": "geojson"}, timeout=60)
+        response.raise_for_status()
+        data = response.json()
+        
+        # Extract route data - handle both formats
+        route = None
+        if "routes" in data and data["routes"]:
+            route = data["routes"][0]
+        elif "features" in data and data["features"]:
+            # GeoJSON format
+            feature = data["features"][0]
+            route = feature.get("properties", {})
+            route["geometry"] = feature.get("geometry", {})
+            route["segments"] = feature.get("properties", {}).get("segments", [])
+        
+        if not route:
+            raise HTTPException(status_code=500, detail="No route found in API response")
+        
+        # Extract geometry and elevation
+        # OpenRouteService can return geometry in different formats
+        coords_list = []
+        geometry = route.get("geometry")
+        
+        if isinstance(geometry, dict):
+            # GeoJSON format: {"type": "LineString", "coordinates": [[lon, lat, elev], ...]}
+            if geometry.get("type") == "LineString":
+                coords_list = geometry.get("coordinates", [])
+            elif "coordinates" in geometry:
+                coords_list = geometry.get("coordinates", [])
+        elif isinstance(geometry, str):
+            # Encoded polyline5 format - decode it
+            try:
+                from polyline5_decoder import decode_polyline5
+                # Decode polyline5 - check if elevation is requested (3D encoding)
+                # If elevation=True in request, polyline includes elevation as 3rd dimension
+                decoded = decode_polyline5(geometry, has_elevation=True)
+                
+                # Extract coordinates and elevations
+                if decoded and len(decoded[0]) >= 3:
+                    # 3D coordinates: [lat, lon, elev]
+                    coords_list = [[coord[1], coord[0]] for coord in decoded]  # Convert to [lon, lat]
+                    elevations = [coord[2] for coord in decoded]
+                else:
+                    # 2D coordinates: [lat, lon]
+                    coords_list = [[coord[1], coord[0]] for coord in decoded]  # Convert to [lon, lat]
+                    elevations = []
+                
+                logger.info(f"Decoded {len(coords_list)} coordinates from polyline5 (3D: {len(decoded[0]) >= 3 if decoded else False})")
+            except ImportError:
+                logger.error("polyline5_decoder module not found. Using start/end points only.")
+                coords_list = [start_coords, end_coords]
+            except Exception as e:
+                logger.error(f"Error decoding polyline5: {e}. Using start/end points only.")
+                coords_list = [start_coords, end_coords]
+        else:
+            # Fallback: use start and end coordinates
+            coords_list = [start_coords, end_coords]
+        
+        # Ensure we have at least 2 points
+        if len(coords_list) < 2:
+            logger.warning(f"Only {len(coords_list)} coordinate(s) received. Using start/end points.")
+            coords_list = [start_coords, end_coords]
+        
+        # Log for debugging
+        logger.info(f"Extracted {len(coords_list)} coordinates from route")
+        
+        # Extract elevation if not already extracted from polyline
+        if not elevations:
+            elevations = []
+            if coords_list:
+                # Check if elevation is in coordinates (3rd element)
+                if len(coords_list[0]) >= 3:
+                    # Elevation already in coordinates
+                    elevations = [coord[2] for coord in coords_list]
+                    # Remove elevation from coordinates for consistency
+                    coords_list = [[coord[0], coord[1]] for coord in coords_list]
+                else:
+                    # Try to get elevation from elevation service
+                    try:
+                        elev_url = "https://api.openrouteservice.org/elevation/line"
+                        elev_body = {
+                            "format_in": "geojson",
+                            "format_out": "json",
+                            "geometry": {
+                                "type": "LineString",
+                                "coordinates": coords_list[:1000]  # Limit to 1000 points
+                            }
+                        }
+                        elev_response = requests.post(elev_url, json=elev_body, headers=headers, timeout=60)
+                        if elev_response.status_code == 200:
+                            elev_data = elev_response.json()
+                            elevations = [pt[2] for pt in elev_data.get("geometry", {}).get("coordinates", [])]
+                            # Interpolate if needed
+                            if len(elevations) != len(coords_list):
+                                # Simple linear interpolation
+                                if len(elevations) > 1:
+                                    # Linear interpolation without numpy
+                                    result = []
+                                    for i in range(len(coords_list)):
+                                        pos = i / (len(coords_list) - 1) if len(coords_list) > 1 else 0
+                                        idx = pos * (len(elevations) - 1)
+                                        idx_low = int(idx)
+                                        idx_high = min(idx_low + 1, len(elevations) - 1)
+                                        t = idx - idx_low
+                                        interp_val = elevations[idx_low] * (1 - t) + elevations[idx_high] * t
+                                        result.append(interp_val)
+                                    elevations = result
+                                else:
+                                    elevations = [elevations[0] if elevations else 0.0] * len(coords_list)
+                        else:
+                            elevations = [0.0] * len(coords_list)
+                    except Exception:
+                        elevations = [0.0] * len(coords_list)
+        else:
+            elevations = []
+        
+        # Extract detailed segments with road type information
+        segments = route.get("segments", [])
+        detailed_segments = []
+        
+        # Extract steps from segments
+        all_steps = []
+        for seg in segments:
+            seg_steps = seg.get("steps", [])
+            all_steps.extend(seg_steps)
+            detailed_segments.append({
+                "distance": seg.get("distance", 0),
+                "duration": seg.get("duration", 0),
+                "steps": seg_steps
+            })
+        
+        # If no segments, create a single segment for the whole route
+        if not detailed_segments:
+            summary = route.get("summary", {})
+            total_dist = summary.get("distance", 0)
+            detailed_segments = [{
+                "distance": total_dist,
+                "duration": summary.get("duration", 0),
+                "steps": []
+            }]
+        
+        # Create points with speed limits based on road type
+        points = []
+        total_distance = sum(seg.get("distance", 0) for seg in detailed_segments) or 1
+        
+        # Calculate cumulative distances for coordinate points
+        coord_distances = [0]
+        for i in range(len(coords_list) - 1):
+            lon1, lat1 = coords_list[i][0], coords_list[i][1]
+            lon2, lat2 = coords_list[i+1][0], coords_list[i+1][1]
+            d = calculate_segment_distance(lat1, lon1, lat2, lon2)
+            coord_distances.append(coord_distances[-1] + d)
+        
+        # Normalize distances
+        if coord_distances[-1] > 0:
+            coord_ratio = total_distance / coord_distances[-1]
+            coord_distances = [d * coord_ratio for d in coord_distances]
+        
+        # Use waytype extras to assign speed limits
+        # waytype values: [start_index, end_index, waytype_id]
+        # waytype_id: 1=motorway, 2=trunk, 3=primary, 4=secondary, 5=tertiary, etc.
+        waytype_mapping = {
+            1: "motorway",
+            2: "trunk", 
+            3: "primary",
+            4: "secondary",
+            5: "tertiary",
+            6: "unclassified",
+            7: "residential",
+            8: "service"
+        }
+        
+        waytype_ranges = []
+        if "extras" in route and "waytype" in route["extras"]:
+            waytype_extra = route["extras"]["waytype"]
+            if "values" in waytype_extra:
+                waytype_ranges = waytype_extra["values"]
+        
+        # Assign speed limits to each point based on waytype
+        for i, coord in enumerate(coords_list):
+            lon, lat = coord[0], coord[1]
+            elev = elevations[i] if i < len(elevations) else 0
+            
+            speed_limit = 50  # Default
+            
+            # Find waytype for this point index
+            if waytype_ranges:
+                for waytype_range in waytype_ranges:
+                    start_idx, end_idx, waytype_id = waytype_range
+                    if start_idx <= i < end_idx:
+                        waytype_name = waytype_mapping.get(waytype_id, "unclassified")
+                        speed_limit = get_speed_limit_by_road_type(waytype_name, user_max_speed)
+                        break
+            
+            points.append({
+                "lat": lat,
+                "lon": lon,
+                "elevation": elev,
+                "speed_limit": speed_limit
+            })
+        
+        return points, detailed_segments
+        
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error calling OpenRouteService API: {str(e)}"
+        )
+
 @api_router.post("/route")
 async def calculate_route(request: RouteRequest) -> RouteResponse:
     """
-    Calculate route with eco-speed optimization.
-    
-    If use_demo=True or if routing API is not configured,
-    returns demo route (Le Havre → Versailles).
+    Calculate route with eco-speed optimization using OpenRouteService API.
+    Requires ORS_API_KEY to be configured.
     """
     route_id = str(uuid.uuid4())
     
-    # For now, always use demo mode (API integration can be added later)
-    demo_points = get_demo_route()
+    # Validate inputs
+    if not request.start or not request.end:
+        raise HTTPException(status_code=400, detail="Start and end locations are required")
     
-    segments = []
+    # Get route from OpenRouteService API
+    try:
+        route_points, detailed_segments = await get_route_from_ors(request.start, request.end, request.user_max_speed)
+        start_location = request.start
+        end_location = request.end
+    except HTTPException as e:
+        raise e
     
-    for i in range(len(demo_points) - 1):
-        p1 = demo_points[i]
-        p2 = demo_points[i + 1]
+    # Calculate total mass (vehicle + passengers)
+    total_passenger_weight = request.num_passengers * request.avg_weight_kg
+    total_mass_kg = request.vehicle_profile.empty_mass + total_passenger_weight
+    
+    # Adjust auxiliary power based on HVAC
+    climate_power_adjustment = 0
+    if request.use_climate:
+        # Add extra HVAC power based on intensity (roughly 1–3 kW)
+        climate_power_adjustment = (request.climate_intensity / 100.0) * 3.0
+    
+    adjusted_aux_power_kw = request.vehicle_profile.aux_power_kw + climate_power_adjustment
+    
+    # First, create all individual segments
+    individual_segments = []
+    
+    for i in range(len(route_points) - 1):
+        p1 = route_points[i]
+        p2 = route_points[i + 1]
         
         # Calculate segment distance
         distance_m = calculate_segment_distance(
@@ -407,15 +888,24 @@ async def calculate_route(request: RouteRequest) -> RouteResponse:
         # Simulate real speed
         real_speed = simulate_real_speed(speed_limit, eco_speed, i)
         
-        # Calculate energy for each scenario
+        # Calculate energy for each scenario with new parameters
         limit_energy = calculate_energy_consumption(
-            speed_limit, distance_m, elevation_change, request.vehicle_profile
+            speed_limit, distance_m, elevation_change, request.vehicle_profile,
+            total_mass_kg=total_mass_kg,
+            aux_power_kw=adjusted_aux_power_kw,
+            rho_air=request.rho_air
         )
         eco_energy = calculate_energy_consumption(
-            eco_speed, distance_m, elevation_change, request.vehicle_profile
+            eco_speed, distance_m, elevation_change, request.vehicle_profile,
+            total_mass_kg=total_mass_kg,
+            aux_power_kw=adjusted_aux_power_kw,
+            rho_air=request.rho_air
         )
         real_energy = calculate_energy_consumption(
-            real_speed, distance_m, elevation_change, request.vehicle_profile
+            real_speed, distance_m, elevation_change, request.vehicle_profile,
+            total_mass_kg=total_mass_kg,
+            aux_power_kw=adjusted_aux_power_kw,
+            rho_air=request.rho_air
         )
         
         # Calculate time for each scenario (in seconds)
@@ -442,7 +932,33 @@ async def calculate_route(request: RouteRequest) -> RouteResponse:
             lat_end=p2["lat"],
             lon_end=p2["lon"]
         )
-        segments.append(segment)
+        individual_segments.append(segment)
+    
+    # Group consecutive segments with the same speed_limit
+    segments = []
+    if individual_segments:
+        current_group = [individual_segments[0]]
+        segment_index = 0
+        
+        for i in range(1, len(individual_segments)):
+            current_seg = individual_segments[i]
+            prev_seg = current_group[-1]
+            
+            # Check if speed_limit is the same (with small tolerance for floating point)
+            if abs(current_seg.speed_limit - prev_seg.speed_limit) < 0.1:
+                # Same speed limit, add to current group
+                current_group.append(current_seg)
+            else:
+                # Different speed limit, finalize current group and start new one
+                merged_seg = _merge_segments(current_group, segment_index)
+                segments.append(merged_seg)
+                segment_index += 1
+                current_group = [current_seg]
+        
+        # Don't forget the last group
+        if current_group:
+            merged_seg = _merge_segments(current_group, segment_index)
+            segments.append(merged_seg)
     
     # Calculate total distance
     total_distance_m = sum(s.distance for s in segments)
@@ -452,9 +968,8 @@ async def calculate_route(request: RouteRequest) -> RouteResponse:
         route_id=route_id,
         segments=segments,
         total_distance=round(total_distance_km, 2),
-        demo_mode=True,
-        start_location="Le Havre, France" if request.use_demo else request.start,
-        end_location="Versailles, France" if request.use_demo else request.end
+        start_location=start_location,
+        end_location=end_location
     )
 
 @api_router.get("/route/{route_id}/kpis")

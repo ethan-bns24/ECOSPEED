@@ -1,141 +1,149 @@
-# Ecospeed - Green Driving Optimizer for Electric Vehicles
+# ECOSPEED - Green Driving Optimizer for Electric Vehicles
 
-![Ecospeed Logo](https://img.shields.io/badge/Ecospeed-EV%20Optimizer-4ade80?style=for-the-badge)
+![ECOSPEED Logo](https://img.shields.io/badge/ECOSPEED-EV%20Optimizer-4ade80?style=for-the-badge)
 
-**Ecospeed** est un optimiseur de conduite écologique pour véhicules électriques qui calcule des profils de vitesse éco-optimisés segment par segment le long d'un itinéraire.
+**ECOSPEED** is a green driving optimizer for electric vehicles that calculates eco-optimized speed profiles segment by segment along a route.
 
-## 🎯 Objectif du projet
+## 🎯 Project Objective
 
-Application web développée pour un projet d'école d'ingénieurs, démontrant :
-- Calculs physiques réalistes de consommation d'énergie
-- Optimisation basée sur le terrain et l'élévation
-- Interface utilisateur professionnelle et intuitive
-- Architecture full-stack moderne (FastAPI + React)
+Web application developed for an engineering school project, demonstrating:
+- Realistic physics-based energy consumption calculations
+- Terrain and elevation-based optimization
+- Professional and intuitive user interface
+- Modern full-stack architecture (FastAPI + React)
 
-## ✨ Fonctionnalités principales
+## ✨ Main Features
 
-### 1. Analyse d'itinéraire
-- Calcul automatique de route avec données d'élévation
-- Segmentation intelligente du parcours
-- Mode démo intégré (Le Havre → Versailles)
+### 1. Route Analysis
+- Automatic route calculation with elevation data using OpenRouteService API
+- Intelligent route segmentation grouped by speed limits
+- Real-time geocoding with retry mechanism
 
-### 2. Modèle physique EV
-Calcul de la consommation d'énergie basé sur :
-- **Force gravitationnelle** : montées/descentes
-- **Résistance au roulement** : friction des pneus
-- **Traînée aérodynamique** : résistance de l'air
-- **Inertie** : accélérations/décélérations
-- **Freinage régénératif** : récupération d'énergie en descente
+### 2. EV Physics Model
+Energy consumption calculation based on:
+- **Gravitational force**: uphill/downhill segments (properly separated)
+- **Rolling resistance**: tire friction
+- **Aerodynamic drag**: air resistance
+- **Regenerative braking**: energy recovery on downhill (with efficiency losses)
 
-### 3. Trois scénarios de conduite
+### 3. Three Driving Scenarios
 
-#### LIMIT (rouge) 🔴
-Scénario théorique à haute vitesse suivant les limitations légales.
+#### LIMIT (red) 🔴
+Theoretical high-speed scenario following legal speed limits.
 
-#### REAL (bleu) 🔵
-Simulation du comportement réel d'un conducteur avec variations.
+#### REAL (blue) 🔵
+Simulated actual driver behavior with variations.
 
-#### ECO (vert) 🟢
-Profil optimisé pour minimiser la consommation d'énergie tout en gardant un temps de trajet raisonnable.
+#### ECO (green) 🟢
+Optimized profile to minimize energy consumption while keeping travel time reasonable.
 
-### 4. Navigation temps réel simulée
-- Recommandations de vitesse éco segment par segment
-- Visualisation sur carte interactive
-- Barre de progression et détails du segment actuel
-- Messages contextuels pour le conducteur
+### 4. Real-time Simulated Navigation
+- Eco-speed recommendations segment by segment
+- Interactive map visualization
+- Progress bar and current segment details
+- Contextual messages for the driver
 
-### 5. Tableau de bord des résultats
-**KPI Cards :**
-- Énergie ECO consommée (kWh)
-- Énergie économisée par rapport au REAL (kWh et %)
-- Temps supplémentaire ECO vs REAL (minutes)
-- CO₂ évité (kg)
+### 5. Results Dashboard
+**KPI Cards:**
+- ECO Energy consumed (kWh)
+- Energy Saved vs Speed Limit (kWh and %)
+- Extra Time vs Speed Limit (minutes)
+- CO₂ Avoided (kg)
 
-**Graphiques :**
-- Profil vitesse vs distance (3 courbes)
-- Consommation d'énergie par scénario (barres)
-- Temps de trajet par scénario (barres)
+**Charts:**
+- Speed profile vs distance (3 curves)
+- Energy consumption by scenario (bars)
+- Travel time by scenario (bars)
 
-## 🚗 Profils de véhicules électriques
+**Trip Summary:**
+- Energy at speed limit vs ECO energy
+- Energy savings with percentage
+- Time comparison
+
+## 🚗 Electric Vehicle Profiles
 
 ### Tesla Model 3
-- Masse : 1611 kg (+ 150 kg charge)
-- Coefficient de traînée : 0.23
-- Surface frontale : 2.22 m²
-- Efficacité moteur : 90%
-- Efficacité régénération : 70%
+- Mass: 1850 kg (+ 150 kg load)
+- Drag coefficient (CdA): 0.58
+- Rolling resistance: 0.008
+- Motor efficiency: 95%
+- Regenerative efficiency: 85%
+- Battery: 75 kWh
+- Auxiliary power: 2.0 kW
 
-### Nissan Leaf
-- Masse : 1580 kg (+ 150 kg charge)
-- Coefficient de traînée : 0.28
-- Surface frontale : 2.27 m²
-- Efficacité moteur : 87%
-- Efficacité régénération : 65%
-
-### Renault Zoe
-- Masse : 1468 kg (+ 150 kg charge)
-- Coefficient de traînée : 0.29
-- Surface frontale : 2.13 m²
-- Efficacité moteur : 88%
-- Efficacité régénération : 68%
+### Tesla Model Y
+- Mass: 2000 kg (+ 150 kg load)
+- Drag coefficient (CdA): 0.62
+- Rolling resistance: 0.008
+- Motor efficiency: 95%
+- Regenerative efficiency: 85%
+- Battery: 75 kWh
+- Auxiliary power: 2.0 kW
 
 ### Custom
-Paramètres entièrement personnalisables pour tester différentes configurations.
+Fully customizable parameters to test different configurations.
 
-## 🏗️ Architecture technique
+## 🏗️ Technical Architecture
 
-### Stack technologique
-- **Backend** : FastAPI (Python 3.11)
-- **Frontend** : React 19
-- **Base de données** : MongoDB
-- **Cartes** : Leaflet + OpenStreetMap (pas de token requis)
-- **Graphiques** : Recharts
-- **Styling** : Tailwind CSS + shadcn/ui components
+### Technology Stack
+- **Backend**: FastAPI (Python 3.11+)
+- **Frontend**: React 19
+- **Database**: MongoDB
+- **Maps**: Leaflet + OpenStreetMap (no token required)
+- **Routing**: OpenRouteService API
+- **Charts**: Recharts
+- **Styling**: Tailwind CSS + shadcn/ui components
 
-### Structure du projet
+### Project Structure
 ```
-/app
+/ecospeed
 ├── backend/
-│   ├── server.py           # API FastAPI avec calculs physiques
-│   ├── requirements.txt    # Dépendances Python
-│   └── .env               # Variables d'environnement
+│   ├── server.py              # FastAPI with physics calculations
+│   ├── polyline5_decoder.py   # OpenRouteService polyline decoder
+│   ├── requirements.txt       # Python dependencies
+│   ├── .env                   # Environment variables
+│   └── start.sh               # Startup script
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/
-│   │   │   ├── HomePage.jsx         # Page d'accueil
-│   │   │   └── AnalysisPage.jsx     # Page d'analyse
+│   │   │   ├── HomePage.jsx         # Home page
+│   │   │   └── AnalysisPage.jsx     # Analysis page
 │   │   ├── components/
-│   │   │   ├── RouteMap.jsx         # Carte interactive
-│   │   │   ├── NavigationPanel.jsx  # Panneau de navigation
-│   │   │   ├── KPICards.jsx         # Cartes KPI
-│   │   │   ├── SpeedChart.jsx       # Graphique de vitesse
-│   │   │   ├── EnergyChart.jsx      # Graphique d'énergie
-│   │   │   └── TimeChart.jsx        # Graphique de temps
+│   │   │   ├── RouteMap.jsx         # Interactive map
+│   │   │   ├── NavigationPanel.jsx  # Navigation panel
+│   │   │   ├── KPICards.jsx         # KPI cards
+│   │   │   ├── SpeedChart.jsx       # Speed chart
+│   │   │   ├── EnergyChart.jsx      # Energy chart
+│   │   │   └── TimeChart.jsx        # Time chart
 │   │   └── App.js
 │   ├── package.json
-│   └── .env
+│   ├── .env
+│   └── start.sh
+├── start.sh                   # Master startup script
 └── README.md
 ```
 
-## 🚀 Installation et lancement
+## 🚀 Installation and Launch
 
-### Prérequis
+### Prerequisites
 - Python 3.11+
 - Node.js 18+
 - MongoDB
 - yarn
 
-### Installation des dépendances
+### Installation
 
 #### Backend
 ```bash
-cd /app/backend
+cd backend
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
 #### Frontend
 ```bash
-cd /app/frontend
+cd frontend
 yarn install
 ```
 
@@ -146,163 +154,182 @@ yarn install
 MONGO_URL=mongodb://localhost:27017
 DB_NAME=ecospeed_db
 CORS_ORIGINS=*
+ORS_API_KEY=your_openrouteservice_api_key
 ```
 
 #### Frontend (.env)
 ```env
-REACT_APP_BACKEND_URL=https://your-backend-url.com
+REACT_APP_BACKEND_URL=http://localhost:8001
 ```
 
-### Lancement
+### Launch
 
-#### Backend (développement)
+#### Option 1: Master Script (Recommended)
 ```bash
-cd /app/backend
-uvicorn server:app --reload --host 0.0.0.0 --port 8001
+./start.sh
 ```
 
-#### Frontend (développement)
+This script automatically starts:
+- MongoDB (if needed)
+- Backend on http://localhost:8001
+- Frontend on http://localhost:3000
+
+#### Option 2: Manual Launch
+
+**Terminal 1 - Backend:**
 ```bash
-cd /app/frontend
-yarn start
+cd backend
+./start.sh
 ```
 
-L'application sera accessible sur `http://localhost:3000`
-
-### Lancement (production)
+**Terminal 2 - Frontend:**
 ```bash
-# Backend
-uvicorn server:app --host 0.0.0.0 --port 8001
-
-# Frontend
-yarn build
-# Puis servir le dossier build/ avec un serveur web
+cd frontend
+./start.sh
 ```
 
-## 🎮 Mode démo
+The application will be accessible at `http://localhost:3000`
 
-L'application inclut un **mode démo complet** qui fonctionne sans clés API :
-- Route pré-calculée : **Le Havre → Versailles** (~260 km)
-- Données d'élévation mockées réalistes
-- 39 segments avec variations de terrain
+## 🔧 OpenRouteService API Setup
 
-Pour activer le mode démo :
-1. Cocher "Use demo route (Le Havre → Versailles)"
-2. Cliquer sur "Calculate Eco-Speed Profile"
+**Required** for route calculation:
 
-## 🔧 Intégration API externe (optionnel)
+1. Create an account on [openrouteservice.org](https://openrouteservice.org/)
+2. Get an API key (7000 requests/day free)
+3. Add to `backend/.env`: `ORS_API_KEY=your_key`
 
-Pour activer les routes en direct :
+See [API_KEY_SETUP.md](API_KEY_SETUP.md) for detailed instructions.
 
-### OpenRouteService
-1. Créer un compte sur [openrouteservice.org](https://openrouteservice.org/)
-2. Obtenir une clé API (7000 requêtes/jour gratuit)
-3. Ajouter au backend `.env` : `ORS_API_KEY=votre_cle`
+## 📊 Physics Formulas
 
-### Mapbox (optionnel)
-1. Créer un compte sur [mapbox.com](https://www.mapbox.com/)
-2. Obtenir un token
-3. Ajouter au frontend `.env` : `MAPBOX_TOKEN=votre_token`
-
-**Note** : L'application utilise OpenStreetMap par défaut (pas de token requis)
-
-## 📊 Formules physiques
-
-### Énergie consommée
+### Energy Consumption
 ```
-E = (F_total × distance) / efficacité_moteur
+E = (F_total × distance) / motor_efficiency (uphill)
+E = (F_total × distance) × regen_efficiency (downhill)
 
-Où F_total = F_gravité + F_roulement + F_aéro
+Where F_total = F_gravity + F_rolling + F_aero
 ```
 
-### Forces calculées
+### Forces Calculated
 
-**Force gravitationnelle (pente) :**
+**Gravitational force (slope):**
 ```
-F_gravité = m × g × sin(θ)
+F_gravity = m × g × slope
 ```
+- Positive uphill (resists motion)
+- Negative downhill (aids motion)
 
-**Résistance au roulement :**
+**Rolling resistance:**
 ```
-F_roulement = Crr × m × g × cos(θ)
-```
-
-**Traînée aérodynamique :**
-```
-F_aéro = 0.5 × ρ_air × Cd × A × v²
+F_rolling = Crr × m × g × cos(θ)
 ```
 
-### Freinage régénératif
-Sur les descentes et décélérations, l'énergie négative est récupérée avec un rendement de 65-70%.
+**Aerodynamic drag:**
+```
+F_aero = 0.5 × ρ_air × CdA × v²
+```
 
-## 🎨 Design et UX
+### Regenerative Braking
+On downhills and decelerations, negative energy is recovered with 65-85% efficiency.
 
-- **Thème vert éco** : dégradé de verts pour évoquer la nature et l'écologie
-- **Typography** : Space Grotesk (titres) + Work Sans (corps)
-- **Couleur primaire** : `#4ade80` (vert éco)
-- **Glassmorphisme** : cartes avec effet de flou et transparence
-- **Responsive** : optimisé pour desktop et mobile
+**Important**: Even with equal uphill/downhill (net slope = 0), energy is still consumed because:
+- Motor efficiency < 100% (losses when consuming)
+- Regen efficiency < 100% (losses when recovering)
 
-## 🧪 Tests
+## 🎨 Design and UX
 
-### Tester l'API
+- **Eco green theme**: green gradient to evoke nature and ecology
+- **Typography**: Space Grotesk (titles) + Work Sans (body)
+- **Primary color**: `#4ade80` (eco green)
+- **Glassmorphism**: cards with blur and transparency effects
+- **Responsive**: optimized for desktop and mobile
+
+## 🧪 Testing
+
+### Test API
 ```bash
-# Test endpoint racine
+# Test root endpoint
 curl http://localhost:8001/api/
 
-# Test profils véhicules
+# Test vehicle profiles
 curl http://localhost:8001/api/vehicle-profiles
 
-# Test calcul route (démo)
+# Test route calculation
 curl -X POST http://localhost:8001/api/route \
   -H "Content-Type: application/json" \
   -d '{
-    "start": "Le Havre, France",
-    "end": "Versailles, France",
-    "use_demo": true,
+    "start": "Paris, France",
+    "end": "Lyon, France",
     "vehicle_profile": {
       "name": "Tesla Model 3",
-      "empty_mass": 1611,
+      "empty_mass": 1850,
       "extra_load": 150,
-      "drag_coefficient": 0.23,
-      "frontal_area": 2.22,
-      "rolling_resistance": 0.007,
-      "motor_efficiency": 0.90,
-      "regen_efficiency": 0.70
-    }
+      "drag_coefficient": 0.58,
+      "frontal_area": 1.0,
+      "rolling_resistance": 0.008,
+      "motor_efficiency": 0.95,
+      "regen_efficiency": 0.85,
+      "aux_power_kw": 2.0,
+      "battery_kwh": 75
+    },
+    "user_max_speed": 130,
+    "num_passengers": 1,
+    "avg_weight_kg": 75,
+    "use_climate": false,
+    "climate_intensity": 50,
+    "battery_start_pct": 100,
+    "battery_end_pct": 20,
+    "rho_air": 1.225
   }'
 ```
 
-## 📝 Documentation du code
+## 📝 Code Documentation
 
-Le code est abondamment commenté pour expliquer :
-- Les formules physiques et leurs simplifications
-- La logique d'optimisation eco-speed
-- La structure des données LIMIT/REAL/ECO
-- L'architecture de l'API et des composants
+The code is extensively commented to explain:
+- Physics formulas and their simplifications
+- Eco-speed optimization logic
+- LIMIT/REAL/ECO data structure
+- API and component architecture
 
-## 🤝 Contribution
+## 🔄 Recent Updates
 
-Projet réalisé pour un cours d'école d'ingénieurs. Les contributions sont les bienvenues pour :
-- Améliorer les algorithmes d'optimisation
-- Ajouter de nouveaux profils de véhicules
-- Intégrer d'autres fournisseurs de routage
-- Améliorer la précision des calculs physiques
+### v1.2.0 (Latest)
+- ✅ Removed demo mode - all routes use OpenRouteService API
+- ✅ Segment grouping by speed limit for cleaner visualization
+- ✅ Energy savings calculation vs speed limit (not just vs real speed)
+- ✅ Improved geocoding with retry mechanism and longer timeout
+- ✅ Proper separation of uphill/downhill energy calculations
+- ✅ Complete English translation
+- ✅ Removed "Made with Emergent" branding
 
-## 📄 Licence
+### v1.1.0
+- ✅ OpenRouteService API integration
+- ✅ Speed limit detection by road type
+- ✅ Detailed segment extraction
+- ✅ Elevation data from API
 
-Ce projet est destiné à un usage éducatif et de démonstration.
+## 🤝 Contributing
 
-## 🙏 Remerciements
+Project developed for an engineering school course. Contributions are welcome for:
+- Improving optimization algorithms
+- Adding new vehicle profiles
+- Integrating other routing providers
+- Improving physics calculation accuracy
 
-- OpenStreetMap pour les tuiles de carte gratuites
-- OpenRouteService pour l'API de routage
-- La communauté React et FastAPI
+## 📄 License
+
+This project is intended for educational and demonstration purposes.
+
+## 🙏 Acknowledgments
+
+- OpenStreetMap for free map tiles
+- OpenRouteService for routing API
+- React and FastAPI communities
 
 ## 📞 Support
 
-Pour toute question sur le projet, veuillez consulter le code source ou la documentation intégrée.
+For any questions about the project, please consult the source code or integrated documentation.
 
 ---
 
-**Développé avec ❤️ pour un projet d'école d'ingénieurs**
+**Developed with ❤️ for an engineering school project**

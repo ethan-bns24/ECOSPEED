@@ -4,6 +4,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide Emergent badge if it's injected dynamically */
+#emergent-badge,
+a[href*="emergent"],
+a[href*="emergentagent"],
+[data-emergent-badge],
+.emergent-badge {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 @layer base {
   * {
     @apply border-border;

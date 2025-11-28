@@ -4,7 +4,6 @@ import axios from 'axios';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Checkbox } from '../components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
@@ -20,8 +19,161 @@ import KPICards from '../components/KPICards';
 import NavigationPanel from '../components/NavigationPanel';
 import { toast } from 'sonner';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// Force l'utilisation de localhost:8001 pour le backend local
+const BACKEND_URL = 'http://localhost:8001';
 const API = `${BACKEND_URL}/api`;
+
+// Log pour debug
+console.log('Backend URL configured:', BACKEND_URL);
+console.log('API endpoint:', API);
+
+// Vehicle Profiles - defined directly in code (from Streamlit)
+const VEHICLE_PROFILES = [
+  {
+    name: "Tesla Model 3",
+    empty_mass: 1850,
+    extra_load: 150,
+    drag_coefficient: 0.58, // CdA
+    frontal_area: 1.0,
+    rolling_resistance: 0.008,
+    motor_efficiency: 0.95,
+    regen_efficiency: 0.85,
+    aux_power_kw: 2.0,
+    battery_kwh: 75
+  },
+  {
+    name: "Tesla Model Y",
+    empty_mass: 2000,
+    extra_load: 150,
+    drag_coefficient: 0.62,
+    frontal_area: 1.0,
+    rolling_resistance: 0.008,
+    motor_efficiency: 0.95,
+    regen_efficiency: 0.85,
+    aux_power_kw: 2.2,
+    battery_kwh: 75
+  },
+  {
+    name: "Audi Q4 e-tron",
+    empty_mass: 2100,
+    extra_load: 150,
+    drag_coefficient: 0.70,
+    frontal_area: 1.0,
+    rolling_resistance: 0.009,
+    motor_efficiency: 0.92,
+    regen_efficiency: 0.80,
+    aux_power_kw: 2.5,
+    battery_kwh: 82
+  },
+  {
+    name: "BMW iX3",
+    empty_mass: 2180,
+    extra_load: 150,
+    drag_coefficient: 0.68,
+    frontal_area: 1.0,
+    rolling_resistance: 0.009,
+    motor_efficiency: 0.93,
+    regen_efficiency: 0.82,
+    aux_power_kw: 2.3,
+    battery_kwh: 80
+  },
+  {
+    name: "Mercedes EQC",
+    empty_mass: 2425,
+    extra_load: 150,
+    drag_coefficient: 0.72,
+    frontal_area: 1.0,
+    rolling_resistance: 0.010,
+    motor_efficiency: 0.91,
+    regen_efficiency: 0.78,
+    aux_power_kw: 2.8,
+    battery_kwh: 80
+  },
+  {
+    name: "Volkswagen ID.4",
+    empty_mass: 2120,
+    extra_load: 150,
+    drag_coefficient: 0.66,
+    frontal_area: 1.0,
+    rolling_resistance: 0.009,
+    motor_efficiency: 0.90,
+    regen_efficiency: 0.75,
+    aux_power_kw: 2.0,
+    battery_kwh: 77
+  },
+  {
+    name: "Renault Zoe",
+    empty_mass: 1500,
+    extra_load: 150,
+    drag_coefficient: 0.65,
+    frontal_area: 1.0,
+    rolling_resistance: 0.010,
+    motor_efficiency: 0.90,
+    regen_efficiency: 0.70,
+    aux_power_kw: 1.5,
+    battery_kwh: 52
+  },
+  {
+    name: "BMW i3",
+    empty_mass: 1200,
+    extra_load: 150,
+    drag_coefficient: 0.50,
+    frontal_area: 1.0,
+    rolling_resistance: 0.008,
+    motor_efficiency: 0.92,
+    regen_efficiency: 0.80,
+    aux_power_kw: 1.8,
+    battery_kwh: 42
+  },
+  {
+    name: "Nissan Leaf",
+    empty_mass: 1600,
+    extra_load: 150,
+    drag_coefficient: 0.68,
+    frontal_area: 1.0,
+    rolling_resistance: 0.010,
+    motor_efficiency: 0.88,
+    regen_efficiency: 0.75,
+    aux_power_kw: 1.7,
+    battery_kwh: 40
+  },
+  {
+    name: "Hyundai IONIQ 5",
+    empty_mass: 1950,
+    extra_load: 150,
+    drag_coefficient: 0.64,
+    frontal_area: 1.0,
+    rolling_resistance: 0.008,
+    motor_efficiency: 0.94,
+    regen_efficiency: 0.83,
+    aux_power_kw: 2.1,
+    battery_kwh: 73
+  },
+  {
+    name: "Kia EV6",
+    empty_mass: 1980,
+    extra_load: 150,
+    drag_coefficient: 0.63,
+    frontal_area: 1.0,
+    rolling_resistance: 0.008,
+    motor_efficiency: 0.94,
+    regen_efficiency: 0.83,
+    aux_power_kw: 2.1,
+    battery_kwh: 77
+  },
+  {
+    name: "Custom",
+    empty_mass: 1900,
+    extra_load: 150,
+    drag_coefficient: 0.62,
+    frontal_area: 1.0,
+    rolling_resistance: 0.010,
+    motor_efficiency: 0.90,
+    regen_efficiency: 0.60,
+    aux_power_kw: 2.0,
+    battery_kwh: 60
+  }
+];
 
 const AnalysisPage = () => {
   const navigate = useNavigate();
@@ -29,9 +181,7 @@ const AnalysisPage = () => {
   // Form state
   const [startLocation, setStartLocation] = useState('');
   const [endLocation, setEndLocation] = useState('');
-  const [useDemo, setUseDemo] = useState(true);
-  const [vehicleProfiles, setVehicleProfiles] = useState([]);
-  const [selectedProfile, setSelectedProfile] = useState(null);
+  const [selectedProfile, setSelectedProfile] = useState(VEHICLE_PROFILES[0].name);
   const [customVehicle, setCustomVehicle] = useState({
     name: 'Custom',
     empty_mass: 1600,
@@ -40,8 +190,19 @@ const AnalysisPage = () => {
     frontal_area: 2.2,
     rolling_resistance: 0.008,
     motor_efficiency: 0.88,
-    regen_efficiency: 0.68
+    regen_efficiency: 0.68,
+    aux_power_kw: 2.0,
+    battery_kwh: 60
   });
+  
+  // Additional parameters
+  const [numPassengers, setNumPassengers] = useState(1);
+  const [avgWeightKg, setAvgWeightKg] = useState(75);
+  const [useClimate, setUseClimate] = useState(false);
+  const [climateIntensity, setClimateIntensity] = useState(50);
+  const [batteryStartPct, setBatteryStartPct] = useState(100);
+  const [batteryEndPct, setBatteryEndPct] = useState(20);
+  const [rhoAir, setRhoAir] = useState(1.225);
   
   // Route and analysis state
   const [loading, setLoading] = useState(false);
@@ -50,33 +211,18 @@ const AnalysisPage = () => {
   const [isNavigating, setIsNavigating] = useState(false);
   const [showResults, setShowResults] = useState(false);
   
-  // Load vehicle profiles
-  useEffect(() => {
-    const fetchProfiles = async () => {
-      try {
-        const response = await axios.get(`${API}/vehicle-profiles`);
-        setVehicleProfiles(response.data);
-        if (response.data.length > 0) {
-          setSelectedProfile(response.data[0].name);
-        }
-      } catch (error) {
-        console.error('Error fetching vehicle profiles:', error);
-        toast.error('Failed to load vehicle profiles');
-      }
-    };
-    fetchProfiles();
-  }, []);
+  // Vehicle profiles are defined directly in code, no API call needed
   
   const getSelectedVehicleData = () => {
     if (selectedProfile === 'Custom') {
       return customVehicle;
     }
-    return vehicleProfiles.find(p => p.name === selectedProfile) || vehicleProfiles[0];
+    return VEHICLE_PROFILES.find(p => p.name === selectedProfile) || VEHICLE_PROFILES[0];
   };
   
   const handleCalculateRoute = async () => {
-    if (!useDemo && (!startLocation || !endLocation)) {
-      toast.error('Please enter start and end locations or use demo mode');
+    if (!startLocation || !endLocation) {
+      toast.error('Please enter both start and end locations');
       return;
     }
     
@@ -85,21 +231,57 @@ const AnalysisPage = () => {
     
     try {
       const vehicle = getSelectedVehicleData();
-      const response = await axios.post(`${API}/route`, {
-        start: startLocation || 'Le Havre, France',
-        end: endLocation || 'Versailles, France',
-        use_demo: useDemo,
-        vehicle_profile: vehicle
+      
+      const requestData = {
+        start: startLocation,
+        end: endLocation,
+        vehicle_profile: vehicle,
+        user_max_speed: 130,
+        num_passengers: numPassengers,
+        avg_weight_kg: avgWeightKg,
+        use_climate: useClimate,
+        climate_intensity: climateIntensity,
+        battery_start_pct: batteryStartPct,
+        battery_end_pct: batteryEndPct,
+        rho_air: rhoAir
+      };
+      
+      console.log('Sending request to:', `${API}/route`);
+      console.log('Backend URL:', BACKEND_URL);
+      console.log('Request data:', requestData);
+      
+      const response = await axios.post(`${API}/route`, requestData, {
+        timeout: 60000, // 60 secondes timeout
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
       setRouteData(response.data);
       setCurrentSegmentIndex(0);
-      toast.success('Route calculated successfully!');
+      setShowResults(true);
+      
+      toast.success(`Route calculated: ${response.data.start_location} → ${response.data.end_location}`);
     } catch (error) {
       console.error('Error calculating route:', error);
-      toast.error('Failed to calculate route. Using demo mode.');
-      // Fallback to demo
-      setUseDemo(true);
+      console.error('Error response:', error.response);
+      console.error('Error request URL:', error.config?.url);
+      
+      let errorMessage = 'Failed to calculate route';
+      
+      if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
+        errorMessage = `Cannot connect to backend at ${API}. Please make sure the backend server is running on port 8001.`;
+      } else if (error.response) {
+        // Server responded with an error code
+        errorMessage = error.response.data?.detail || error.response.data?.message || `Server error: ${error.response.status}`;
+      } else if (error.request) {
+        // Request was made but no response was received
+        errorMessage = `No response from server at ${API}. Please check if the backend is running.`;
+      } else {
+        errorMessage = error.message || 'Unknown error occurred';
+      }
+      
+      toast.error(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -177,16 +359,6 @@ const AnalysisPage = () => {
       </header>
 
       <div className="container mx-auto px-6 py-8">
-        {/* Demo Mode Banner */}
-        {useDemo && (
-          <Alert className="mb-6 bg-[#4ade80]/10 border-[#4ade80]/30 text-white" data-testid="demo-banner">
-            <Info className="w-5 h-5 text-[#4ade80]" />
-            <AlertDescription className="ml-2">
-              <strong>Demo mode:</strong> Using sample data for Le Havre → Versailles route. Configure API keys in environment to enable live routes.
-            </AlertDescription>
-          </Alert>
-        )}
-
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column - Configuration */}
           <div className="lg:col-span-1 space-y-6">
@@ -202,10 +374,9 @@ const AnalysisPage = () => {
                   <Input
                     id="start-location"
                     data-testid="start-location-input"
-                    placeholder="e.g., Le Havre, France"
+                    placeholder="e.g., Paris, France"
                     value={startLocation}
                     onChange={(e) => setStartLocation(e.target.value)}
-                    disabled={useDemo}
                     className="bg-white/5 border-white/20 text-white placeholder:text-gray-400"
                   />
                 </div>
@@ -215,25 +386,11 @@ const AnalysisPage = () => {
                   <Input
                     id="end-location"
                     data-testid="end-location-input"
-                    placeholder="e.g., Versailles, France"
+                    placeholder="e.g., Lyon, France"
                     value={endLocation}
                     onChange={(e) => setEndLocation(e.target.value)}
-                    disabled={useDemo}
                     className="bg-white/5 border-white/20 text-white placeholder:text-gray-400"
                   />
-                </div>
-                
-                <div className="flex items-center space-x-2 pt-2">
-                  <Checkbox
-                    id="use-demo"
-                    data-testid="use-demo-checkbox"
-                    checked={useDemo}
-                    onCheckedChange={setUseDemo}
-                    className="border-white/30"
-                  />
-                  <Label htmlFor="use-demo" className="cursor-pointer">
-                    Use demo route (Le Havre → Versailles)
-                  </Label>
                 </div>
                 
                 <Button
@@ -260,10 +417,10 @@ const AnalysisPage = () => {
                   <Label>Vehicle Profile</Label>
                   <Select value={selectedProfile} onValueChange={setSelectedProfile}>
                     <SelectTrigger data-testid="vehicle-profile-select" className="bg-white/5 border-white/20 text-white">
-                      <SelectValue />
+                      <SelectValue placeholder="Select a vehicle profile" />
                     </SelectTrigger>
                     <SelectContent className="bg-[#1a4d2e] border-white/20 text-white">
-                      {vehicleProfiles.map(profile => (
+                      {VEHICLE_PROFILES.map(profile => (
                         <SelectItem key={profile.name} value={profile.name}>
                           {profile.name}
                         </SelectItem>
@@ -343,6 +500,26 @@ const AnalysisPage = () => {
                           className="bg-white/5 border-white/20 text-white text-sm"
                         />
                       </div>
+                      <div>
+                        <Label className="text-xs">Aux Power (kW)</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={customVehicle.aux_power_kw || 2.0}
+                          onChange={(e) => setCustomVehicle({...customVehicle, aux_power_kw: parseFloat(e.target.value)})}
+                          className="bg-white/5 border-white/20 text-white text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Battery (kWh)</Label>
+                        <Input
+                          type="number"
+                          step="1"
+                          value={customVehicle.battery_kwh || 60}
+                          onChange={(e) => setCustomVehicle({...customVehicle, battery_kwh: parseFloat(e.target.value)})}
+                          className="bg-white/5 border-white/20 text-white text-sm"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
@@ -350,21 +527,134 @@ const AnalysisPage = () => {
                 {selectedProfile && selectedProfile !== 'Custom' && (
                   <div className="text-sm text-gray-300 space-y-1 pt-2">
                     {(() => {
-                      const profile = vehicleProfiles.find(p => p.name === selectedProfile);
+                      const profile = VEHICLE_PROFILES.find(p => p.name === selectedProfile);
                       if (!profile) return null;
                       return (
                         <div className="grid grid-cols-2 gap-2">
                           <div>Mass: {profile.empty_mass + profile.extra_load} kg</div>
-                          <div>Cd: {profile.drag_coefficient}</div>
+                          <div>CdA: {profile.drag_coefficient}</div>
                           <div>Area: {profile.frontal_area} m²</div>
                           <div>Crr: {profile.rolling_resistance}</div>
                           <div>η motor: {(profile.motor_efficiency * 100).toFixed(0)}%</div>
                           <div>η regen: {(profile.regen_efficiency * 100).toFixed(0)}%</div>
+                          {profile.battery_kwh && <div>Battery: {profile.battery_kwh} kWh</div>}
+                          {profile.aux_power_kw && <div>Aux: {profile.aux_power_kw} kW</div>}
                         </div>
                       );
                     })()}
                   </div>
                 )}
+                
+                <Separator className="my-4" />
+                
+                {/* Load and passengers */}
+                <div className="space-y-3">
+                  <Label>👥 Load and passengers</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs">Number of passengers</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="7"
+                        value={numPassengers}
+                        onChange={(e) => setNumPassengers(parseInt(e.target.value) || 1)}
+                        className="bg-white/5 border-white/20 text-white text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Avg weight per person (kg)</Label>
+                      <Input
+                        type="number"
+                        min="40"
+                        max="120"
+                        value={avgWeightKg}
+                        onChange={(e) => setAvgWeightKg(parseFloat(e.target.value) || 75)}
+                        className="bg-white/5 border-white/20 text-white text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <Separator className="my-4" />
+                
+                {/* Driving conditions */}
+                <div className="space-y-3">
+                  <Label>🌡️ Driving conditions</Label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="use-climate"
+                      checked={useClimate}
+                      onChange={(e) => setUseClimate(e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="use-climate" className="cursor-pointer">Use HVAC</Label>
+                  </div>
+                  {useClimate && (
+                    <div>
+                      <Label className="text-xs">HVAC intensity (%)</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={climateIntensity}
+                        onChange={(e) => setClimateIntensity(parseFloat(e.target.value) || 50)}
+                        className="bg-white/5 border-white/20 text-white text-sm"
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                <Separator className="my-4" />
+                
+                {/* Battery state */}
+                <div className="space-y-3">
+                  <Label>🔋 Battery state</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs">Battery at departure (%)</Label>
+                      <Input
+                        type="number"
+                        min="20"
+                        max="100"
+                        value={batteryStartPct}
+                        onChange={(e) => setBatteryStartPct(parseFloat(e.target.value) || 100)}
+                        className="bg-white/5 border-white/20 text-white text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Target battery on arrival (%)</Label>
+                      <Input
+                        type="number"
+                        min="5"
+                        max="90"
+                        value={batteryEndPct}
+                        onChange={(e) => setBatteryEndPct(parseFloat(e.target.value) || 20)}
+                        className="bg-white/5 border-white/20 text-white text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <Separator className="my-4" />
+                
+                {/* Advanced options */}
+                <div className="space-y-3">
+                  <Label>Advanced options</Label>
+                  <div>
+                    <Label className="text-xs">Air density (kg/m³)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0.9"
+                      max="1.5"
+                      value={rhoAir}
+                      onChange={(e) => setRhoAir(parseFloat(e.target.value) || 1.225)}
+                      className="bg-white/5 border-white/20 text-white text-sm"
+                    />
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -476,6 +766,74 @@ const AnalysisPage = () => {
                   
                   {/* KPI Cards */}
                   <KPICards segments={routeData.segments} />
+                  
+                  {/* Final Summary - Energy Saved vs Speed Limit */}
+                  {(() => {
+                    const totalEcoEnergy = routeData.segments.reduce((sum, s) => sum + s.eco_energy, 0);
+                    const totalLimitEnergy = routeData.segments.reduce((sum, s) => sum + s.limit_energy, 0);
+                    const energySavedVsLimit = totalLimitEnergy - totalEcoEnergy;
+                    const energySavedPercent = totalLimitEnergy > 0 ? (energySavedVsLimit / totalLimitEnergy) * 100 : 0;
+                    const totalEcoTime = routeData.segments.reduce((sum, s) => sum + s.eco_time, 0) / 60;
+                    const totalLimitTime = routeData.segments.reduce((sum, s) => sum + s.limit_time, 0) / 60;
+                    const extraTime = totalEcoTime - totalLimitTime;
+                    
+                    return (
+                      <Card className="bg-[#4ade80]/10 border-[#4ade80]/30 mt-6" data-testid="final-summary">
+                        <CardContent className="p-6">
+                          <div className="text-center">
+                            <h3 className="text-2xl font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                              Trip Summary
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                              <div className="bg-white/5 rounded-lg p-4">
+                                <div className="text-sm text-gray-400 mb-2">Energy at Speed Limit</div>
+                                <div className="text-3xl font-bold text-white">
+                                  {totalLimitEnergy.toFixed(2)} <span className="text-lg text-gray-400">kWh</span>
+                                </div>
+                              </div>
+                              <div className="bg-[#4ade80]/20 rounded-lg p-4 border-2 border-[#4ade80]/50">
+                                <div className="text-sm text-gray-300 mb-2">Energy Saved</div>
+                                <div className="text-3xl font-bold text-[#4ade80]">
+                                  {energySavedVsLimit.toFixed(2)} <span className="text-lg text-gray-300">kWh</span>
+                                </div>
+                                <div className="text-lg text-[#4ade80] mt-1 font-semibold">
+                                  ({energySavedPercent.toFixed(1)}% savings)
+                                </div>
+                              </div>
+                              <div className="bg-white/5 rounded-lg p-4">
+                                <div className="text-sm text-gray-400 mb-2">Eco-Driving Energy</div>
+                                <div className="text-3xl font-bold text-[#4ade80]">
+                                  {totalEcoEnergy.toFixed(2)} <span className="text-lg text-gray-400">kWh</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="mt-6 pt-6 border-t border-white/10">
+                              <div className="flex items-center justify-center gap-8">
+                                <div className="text-center">
+                                  <div className="text-sm text-gray-400 mb-1">Time at Speed Limit</div>
+                                  <div className="text-xl font-bold text-white">
+                                    {totalLimitTime.toFixed(1)} <span className="text-sm text-gray-400">min</span>
+                                  </div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-sm text-gray-400 mb-1">Eco-Driving Time</div>
+                                  <div className="text-xl font-bold text-[#4ade80]">
+                                    {totalEcoTime.toFixed(1)} <span className="text-sm text-gray-400">min</span>
+                                  </div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-sm text-gray-400 mb-1">Extra Time</div>
+                                  <div className={`text-xl font-bold ${extraTime > 0 ? 'text-yellow-400' : 'text-[#4ade80]'}`}>
+                                    {extraTime >= 0 ? '+' : ''}{extraTime.toFixed(1)} <span className="text-sm text-gray-400">min</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })()}
                   
                   {/* Charts */}
                   <Tabs defaultValue="speed" className="mt-8">

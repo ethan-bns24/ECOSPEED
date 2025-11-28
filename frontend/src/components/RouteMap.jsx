@@ -28,8 +28,8 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation })
     ? [segments[currentSegmentIndex].lat_start, segments[currentSegmentIndex].lon_start]
     : null;
 
-  // Default center (Le Havre)
-  const defaultCenter = [49.4944, 0.1079];
+  // Default center (France)
+  const defaultCenter = [46.6034, 1.8883];
   const center = startMarker || defaultCenter;
 
   // Custom icons
@@ -92,7 +92,7 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation })
       {startMarker && (
         <Marker position={startMarker} icon={startIcon}>
           <Popup>
-            <strong>Start:</strong> {startLocation || 'Le Havre, France'}
+            <strong>Start:</strong> {startLocation || 'Start location'}
           </Popup>
         </Marker>
       )}
@@ -101,7 +101,7 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation })
       {endMarker && (
         <Marker position={endMarker} icon={endIcon}>
           <Popup>
-            <strong>End:</strong> {endLocation || 'Versailles, France'}
+            <strong>End:</strong> {endLocation || 'End location'}
           </Popup>
         </Marker>
       )}
