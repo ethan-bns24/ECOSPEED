@@ -59,6 +59,7 @@
     "zod": "^3.24.4"
   },
   "scripts": {
+    "vercel-build": "react-scripts build",
     "start": "craco start",
     "build": "craco build",
     "test": "craco test"

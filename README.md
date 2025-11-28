@@ -326,6 +326,15 @@ This project is intended for educational and demonstration purposes.
 - OpenRouteService for routing API
 - React and FastAPI communities
 
+## 🚀 Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
+
+**Quick deployment options**:
+- **Frontend**: Vercel (recommended) or Netlify
+- **Backend**: Railway or Render
+- **Database**: MongoDB Atlas (cloud) or local MongoDB
+
 ## 📞 Support
 
 For any questions about the project, please consult the source code or integrated documentation.
