@@ -19,8 +19,8 @@ import KPICards from '../components/KPICards';
 import NavigationPanel from '../components/NavigationPanel';
 import { toast } from 'sonner';
 
-// Force l'utilisation de localhost:8001 pour le backend local
-const BACKEND_URL = 'http://localhost:8001';
+// Use environment variable or fallback to localhost for development
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 const API = `${BACKEND_URL}/api`;
 
 // Log pour debug
