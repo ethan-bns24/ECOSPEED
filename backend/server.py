@@ -236,12 +236,16 @@ def calculate_eco_speed(
     min_speed_kmh: float = 30.0
 ) -> float:
     """
-    Calculate optimized eco-speed for a segment, taking into account vehicle mass.
+    Calculate optimized eco-speed for a segment, taking into account ALL vehicle parameters:
+    - Mass (affects gravity and rolling resistance)
+    - Rolling resistance coefficient (Crr)
+    - Aerodynamic drag (CdA)
+    - Motor and regen efficiency
     
     Strategy:
-    - Uphill: reduce speed to minimize power demand (more reduction if heavier)
+    - Uphill: reduce speed to minimize power demand (more reduction if heavier/higher drag)
     - Downhill: moderate speed to maximize regen benefits (but never exceed speed limit)
-    - Flat: slightly below speed limit for optimal efficiency
+    - Flat: slightly below speed limit for optimal efficiency (considering drag and rolling resistance)
     
     IMPORTANT: eco_speed must NEVER exceed speed_limit_kmh (legal requirement)
     
@@ -260,30 +264,78 @@ def calculate_eco_speed(
     # Mass ratio: how much heavier than base (1.0 = same, 1.5 = 50% heavier)
     mass_ratio = total_mass / base_mass if base_mass > 0 else 1.0
     
-    # Adjust speed based on slope and mass
+    # Normalize vehicle characteristics for speed adjustment
+    # Reference values (typical EV)
+    ref_rolling_resistance = 0.008  # Typical Crr for EVs
+    ref_drag_coefficient = 0.6  # Typical CdA for EVs (m²)
+    
+    # Calculate resistance factors relative to reference
+    rolling_factor = vehicle.rolling_resistance / ref_rolling_resistance if ref_rolling_resistance > 0 else 1.0
+    drag_factor = vehicle.drag_coefficient / ref_drag_coefficient if ref_drag_coefficient > 0 else 1.0
+    
+    # Combined resistance factor (higher = more resistance = need lower speed)
+    # Rolling resistance is more important at low speeds, drag at high speeds
+    # We use a weighted average: 40% rolling, 60% drag (drag dominates at highway speeds)
+    resistance_factor = 0.4 * rolling_factor + 0.6 * drag_factor
+    
+    # Efficiency factor (lower efficiency = need more careful speed management)
+    # Average of motor and regen efficiency (both matter)
+    avg_efficiency = (vehicle.motor_efficiency + vehicle.regen_efficiency) / 2.0
+    ref_efficiency = 0.90  # Reference 90% average efficiency
+    efficiency_factor = avg_efficiency / ref_efficiency if ref_efficiency > 0 else 1.0
+    # Lower efficiency means we need to be more conservative with speed
+    efficiency_adjustment = 1.0 - (1.0 - efficiency_factor) * 0.1  # Up to 10% adjustment
+    
+    # Adjust speed based on slope, mass, resistance, and efficiency
     if slope > 0.02:  # Significant uphill (>2% grade)
         # Reduce speed significantly on uphill
-        # Heavier vehicles need more speed reduction to minimize power demand
+        # Heavier vehicles, higher drag, and lower efficiency need more speed reduction
         base_reduction = 0.65  # Base reduction to 65% of limit
-        # Additional reduction based on mass (up to 10% more reduction for 2x mass)
+        
+        # Mass adjustment (up to 10% more reduction for 2x mass)
         mass_adjustment = min(0.10, (mass_ratio - 1.0) * 0.10)
-        speed_factor = base_reduction - mass_adjustment
+        
+        # Resistance adjustment (higher resistance = more reduction, up to 8%)
+        resistance_adjustment = min(0.08, (resistance_factor - 1.0) * 0.08)
+        
+        # Efficiency adjustment (lower efficiency = more reduction, up to 5%)
+        efficiency_adjustment_val = (1.0 - efficiency_adjustment) * 0.05
+        
+        speed_factor = base_reduction - mass_adjustment - resistance_adjustment - efficiency_adjustment_val
         eco_speed = max(min_speed_kmh, speed_limit_kmh * speed_factor)
+        
     elif slope < -0.02:  # Significant downhill
         # Moderate speed to balance safety and regen, but never exceed limit
-        # Heavier vehicles can benefit more from regen, so slightly higher speed is OK
+        # Heavier vehicles and better regen efficiency can benefit from slightly higher speed
         base_factor = 0.85
-        # Slight increase for heavier vehicles (up to 5% more for 2x mass)
+        
+        # Mass adjustment (heavier = more regen benefit, up to 5% increase)
         mass_adjustment = min(0.05, (mass_ratio - 1.0) * 0.05)
-        speed_factor = base_factor + mass_adjustment
+        
+        # Regen efficiency adjustment (better regen = can go slightly faster, up to 3%)
+        regen_adjustment = min(0.03, (vehicle.regen_efficiency - 0.85) * 0.15)  # 0.85 = ref, scale to 3%
+        
+        # But higher drag/resistance reduces this benefit (up to 2% reduction)
+        resistance_penalty = min(0.02, (resistance_factor - 1.0) * 0.02)
+        
+        speed_factor = base_factor + mass_adjustment + regen_adjustment - resistance_penalty
         eco_speed = min(speed_limit_kmh * speed_factor, speed_limit_kmh)
+        
     else:  # Flat terrain
         # Slightly below limit for efficiency
-        # Heavier vehicles have more rolling resistance, so slightly lower speed
+        # Consider rolling resistance (more important at low speeds) and drag (more important at high speeds)
         base_factor = 0.88
-        # Slight reduction for heavier vehicles (up to 3% more reduction for 2x mass)
+        
+        # Mass adjustment (heavier = more rolling resistance, up to 3% reduction)
         mass_adjustment = min(0.03, (mass_ratio - 1.0) * 0.03)
-        speed_factor = base_factor - mass_adjustment
+        
+        # Resistance adjustment (higher resistance = more reduction, up to 5%)
+        resistance_adjustment = min(0.05, (resistance_factor - 1.0) * 0.05)
+        
+        # Efficiency adjustment (lower efficiency = more reduction, up to 3%)
+        efficiency_adjustment_val = (1.0 - efficiency_adjustment) * 0.03
+        
+        speed_factor = base_factor - mass_adjustment - resistance_adjustment - efficiency_adjustment_val
         eco_speed = speed_limit_kmh * speed_factor
     
     # CRITICAL: Ensure eco_speed NEVER exceeds speed_limit_kmh (legal requirement)
