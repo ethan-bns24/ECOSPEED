@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -11,11 +11,29 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
-const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation }) => {
+// Component to adjust map view to fit route bounds
+function MapBounds({ coordinates }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (coordinates && coordinates.length > 0) {
+      // Create bounds from all coordinates
+      const bounds = L.latLngBounds(coordinates);
+      // Fit map to bounds with padding
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+  }, [coordinates, map]);
+  
+  return null;
+}
+
+const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, routeCoordinates }) => {
   const mapRef = useRef(null);
 
-  // Create polyline coordinates from segments - trace the actual route through all points
-  const polylineCoords = segments.length > 0
+  // Use route_coordinates if available (full route path), otherwise fallback to segments
+  const polylineCoords = routeCoordinates && routeCoordinates.length > 0
+    ? routeCoordinates
+    : segments.length > 0
     ? (() => {
         const coords = [];
         // Add the start point of the first segment
@@ -28,9 +46,18 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation })
       })()
     : [];
 
-  // Start and end markers
-  const startMarker = segments.length > 0 ? [segments[0].lat_start, segments[0].lon_start] : null;
-  const endMarker = segments.length > 0 ? [segments[segments.length - 1].lat_end, segments[segments.length - 1].lon_end] : null;
+  // Start and end markers - use route coordinates if available
+  const startMarker = routeCoordinates && routeCoordinates.length > 0
+    ? routeCoordinates[0]
+    : segments.length > 0
+    ? [segments[0].lat_start, segments[0].lon_start]
+    : null;
+    
+  const endMarker = routeCoordinates && routeCoordinates.length > 0
+    ? routeCoordinates[routeCoordinates.length - 1]
+    : segments.length > 0
+    ? [segments[segments.length - 1].lat_end, segments[segments.length - 1].lon_end]
+    : null;
   
   // Current position marker
   const currentMarker = segments.length > 0 && currentSegmentIndex >= 0 && currentSegmentIndex < segments.length
@@ -86,6 +113,9 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation })
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      
+      {/* Auto-adjust map bounds to fit route */}
+      {polylineCoords.length > 0 && <MapBounds coordinates={polylineCoords} />}
       
       {/* Route polyline */}
       {polylineCoords.length > 0 && (

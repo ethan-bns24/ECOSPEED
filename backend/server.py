@@ -90,6 +90,7 @@ class RouteResponse(BaseModel):
     total_distance: float  # km
     start_location: str
     end_location: str
+    route_coordinates: List[List[float]] = []  # Full route coordinates [[lat, lon], ...] for map display
 
 class KPIResponse(BaseModel):
     eco_energy: float  # kWh
@@ -545,12 +546,13 @@ def get_speed_limit_by_road_type(road_type: str, user_max_speed: int = 130) -> i
     # Par défaut, utiliser 50 km/h (zone urbaine)
     return 50
 
-async def get_route_from_ors(start: str, end: str, user_max_speed: int = 130) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+async def get_route_from_ors(start: str, end: str, user_max_speed: int = 130) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[List[float]]]:
     """
     Get route from OpenRouteService API with detailed segments and speed limits.
-    Returns tuple: (points, detailed_segments)
+    Returns tuple: (points, detailed_segments, route_coordinates)
     - points: list of points with coordinates, elevation, and speed_limit
     - detailed_segments: list of route segments with road type information
+    - route_coordinates: full list of route coordinates [[lat, lon], ...] for map display
     """
     ors_api_key = os.environ.get('ORS_API_KEY', '').strip()
     
@@ -821,7 +823,10 @@ async def get_route_from_ors(start: str, end: str, user_max_speed: int = 130) ->
                 "speed_limit": speed_limit
             })
         
-        return points, detailed_segments
+        # Convert coords_list from [lon, lat] to [lat, lon] for frontend
+        route_coordinates = [[coord[1], coord[0]] for coord in coords_list]
+        
+        return points, detailed_segments, route_coordinates
         
     except requests.exceptions.RequestException as e:
         raise HTTPException(
@@ -843,7 +848,7 @@ async def calculate_route(request: RouteRequest) -> RouteResponse:
     
     # Get route from OpenRouteService API
     try:
-        route_points, detailed_segments = await get_route_from_ors(request.start, request.end, request.user_max_speed)
+        route_points, detailed_segments, route_coordinates = await get_route_from_ors(request.start, request.end, request.user_max_speed)
         start_location = request.start
         end_location = request.end
     except HTTPException as e:
@@ -971,7 +976,8 @@ async def calculate_route(request: RouteRequest) -> RouteResponse:
         segments=segments,
         total_distance=round(total_distance_km, 2),
         start_location=start_location,
-        end_location=end_location
+        end_location=end_location,
+        route_coordinates=route_coordinates
     )
 
 @api_router.get("/route/{route_id}/kpis")

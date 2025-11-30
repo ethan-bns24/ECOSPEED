@@ -686,6 +686,7 @@ const AnalysisPage = () => {
                     currentSegmentIndex={currentSegmentIndex}
                     startLocation={routeData?.start_location}
                     endLocation={routeData?.end_location}
+                    routeCoordinates={routeData?.route_coordinates || []}
                   />
                 </div>
               </CardContent>
