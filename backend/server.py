@@ -850,8 +850,10 @@ async def calculate_route(request: RouteRequest) -> RouteResponse:
         raise e
     
     # Calculate total mass (vehicle + passengers)
+    logging.info(f"Received parameters: num_passengers={request.num_passengers}, avg_weight_kg={request.avg_weight_kg}")
     total_passenger_weight = request.num_passengers * request.avg_weight_kg
     total_mass_kg = request.vehicle_profile.empty_mass + total_passenger_weight
+    logging.info(f"Calculated total mass: {total_mass_kg} kg (vehicle: {request.vehicle_profile.empty_mass} kg + passengers: {total_passenger_weight} kg)")
     
     # Adjust auxiliary power based on HVAC
     climate_power_adjustment = 0

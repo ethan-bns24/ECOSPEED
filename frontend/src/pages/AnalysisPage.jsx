@@ -249,6 +249,7 @@ const AnalysisPage = () => {
       console.log('Sending request to:', `${API}/route`);
       console.log('Backend URL:', BACKEND_URL);
       console.log('Request data:', requestData);
+      console.log('Passengers:', numPassengers, 'Avg weight:', avgWeightKg);
       
       const response = await axios.post(`${API}/route`, requestData, {
         timeout: 60000, // 60 secondes timeout
@@ -556,9 +557,12 @@ const AnalysisPage = () => {
                       <Input
                         type="number"
                         min="0"
-                        max="7"
+                        max="10"
                         value={numPassengers}
-                        onChange={(e) => setNumPassengers(parseInt(e.target.value) || 1)}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 0;
+                          setNumPassengers(val >= 0 ? val : 0);
+                        }}
                         className="bg-white/5 border-white/20 text-white text-sm"
                       />
                     </div>
@@ -566,10 +570,18 @@ const AnalysisPage = () => {
                       <Label className="text-xs">Avg weight per person (kg)</Label>
                       <Input
                         type="number"
-                        min="40"
-                        max="120"
+                        min="0"
+                        max="200"
+                        step="0.1"
                         value={avgWeightKg}
-                        onChange={(e) => setAvgWeightKg(parseFloat(e.target.value) || 75)}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          if (!isNaN(val) && val >= 0 && val <= 200) {
+                            setAvgWeightKg(val);
+                          } else if (e.target.value === '' || e.target.value === '0') {
+                            setAvgWeightKg(0);
+                          }
+                        }}
                         className="bg-white/5 border-white/20 text-white text-sm"
                       />
                     </div>
