@@ -232,13 +232,14 @@ def calculate_eco_speed(
     elevation_change_m: float,
     speed_limit_kmh: float,
     vehicle: VehicleProfile,
+    total_mass_kg: float = None,
     min_speed_kmh: float = 30.0
 ) -> float:
     """
-    Calculate optimized eco-speed for a segment.
+    Calculate optimized eco-speed for a segment, taking into account vehicle mass.
     
     Strategy:
-    - Uphill: reduce speed to minimize power demand (but not below min_speed)
+    - Uphill: reduce speed to minimize power demand (more reduction if heavier)
     - Downhill: moderate speed to maximize regen benefits (but never exceed speed limit)
     - Flat: slightly below speed limit for optimal efficiency
     
@@ -248,15 +249,42 @@ def calculate_eco_speed(
     """
     slope = elevation_change_m / distance_m if distance_m > 0 else 0
     
+    # Calculate total mass (use provided or vehicle default)
+    if total_mass_kg is None:
+        total_mass = vehicle.empty_mass + vehicle.extra_load
+    else:
+        total_mass = total_mass_kg
+    
+    # Base vehicle mass for reference (typical empty mass)
+    base_mass = vehicle.empty_mass
+    # Mass ratio: how much heavier than base (1.0 = same, 1.5 = 50% heavier)
+    mass_ratio = total_mass / base_mass if base_mass > 0 else 1.0
+    
+    # Adjust speed based on slope and mass
     if slope > 0.02:  # Significant uphill (>2% grade)
         # Reduce speed significantly on uphill
-        eco_speed = max(min_speed_kmh, speed_limit_kmh * 0.65)
+        # Heavier vehicles need more speed reduction to minimize power demand
+        base_reduction = 0.65  # Base reduction to 65% of limit
+        # Additional reduction based on mass (up to 10% more reduction for 2x mass)
+        mass_adjustment = min(0.10, (mass_ratio - 1.0) * 0.10)
+        speed_factor = base_reduction - mass_adjustment
+        eco_speed = max(min_speed_kmh, speed_limit_kmh * speed_factor)
     elif slope < -0.02:  # Significant downhill
         # Moderate speed to balance safety and regen, but never exceed limit
-        eco_speed = min(speed_limit_kmh * 0.85, speed_limit_kmh)
+        # Heavier vehicles can benefit more from regen, so slightly higher speed is OK
+        base_factor = 0.85
+        # Slight increase for heavier vehicles (up to 5% more for 2x mass)
+        mass_adjustment = min(0.05, (mass_ratio - 1.0) * 0.05)
+        speed_factor = base_factor + mass_adjustment
+        eco_speed = min(speed_limit_kmh * speed_factor, speed_limit_kmh)
     else:  # Flat terrain
         # Slightly below limit for efficiency
-        eco_speed = speed_limit_kmh * 0.88
+        # Heavier vehicles have more rolling resistance, so slightly lower speed
+        base_factor = 0.88
+        # Slight reduction for heavier vehicles (up to 3% more reduction for 2x mass)
+        mass_adjustment = min(0.03, (mass_ratio - 1.0) * 0.03)
+        speed_factor = base_factor - mass_adjustment
+        eco_speed = speed_limit_kmh * speed_factor
     
     # CRITICAL: Ensure eco_speed NEVER exceeds speed_limit_kmh (legal requirement)
     # Also ensure it's not below minimum safe speed
@@ -884,12 +912,13 @@ async def calculate_route(request: RouteRequest) -> RouteResponse:
         elevation_change = p2["elevation"] - p1["elevation"]
         speed_limit = p2["speed_limit"]
         
-        # Calculate eco speed
+        # Calculate eco speed (taking into account total mass)
         eco_speed = calculate_eco_speed(
             distance_m,
             elevation_change,
             speed_limit,
-            request.vehicle_profile
+            request.vehicle_profile,
+            total_mass_kg=total_mass_kg
         )
         
         # Simulate real speed
