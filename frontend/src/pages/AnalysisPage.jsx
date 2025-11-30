@@ -28,13 +28,14 @@ console.log('Backend URL configured:', BACKEND_URL);
 console.log('API endpoint:', API);
 
 // Vehicle Profiles - defined directly in code (from Streamlit)
+// Note: drag_coefficient is actually CdA (Cd × A), so frontal_area is for display only
 const VEHICLE_PROFILES = [
   {
     name: "Tesla Model 3",
     empty_mass: 1850,
     extra_load: 150,
-    drag_coefficient: 0.58, // CdA
-    frontal_area: 1.0,
+    drag_coefficient: 0.58, // CdA (Cd × A)
+    frontal_area: 2.2, // Realistic frontal area in m²
     rolling_resistance: 0.008,
     motor_efficiency: 0.95,
     regen_efficiency: 0.85,
@@ -45,8 +46,8 @@ const VEHICLE_PROFILES = [
     name: "Tesla Model Y",
     empty_mass: 2000,
     extra_load: 150,
-    drag_coefficient: 0.62,
-    frontal_area: 1.0,
+    drag_coefficient: 0.62, // CdA
+    frontal_area: 2.4, // SUV - larger frontal area
     rolling_resistance: 0.008,
     motor_efficiency: 0.95,
     regen_efficiency: 0.85,
@@ -57,8 +58,8 @@ const VEHICLE_PROFILES = [
     name: "Audi Q4 e-tron",
     empty_mass: 2100,
     extra_load: 150,
-    drag_coefficient: 0.70,
-    frontal_area: 1.0,
+    drag_coefficient: 0.70, // CdA
+    frontal_area: 2.5, // SUV - larger frontal area
     rolling_resistance: 0.009,
     motor_efficiency: 0.92,
     regen_efficiency: 0.80,
@@ -69,8 +70,8 @@ const VEHICLE_PROFILES = [
     name: "BMW iX3",
     empty_mass: 2180,
     extra_load: 150,
-    drag_coefficient: 0.68,
-    frontal_area: 1.0,
+    drag_coefficient: 0.68, // CdA
+    frontal_area: 2.4, // SUV
     rolling_resistance: 0.009,
     motor_efficiency: 0.93,
     regen_efficiency: 0.82,
@@ -81,8 +82,8 @@ const VEHICLE_PROFILES = [
     name: "Mercedes EQC",
     empty_mass: 2425,
     extra_load: 150,
-    drag_coefficient: 0.72,
-    frontal_area: 1.0,
+    drag_coefficient: 0.72, // CdA
+    frontal_area: 2.5, // Large SUV
     rolling_resistance: 0.010,
     motor_efficiency: 0.91,
     regen_efficiency: 0.78,
@@ -93,8 +94,8 @@ const VEHICLE_PROFILES = [
     name: "Volkswagen ID.4",
     empty_mass: 2120,
     extra_load: 150,
-    drag_coefficient: 0.66,
-    frontal_area: 1.0,
+    drag_coefficient: 0.66, // CdA
+    frontal_area: 2.3, // SUV
     rolling_resistance: 0.009,
     motor_efficiency: 0.90,
     regen_efficiency: 0.75,
@@ -105,8 +106,8 @@ const VEHICLE_PROFILES = [
     name: "Renault Zoe",
     empty_mass: 1500,
     extra_load: 150,
-    drag_coefficient: 0.65,
-    frontal_area: 1.0,
+    drag_coefficient: 0.65, // CdA
+    frontal_area: 1.9, // Small car
     rolling_resistance: 0.010,
     motor_efficiency: 0.90,
     regen_efficiency: 0.70,
@@ -117,8 +118,8 @@ const VEHICLE_PROFILES = [
     name: "BMW i3",
     empty_mass: 1200,
     extra_load: 150,
-    drag_coefficient: 0.50,
-    frontal_area: 1.0,
+    drag_coefficient: 0.50, // CdA
+    frontal_area: 1.8, // Very small car
     rolling_resistance: 0.008,
     motor_efficiency: 0.92,
     regen_efficiency: 0.80,
@@ -129,8 +130,8 @@ const VEHICLE_PROFILES = [
     name: "Nissan Leaf",
     empty_mass: 1600,
     extra_load: 150,
-    drag_coefficient: 0.68,
-    frontal_area: 1.0,
+    drag_coefficient: 0.68, // CdA
+    frontal_area: 2.1, // Compact car
     rolling_resistance: 0.010,
     motor_efficiency: 0.88,
     regen_efficiency: 0.75,
@@ -141,8 +142,8 @@ const VEHICLE_PROFILES = [
     name: "Hyundai IONIQ 5",
     empty_mass: 1950,
     extra_load: 150,
-    drag_coefficient: 0.64,
-    frontal_area: 1.0,
+    drag_coefficient: 0.64, // CdA
+    frontal_area: 2.3, // SUV/Crossover
     rolling_resistance: 0.008,
     motor_efficiency: 0.94,
     regen_efficiency: 0.83,
@@ -153,8 +154,8 @@ const VEHICLE_PROFILES = [
     name: "Kia EV6",
     empty_mass: 1980,
     extra_load: 150,
-    drag_coefficient: 0.63,
-    frontal_area: 1.0,
+    drag_coefficient: 0.63, // CdA
+    frontal_area: 2.3, // SUV/Crossover
     rolling_resistance: 0.008,
     motor_efficiency: 0.94,
     regen_efficiency: 0.83,
@@ -165,8 +166,8 @@ const VEHICLE_PROFILES = [
     name: "Custom",
     empty_mass: 1900,
     extra_load: 150,
-    drag_coefficient: 0.62,
-    frontal_area: 1.0,
+    drag_coefficient: 0.62, // CdA
+    frontal_area: 2.2, // Default realistic value
     rolling_resistance: 0.010,
     motor_efficiency: 0.90,
     regen_efficiency: 0.60,
@@ -184,13 +185,13 @@ const AnalysisPage = () => {
   const [selectedProfile, setSelectedProfile] = useState(VEHICLE_PROFILES[0].name);
   const [customVehicle, setCustomVehicle] = useState({
     name: 'Custom',
-    empty_mass: 1600,
+    empty_mass: 1900,
     extra_load: 150,
-    drag_coefficient: 0.28,
+    drag_coefficient: 0.62, // CdA
     frontal_area: 2.2,
-    rolling_resistance: 0.008,
-    motor_efficiency: 0.88,
-    regen_efficiency: 0.68,
+    rolling_resistance: 0.010,
+    motor_efficiency: 0.90,
+    regen_efficiency: 0.60,
     aux_power_kw: 2.0,
     battery_kwh: 60
   });
