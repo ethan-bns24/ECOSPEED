@@ -14,9 +14,18 @@ L.Icon.Default.mergeOptions({
 const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation }) => {
   const mapRef = useRef(null);
 
-  // Create polyline coordinates from segments
+  // Create polyline coordinates from segments - trace the actual route through all points
   const polylineCoords = segments.length > 0
-    ? segments.map(s => [s.lat_start, s.lon_start]).concat([[segments[segments.length - 1].lat_end, segments[segments.length - 1].lon_end]])
+    ? (() => {
+        const coords = [];
+        // Add the start point of the first segment
+        coords.push([segments[0].lat_start, segments[0].lon_start]);
+        // Add the end point of each segment (which connects to the next segment)
+        segments.forEach(segment => {
+          coords.push([segment.lat_end, segment.lon_end]);
+        });
+        return coords;
+      })()
     : [];
 
   // Start and end markers
