@@ -1074,6 +1074,146 @@ async def get_route_kpis(route_id: str) -> KPIResponse:
     # For simplicity, we're returning placeholder KPIs
     raise HTTPException(status_code=501, detail="KPI calculation should be done on frontend based on route segments")
 
+@api_router.get("/charging-stations")
+async def get_charging_stations(
+    latitude: float = 48.8566,  # Paris par défaut
+    longitude: float = 2.3522,
+    distance: float = 50.0  # km
+) -> List[ChargingStation]:
+    """
+    Récupère les bornes de recharge à proximité en utilisant l'API Open Charge Map.
+    Combine les données réelles avec les bornes de démo.
+    """
+    stations = []
+    
+    # Bornes de démo (toujours incluses)
+    demo_stations = [
+        ChargingStation(
+            name='Supercharger Paris-La Défense',
+            operator='Tesla',
+            powerKw=250,
+            price='0.40€/kWh',
+            status='Dispo',
+            latitude=48.8925,
+            longitude=2.2383,
+            address='Paris-La Défense'
+        ),
+        ChargingStation(
+            name='Ionity Autoroute A6',
+            operator='Ionity',
+            powerKw=350,
+            price='0.79€/kWh',
+            status='Dispo',
+            latitude=48.8566,
+            longitude=2.3522,
+            address='Autoroute A6'
+        ),
+        ChargingStation(
+            name='Total Energies Champs-Élysées',
+            operator='Total',
+            powerKw=175,
+            price='0.45€/kWh',
+            status='Dispo',
+            latitude=48.8698,
+            longitude=2.3081,
+            address='Champs-Élysées, Paris'
+        ),
+        ChargingStation(
+            name='Electra Parking Opéra',
+            operator='Electra',
+            powerKw=150,
+            price='0.44€/kWh',
+            status='Occupée',
+            latitude=48.8706,
+            longitude=2.3317,
+            address='Opéra, Paris'
+        ),
+    ]
+    stations.extend(demo_stations)
+    
+    # Récupérer les bornes depuis Open Charge Map API
+    try:
+        # Open Charge Map API - recherche autour d'un point
+        # Format: https://api.openchargemap.io/v3/poi/?output=json&latitude=48.8566&longitude=2.3522&distance=50&distanceunit=KM&maxresults=50
+        url = "https://api.openchargemap.io/v3/poi/"
+        params = {
+            'output': 'json',
+            'latitude': latitude,
+            'longitude': longitude,
+            'distance': distance,
+            'distanceunit': 'KM',
+            'maxresults': 50,  # Limiter à 50 résultats
+            'key': os.environ.get('OPEN_CHARGE_MAP_API_KEY', ''),  # Optionnel, fonctionne sans clé
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            
+            for poi in data:
+                # Extraire les informations de la borne
+                address_info = poi.get('AddressInfo', {})
+                connections = poi.get('Connections', [])
+                
+                if not connections:
+                    continue
+                
+                # Prendre la connexion avec la plus haute puissance
+                max_power = 0
+                connection_type = None
+                for conn in connections:
+                    power_kw = conn.get('PowerKW', 0) or 0
+                    if power_kw > max_power:
+                        max_power = power_kw
+                        connection_type = conn.get('ConnectionType', {}).get('Title', 'Type inconnu')
+                
+                if max_power == 0:
+                    continue
+                
+                # Déterminer le statut (simplifié - Open Charge Map ne fournit pas toujours le statut en temps réel)
+                status = 'Dispo'  # Par défaut disponible
+                status_type = poi.get('StatusType', {})
+                if status_type:
+                    status_id = status_type.get('ID', 0)
+                    if status_id == 50:  # En service
+                        status = 'Dispo'
+                    elif status_id == 0:  # Inconnu
+                        status = 'Dispo'
+                    else:
+                        status = 'Hors service'
+                
+                # Nom de l'opérateur
+                operator_info = poi.get('OperatorInfo', {})
+                operator = operator_info.get('Title', 'Opérateur inconnu') if operator_info else 'Opérateur inconnu'
+                
+                # Prix (si disponible)
+                usage_info = poi.get('UsageType', {})
+                price = None
+                if usage_info and usage_info.get('IsPayAtLocation'):
+                    price = 'Tarif variable'
+                
+                station = ChargingStation(
+                    name=address_info.get('Title', 'Borne de recharge'),
+                    operator=operator,
+                    powerKw=float(max_power),
+                    price=price,
+                    status=status,
+                    latitude=address_info.get('Latitude', latitude),
+                    longitude=address_info.get('Longitude', longitude),
+                    address=address_info.get('AddressLine1', '') or address_info.get('Town', '')
+                )
+                
+                # Éviter les doublons avec les bornes de démo (par nom)
+                if not any(s.name == station.name for s in demo_stations):
+                    stations.append(station)
+        
+    except Exception as e:
+        logger.error(f"Error fetching charging stations from Open Charge Map: {e}")
+        # En cas d'erreur, on retourne quand même les bornes de démo
+    
+    # Limiter à 30 bornes au total pour éviter de surcharger l'interface
+    return stations[:30]
+
 # Root endpoint
 @app.get("/")
 async def root():
