@@ -153,14 +153,12 @@ const HistoryPage = () => {
                       {trip.ecoScore}/100
                     </div>
                   </div>
-                  {trip.chargingStops !== null && trip.chargingStops !== undefined && (
-                    <div>
-                      <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Recharges</div>
-                      <div className={`text-sm font-semibold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
-                        {trip.chargingStops}
-                      </div>
+                  <div>
+                    <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Recharges</div>
+                    <div className={`text-sm font-semibold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
+                      {trip.chargingStops !== null && trip.chargingStops !== undefined ? trip.chargingStops : '-'}
                     </div>
-                  )}
+                  </div>
                   <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${isDark ? 'border-emerald-300/50 bg-emerald-400/30 text-emerald-50' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
                     <Zap className="w-3 h-3" />
                     Optimisé
