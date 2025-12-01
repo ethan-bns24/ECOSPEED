@@ -1286,10 +1286,10 @@ async def get_charging_stations(
             ),
         ]
     
-    # Limiter à 500 bornes pour éviter de surcharger l'interface (mais permettre plus que 30)
-    # Si des filtres de distance sont appliqués, retourner toutes les bornes dans cette zone
-    max_results = 500 if (latitude and longitude and distance) else 1000
-    return stations[:max_results]
+    # Retourner toutes les bornes (pas de limite)
+    # La pagination côté frontend gère l'affichage
+    logger.info(f"Returning {len(stations)} charging stations (no limit)")
+    return stations
 
 # Root endpoint
 @app.get("/")
