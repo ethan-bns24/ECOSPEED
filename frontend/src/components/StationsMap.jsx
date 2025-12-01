@@ -104,7 +104,7 @@ const StationsMap = ({ stations = [], selectedStation = null, onStationClick }) 
       <MapView center={center} zoom={zoom} stations={stationsToDisplay} />
       
       {/* Charging station markers - seulement la borne sélectionnée */}
-      {stationsToDisplay
+      {stationsToDisplay.length > 0 && stationsToDisplay
         .map((station, index) => {
           const icon = createStationIcon(station.status || 'Dispo');
           const isSelected = selectedStation && 
