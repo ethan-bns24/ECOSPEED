@@ -2,13 +2,34 @@ import React, { useEffect, useState } from 'react';
 import { Activity, BarChart2, Leaf, Zap } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { getAllTrips } from '../lib/tripStorage';
+import { getAppSettings } from '../lib/settingsStorage';
 
 const StatsPage = () => {
   const [trips, setTrips] = useState([]);
+  const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
     setTrips(getAllTrips());
+    const { theme: thm } = getAppSettings();
+    setTheme(thm);
+    
+    const handler = (event) => {
+      const detail = event.detail || {};
+      if (detail.theme) setTheme(detail.theme);
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('ecospeed-settings-updated', handler);
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('ecospeed-settings-updated', handler);
+      }
+    };
   }, []);
+  
+  const isDark = theme === 'dark';
 
   const totalTrips = trips.length;
   const totalDistanceKm = trips.reduce((sum, t) => sum + (t.distanceKm || 0), 0);
@@ -27,8 +48,8 @@ const StatsPage = () => {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold mb-1">Statistiques</h1>
-        <p className="text-sm text-slate-600">
+        <h1 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-emerald-100' : ''}`}>Statistiques</h1>
+        <p className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
           Analysez vos performances d&apos;éco-conduite.
         </p>
       </div>
@@ -58,15 +79,15 @@ const StatsPage = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-100 mb-6">
+      <div className={`rounded-3xl p-5 md:p-6 shadow-sm mb-6 ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base md:text-lg font-semibold flex items-center gap-2">
-            <Zap className="w-4 h-4 text-emerald-600" />
+          <h2 className={`text-base md:text-lg font-semibold flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
+            <Zap className={`w-4 h-4 ${isDark ? 'text-emerald-100' : 'text-emerald-600'}`} />
             Énergie économisée par trajet
           </h2>
         </div>
         {trips.length === 0 ? (
-          <div className="text-sm text-slate-500">
+          <div className={`text-sm ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
             Aucune donnée disponible pour l&apos;instant.
           </div>
         ) : (
@@ -74,12 +95,12 @@ const StatsPage = () => {
             {trips.map((trip) => (
               <li
                 key={trip.id}
-                className="flex items-center justify-between border-b last:border-0 border-slate-100 py-2"
+                className={`flex items-center justify-between border-b last:border-0 py-2 ${isDark ? 'border-emerald-300/30' : 'border-slate-100'}`}
               >
-                <span className="text-slate-600">
+                <span className={isDark ? 'text-emerald-50' : 'text-slate-600'}>
                   {trip.startLocation} → {trip.endLocation}
                 </span>
-                <span className="font-semibold text-emerald-700">
+                <span className={`font-semibold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
                   -{(trip.energySavedKwh || 0).toFixed(2)} kWh
                 </span>
               </li>
@@ -89,26 +110,26 @@ const StatsPage = () => {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-100">
-          <h2 className="text-base md:text-lg font-semibold mb-3 flex items-center gap-2">
-            <BarChart2 className="w-4 h-4 text-slate-600" />
+        <div className={`rounded-3xl p-5 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
+          <h2 className={`text-base md:text-lg font-semibold mb-3 flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
+            <BarChart2 className={`w-4 h-4 ${isDark ? 'text-emerald-100' : 'text-slate-600'}`} />
             Comparaison avec la moyenne
           </h2>
-          <p className="text-3xl font-bold text-emerald-600 mb-1">
+          <p className={`text-3xl font-bold mb-1 ${isDark ? 'text-emerald-100' : 'text-emerald-600'}`}>
             {totalEnergySavedKwh > 0 ? '+23%' : '0%'}
           </p>
-          <p className="text-sm text-slate-600">
+          <p className={`text-sm ${isDark ? 'text-emerald-50' : 'text-slate-600'}`}>
             Vous économisez plus d&apos;énergie que la moyenne des conducteurs
             (valeur indicative).
           </p>
         </div>
 
-        <div className="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-100">
-          <h2 className="text-base md:text-lg font-semibold mb-3 flex items-center gap-2">
-            <Leaf className="w-4 h-4 text-emerald-600" />
+        <div className={`rounded-3xl p-5 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
+          <h2 className={`text-base md:text-lg font-semibold mb-3 flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
+            <Leaf className={`w-4 h-4 ${isDark ? 'text-emerald-100' : 'text-emerald-600'}`} />
             Impact environnemental
           </h2>
-          <p className="text-sm text-slate-600">
+          <p className={`text-sm ${isDark ? 'text-emerald-50' : 'text-slate-600'}`}>
             Grâce à vos économies d&apos;énergie, vous avez évité environ{' '}
             <span className="font-semibold">
               {totalCo2SavedKg.toFixed(1)} kg de CO₂

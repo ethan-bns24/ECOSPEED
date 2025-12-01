@@ -3,11 +3,13 @@ import { Car, Star, Plus } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
 import { getVehicleSettings, updateVehicleSettings } from '../lib/settingsStorage';
+import { getAppSettings } from '../lib/settingsStorage';
 import { toast } from 'sonner';
 
 const VehiclesPage = () => {
   const [enabledVehicles, setEnabledVehicles] = useState([]);
   const [defaultVehicleName, setDefaultVehicleName] = useState(null);
+  const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
     const { enabledVehicles, defaultVehicleName } = getVehicleSettings();
@@ -26,7 +28,27 @@ const VehiclesPage = () => {
         });
       }
     }
+    
+    const { theme: thm } = getAppSettings();
+    setTheme(thm);
+    
+    const handler = (event) => {
+      const detail = event.detail || {};
+      if (detail.theme) setTheme(detail.theme);
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('ecospeed-settings-updated', handler);
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('ecospeed-settings-updated', handler);
+      }
+    };
   }, []);
+  
+  const isDark = theme === 'dark';
 
   const handleSetDefault = (name) => {
     // Si le véhicule est déjà dans la liste, on ne fait que changer le "par défaut"
@@ -58,18 +80,18 @@ const VehiclesPage = () => {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold mb-1">Mes véhicules</h1>
-        <p className="text-sm text-slate-600">
+        <h1 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-emerald-100' : ''}`}>Mes véhicules</h1>
+        <p className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
           Gérez vos véhicules électriques utilisés pour les simulations ECOSPEED.
         </p>
       </div>
 
       <div className="grid lg:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)] gap-6">
         <div className="space-y-4">
-          <div className="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-100">
+          <div className={`rounded-3xl p-5 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base md:text-lg font-semibold flex items-center gap-2">
-                <Car className="w-5 h-5 text-emerald-600" />
+              <h2 className={`text-base md:text-lg font-semibold flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
+                <Car className={`w-5 h-5 ${isDark ? 'text-emerald-100' : 'text-emerald-600'}`} />
                 Mes véhicules
               </h2>
               <button
@@ -87,19 +109,23 @@ const VehiclesPage = () => {
                   key={vehicle.name}
                   type="button"
                   onClick={() => handleSetDefault(vehicle.name)}
-                  className="w-full rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 flex items-center justify-between gap-3 text-left hover:border-emerald-400 hover:bg-emerald-50 transition"
+                  className={`w-full rounded-2xl border px-4 py-3 flex items-center justify-between gap-3 text-left transition ${isDark ? 'border-emerald-300/30 bg-emerald-400/20 hover:border-emerald-300/50 hover:bg-emerald-400/30' : 'border-slate-100 bg-slate-50/70 hover:border-emerald-400 hover:bg-emerald-50'}`}
                 >
                   <div>
-                    <div className="font-semibold">{vehicle.name}</div>
-                    <div className="text-xs text-slate-500">
+                    <div className={`font-semibold ${isDark ? 'text-white' : ''}`}>{vehicle.name}</div>
+                    <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
                       {vehicle.battery_kwh} kWh · {vehicle.empty_mass} kg
                     </div>
                   </div>
                   <span
                     className={`inline-flex items-center gap-1 text-[11px] px-3 py-1 rounded-full border ${
                       isDefault(vehicle.name)
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : 'bg-slate-100 text-slate-500 border-slate-200'
+                        ? isDark
+                          ? 'bg-emerald-400/40 text-emerald-50 border-emerald-300/50'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : isDark
+                          ? 'bg-emerald-300/20 text-emerald-200 border-emerald-300/30'
+                          : 'bg-slate-100 text-slate-500 border-slate-200'
                     }`}
                   >
                     <Star className="w-3 h-3" />
