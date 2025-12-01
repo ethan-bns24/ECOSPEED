@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Car, Star } from 'lucide-react';
+import { Car, Star, Plus } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
 import { getVehicleSettings, updateVehicleSettings } from '../lib/settingsStorage';
