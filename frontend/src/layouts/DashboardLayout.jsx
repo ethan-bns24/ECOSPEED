@@ -92,16 +92,15 @@ const DashboardLayout = ({ children }) => {
   ];
 
   const isLight = theme === 'light';
-  const sidebarClass = isLight
-    ? 'hidden md:flex md:flex-col w-64 bg-white text-slate-900 border-r border-slate-200'
-    : 'hidden md:flex md:flex-col w-64 bg-[#0b3b27] text-white';
+  // Sidebar toujours verte, peu importe le thème
+  const sidebarClass = 'hidden md:flex md:flex-col w-64 bg-[#0b3b27] text-white';
   const mainBgClass = isLight
-    ? 'flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 bg-gradient-to-b from-white to-slate-50'
-    : 'flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 bg-gradient-to-b from-[#0a2e1a] via-[#1a4d2e] to-[#0f3d20]';
+    ? 'flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 bg-white text-slate-900'
+    : 'flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 bg-gradient-to-b from-[#0a2e1a] via-[#1a4d2e] to-[#0f3d20] text-emerald-100';
 
   const containerClass = isLight
     ? "min-h-screen bg-white flex text-slate-900"
-    : "min-h-screen bg-[#0a2e1a] flex text-white";
+    : "min-h-screen bg-[#0a2e1a] flex text-emerald-100";
   
   return (
     <div className={containerClass}>

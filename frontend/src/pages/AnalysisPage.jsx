@@ -332,11 +332,11 @@ const AnalysisPage = () => {
     : 0;
   
   const bgClass = isDark 
-    ? "min-h-screen bg-gradient-to-br from-[#0a2e1a] via-[#1a4d2e] to-[#0f3d20] text-white pb-12"
-    : "min-h-screen bg-gradient-to-b from-emerald-50 to-slate-50 text-slate-900 pb-12";
+    ? "min-h-screen bg-gradient-to-br from-[#0a2e1a] via-[#1a4d2e] to-[#0f3d20] text-emerald-100 pb-12"
+    : "min-h-screen bg-white text-slate-900 pb-12";
   
   const headerClass = isDark
-    ? "bg-black/20 backdrop-blur-md border-b border-white/10 sticky top-0 z-50"
+    ? "bg-[#0a2e1a]/80 backdrop-blur-md border-b border-emerald-800/30 sticky top-0 z-50"
     : "bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50";
   
   return (
@@ -372,33 +372,33 @@ const AnalysisPage = () => {
           {/* Left Column - Configuration */}
           <div className="lg:col-span-1 space-y-6">
             {/* Route Configuration Card */}
-            <Card className={isDark ? "bg-white/5 backdrop-blur-sm border-white/10" : "bg-white border-slate-200 shadow-sm"} data-testid="route-config-card">
+            <Card className={isDark ? "bg-white/5 backdrop-blur-sm border-emerald-700/30" : "bg-white border-slate-200 shadow-sm"} data-testid="route-config-card">
               <CardHeader>
-                <CardTitle className={`text-xl ${isDark ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{t.routeConfig}</CardTitle>
-                <CardDescription className={isDark ? "text-gray-300" : "text-slate-600"}>{t.routeConfigDesc}</CardDescription>
+                <CardTitle className={`text-xl ${isDark ? 'text-emerald-100' : 'text-slate-900'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{t.routeConfig}</CardTitle>
+                <CardDescription className={isDark ? "text-emerald-200/80" : "text-slate-600"}>{t.routeConfigDesc}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="start-location" className={isDark ? "text-white" : "text-slate-700"}>{t.startLocation}</Label>
+                  <Label htmlFor="start-location" className={isDark ? "text-emerald-100" : "text-slate-700"}>{t.startLocation}</Label>
                   <Input
                     id="start-location"
                     data-testid="start-location-input"
                     placeholder={t.startPlaceholder}
                     value={startLocation}
                     onChange={(e) => setStartLocation(e.target.value)}
-                    className={isDark ? "bg-white/5 border-white/20 text-white placeholder:text-gray-400" : "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400"}
+                    className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 placeholder:text-emerald-300/60" : "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400"}
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="end-location" className={isDark ? "text-white" : "text-slate-700"}>{t.endLocation}</Label>
+                  <Label htmlFor="end-location" className={isDark ? "text-emerald-100" : "text-slate-700"}>{t.endLocation}</Label>
                   <Input
                     id="end-location"
                     data-testid="end-location-input"
                     placeholder={t.endPlaceholder}
                     value={endLocation}
                     onChange={(e) => setEndLocation(e.target.value)}
-                    className={isDark ? "bg-white/5 border-white/20 text-white placeholder:text-gray-400" : "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400"}
+                    className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 placeholder:text-emerald-300/60" : "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400"}
                   />
                 </div>
                 
@@ -414,18 +414,18 @@ const AnalysisPage = () => {
             </Card>
 
             {/* Vehicle Configuration Card */}
-            <Card className={isDark ? "bg-white/5 backdrop-blur-sm border-white/10" : "bg-white border-slate-200 shadow-sm"} data-testid="vehicle-config-card">
+            <Card className={isDark ? "bg-white/5 backdrop-blur-sm border-emerald-700/30" : "bg-white border-slate-200 shadow-sm"} data-testid="vehicle-config-card">
               <CardHeader>
-                <CardTitle className={`text-xl ${isDark ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{t.vehicleParams}</CardTitle>
-                <CardDescription className={isDark ? "text-gray-300" : "text-slate-600"}>
+                <CardTitle className={`text-xl ${isDark ? 'text-emerald-100' : 'text-slate-900'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{t.vehicleParams}</CardTitle>
+                <CardDescription className={isDark ? "text-emerald-200/80" : "text-slate-600"}>
                   {t.vehicleParamsDesc}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className={isDark ? "text-white" : "text-slate-700"}>{t.vehicleProfile}</Label>
+                  <Label className={isDark ? "text-emerald-100" : "text-slate-700"}>{t.vehicleProfile}</Label>
                   {availableProfiles.length === 1 ? (
-                    <div className={`text-sm ${isDark ? 'text-gray-200' : 'text-slate-600'}`}>
+                    <div className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
                       <span className="font-semibold">{availableProfiles[0].name}</span>{' '}
                       ({t.selectedAuto})
                     </div>
@@ -433,11 +433,11 @@ const AnalysisPage = () => {
                     <Select value={selectedProfile} onValueChange={setSelectedProfile}>
                       <SelectTrigger
                         data-testid="vehicle-profile-select"
-                        className={isDark ? "bg-white/5 border-white/20 text-white" : "bg-white border-slate-300 text-slate-900"}
+                        className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100" : "bg-white border-slate-300 text-slate-900"}
                       >
                         <SelectValue placeholder={t.vehicleProfile} />
                       </SelectTrigger>
-                      <SelectContent className={isDark ? "bg-[#1a4d2e] border-white/20 text-white" : "bg-white border-slate-200 text-slate-900"}>
+                      <SelectContent className={isDark ? "bg-[#1a4d2e] border-emerald-700/30 text-emerald-100" : "bg-white border-slate-200 text-slate-900"}>
                         {availableProfiles.map((profile) => (
                           <SelectItem key={profile.name} value={profile.name}>
                             {profile.name}
