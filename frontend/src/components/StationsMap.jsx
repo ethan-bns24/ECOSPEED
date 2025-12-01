@@ -16,18 +16,31 @@ function MapView({ center, zoom, stations }) {
   const map = useMap();
   
   useEffect(() => {
-    if (center && center.length === 2) {
-      map.setView(center, zoom || 13);
-    } else if (stations && stations.length > 0) {
-      // Fit bounds to show all stations
-      const bounds = L.latLngBounds(
-        stations
-          .filter(s => s.latitude && s.longitude)
-          .map(s => [s.latitude, s.longitude])
-      );
-      if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+    try {
+      if (center && Array.isArray(center) && center.length === 2 && 
+          typeof center[0] === 'number' && typeof center[1] === 'number') {
+        map.setView(center, zoom || 13);
+      } else if (stations && Array.isArray(stations) && stations.length > 0) {
+        // Fit bounds to show all stations
+        const validCoords = stations
+          .filter(s => 
+            s && 
+            typeof s.latitude === 'number' && 
+            typeof s.longitude === 'number' &&
+            !isNaN(s.latitude) && 
+            !isNaN(s.longitude)
+          )
+          .map(s => [s.latitude, s.longitude]);
+        
+        if (validCoords.length > 0) {
+          const bounds = L.latLngBounds(validCoords);
+          if (bounds.isValid()) {
+            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+          }
+        }
       }
+    } catch (error) {
+      console.error('Error adjusting map view:', error);
     }
   }, [center, zoom, stations, map]);
   
