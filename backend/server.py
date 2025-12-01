@@ -1086,143 +1086,195 @@ async def get_route_kpis(route_id: str) -> KPIResponse:
 
 @api_router.get("/charging-stations")
 async def get_charging_stations(
-    latitude: float = 48.8566,  # Paris par défaut
-    longitude: float = 2.3522,
-    distance: float = 50.0  # km
+    latitude: float = None,  # Optionnel pour filtrer par zone
+    longitude: float = None,
+    distance: float = None  # km - optionnel
 ) -> List[ChargingStation]:
     """
-    Récupère les bornes de recharge à proximité en utilisant l'API Open Charge Map.
-    Combine les données réelles avec les bornes de démo.
+    Récupère toutes les bornes de recharge de France depuis la base officielle IRVE.
+    Utilise l'API transport.data.gouv.fr qui fournit toutes les bornes publiques françaises.
     """
     stations = []
     
-    # Bornes de démo (toujours incluses)
-    demo_stations = [
-        ChargingStation(
-            name='Supercharger Paris-La Défense',
-            operator='Tesla',
-            powerKw=250,
-            price='0.40€/kWh',
-            status='Dispo',
-            latitude=48.8925,
-            longitude=2.2383,
-            address='Paris-La Défense'
-        ),
-        ChargingStation(
-            name='Ionity Autoroute A6',
-            operator='Ionity',
-            powerKw=350,
-            price='0.79€/kWh',
-            status='Dispo',
-            latitude=48.8566,
-            longitude=2.3522,
-            address='Autoroute A6'
-        ),
-        ChargingStation(
-            name='Total Energies Champs-Élysées',
-            operator='Total',
-            powerKw=175,
-            price='0.45€/kWh',
-            status='Dispo',
-            latitude=48.8698,
-            longitude=2.3081,
-            address='Champs-Élysées, Paris'
-        ),
-        ChargingStation(
-            name='Electra Parking Opéra',
-            operator='Electra',
-            powerKw=150,
-            price='0.44€/kWh',
-            status='Occupée',
-            latitude=48.8706,
-            longitude=2.3317,
-            address='Opéra, Paris'
-        ),
-    ]
-    stations.extend(demo_stations)
-    
-    # Récupérer les bornes depuis Open Charge Map API
     try:
-        # Open Charge Map API - recherche autour d'un point
-        # Format: https://api.openchargemap.io/v3/poi/?output=json&latitude=48.8566&longitude=2.3522&distance=50&distanceunit=KM&maxresults=50
-        url = "https://api.openchargemap.io/v3/poi/"
-        params = {
-            'output': 'json',
-            'latitude': latitude,
-            'longitude': longitude,
-            'distance': distance,
-            'distanceunit': 'KM',
-            'maxresults': 50,  # Limiter à 50 résultats
-            'key': os.environ.get('OPEN_CHARGE_MAP_API_KEY', ''),  # Optionnel, fonctionne sans clé
-        }
+        # API officielle française IRVE - fichier consolidé mis à jour quotidiennement
+        # URL du fichier GeoJSON consolidé des bornes IRVE
+        url = "https://transport.data.gouv.fr/api/datasets/consolidation-des-donnees-des-infrastructures-de-recharge-pour-vehicules-electriques-irve"
         
-        response = requests.get(url, params=params, timeout=10)
+        # D'abord, récupérer les métadonnées du dataset pour obtenir l'URL du fichier
+        response = requests.get(url, timeout=15)
         if response.status_code == 200:
-            data = response.json()
+            dataset_info = response.json()
             
-            for poi in data:
-                # Extraire les informations de la borne
-                address_info = poi.get('AddressInfo', {})
-                connections = poi.get('Connections', [])
+            # Trouver le fichier GeoJSON dans les ressources
+            resources = dataset_info.get('resources', [])
+            geojson_resource = None
+            for resource in resources:
+                if resource.get('format') == 'geojson' or 'geojson' in resource.get('url', '').lower():
+                    geojson_resource = resource
+                    break
+            
+            if not geojson_resource:
+                # Si pas de GeoJSON, chercher le dernier fichier mis à jour
+                resources.sort(key=lambda x: x.get('last_modified', ''), reverse=True)
+                geojson_resource = resources[0] if resources else None
+            
+            if geojson_resource:
+                geojson_url = geojson_resource.get('url')
+                logger.info(f"Fetching IRVE data from: {geojson_url}")
                 
-                if not connections:
-                    continue
-                
-                # Prendre la connexion avec la plus haute puissance
-                max_power = 0
-                connection_type = None
-                for conn in connections:
-                    power_kw = conn.get('PowerKW', 0) or 0
-                    if power_kw > max_power:
-                        max_power = power_kw
-                        connection_type = conn.get('ConnectionType', {}).get('Title', 'Type inconnu')
-                
-                if max_power == 0:
-                    continue
-                
-                # Déterminer le statut (simplifié - Open Charge Map ne fournit pas toujours le statut en temps réel)
-                status = 'Dispo'  # Par défaut disponible
-                status_type = poi.get('StatusType', {})
-                if status_type:
-                    status_id = status_type.get('ID', 0)
-                    if status_id == 50:  # En service
-                        status = 'Dispo'
-                    elif status_id == 0:  # Inconnu
-                        status = 'Dispo'
-                    else:
-                        status = 'Hors service'
-                
-                # Nom de l'opérateur
-                operator_info = poi.get('OperatorInfo', {})
-                operator = operator_info.get('Title', 'Opérateur inconnu') if operator_info else 'Opérateur inconnu'
-                
-                # Prix (si disponible)
-                usage_info = poi.get('UsageType', {})
-                price = None
-                if usage_info and usage_info.get('IsPayAtLocation'):
-                    price = 'Tarif variable'
-                
-                station = ChargingStation(
-                    name=address_info.get('Title', 'Borne de recharge'),
-                    operator=operator,
-                    powerKw=float(max_power),
-                    price=price,
-                    status=status,
-                    latitude=address_info.get('Latitude', latitude),
-                    longitude=address_info.get('Longitude', longitude),
-                    address=address_info.get('AddressLine1', '') or address_info.get('Town', '')
-                )
-                
-                # Éviter les doublons avec les bornes de démo (par nom)
-                if not any(s.name == station.name for s in demo_stations):
-                    stations.append(station)
-        
-    except Exception as e:
-        logger.error(f"Error fetching charging stations from Open Charge Map: {e}")
-        # En cas d'erreur, on retourne quand même les bornes de démo
+                # Télécharger le fichier GeoJSON
+                geojson_response = requests.get(geojson_url, timeout=30)
+                if geojson_response.status_code == 200:
+                    geojson_data = geojson_response.json()
+                    
+                    features = geojson_data.get('features', [])
+                    logger.info(f"Found {len(features)} charging stations in IRVE database")
+                    
+                    for feature in features:
+                        properties = feature.get('properties', {})
+                        geometry = feature.get('geometry', {})
+                        coordinates = geometry.get('coordinates', [])
+                        
+                        if not coordinates or len(coordinates) < 2:
+                            continue
+                        
+                        lon, lat = coordinates[0], coordinates[1]
+                        
+                        # Filtrer par distance si latitude/longitude/distance sont fournis
+                        if latitude and longitude and distance:
+                            from math import radians, cos, sin, asin, sqrt
+                            
+                            def haversine(lon1, lat1, lon2, lat2):
+                                """Calcule la distance entre deux points en km"""
+                                lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+                                dlon = lon2 - lon1
+                                dlat = lat2 - lat1
+                                a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+                                c = 2 * asin(sqrt(a))
+                                return 6371 * c  # Rayon de la Terre en km
+                            
+                            dist = haversine(longitude, latitude, lon, lat)
+                            if dist > distance:
+                                continue
+                        
+                        # Extraire les informations de la borne
+                        nom_station = properties.get('nom_station', 'Borne de recharge')
+                        nom_operateur = properties.get('nom_operateur', 'Opérateur inconnu')
+                        
+                        # Puissance maximale (prendre la plus haute parmi toutes les prises)
+                        puissance_nominale = properties.get('puissance_nominale', 0)
+                        if not puissance_nominale or puissance_nominale == 0:
+                            # Essayer d'autres champs
+                            puissance_nominale = properties.get('puissance_max', 0) or properties.get('power', 0) or 0
+                        
+                        # Si toujours 0, essayer de calculer depuis les prises
+                        if puissance_nominale == 0:
+                            prises = properties.get('prises', [])
+                            if isinstance(prises, list):
+                                for prise in prises:
+                                    pwr = prise.get('puissance_nominale', 0) if isinstance(prise, dict) else 0
+                                    if pwr > puissance_nominale:
+                                        puissance_nominale = pwr
+                        
+                        if puissance_nominale == 0:
+                            puissance_nominale = 22  # Valeur par défaut si non spécifiée
+                        
+                        # Statut
+                        etat = properties.get('etat', 'Disponible')
+                        if etat in ['Disponible', 'disponible', 'En service']:
+                            status = 'Dispo'
+                        elif etat in ['Occupé', 'occupé', 'En utilisation']:
+                            status = 'Occupée'
+                        else:
+                            status = 'Dispo'  # Par défaut
+                        
+                        # Adresse
+                        adresse_station = properties.get('adresse_station', '')
+                        commune = properties.get('commune', '')
+                        code_insee = properties.get('code_insee', '')
+                        address = f"{adresse_station}, {commune}".strip(', ')
+                        
+                        # Prix (si disponible)
+                        tarif = properties.get('tarif', '')
+                        price = tarif if tarif else None
+                        
+                        station = ChargingStation(
+                            name=nom_station,
+                            operator=nom_operateur,
+                            powerKw=float(puissance_nominale),
+                            price=price,
+                            status=status,
+                            latitude=lat,
+                            longitude=lon,
+                            address=address if address else commune
+                        )
+                        
+                        stations.append(station)
+                    
+                    logger.info(f"Successfully loaded {len(stations)} charging stations from IRVE")
+                else:
+                    logger.error(f"Failed to fetch GeoJSON: {geojson_response.status_code}")
+            else:
+                logger.error("No GeoJSON resource found in dataset")
+        else:
+            logger.error(f"Failed to fetch dataset info: {response.status_code}")
     
-    # Limiter à 30 bornes au total pour éviter de surcharger l'interface
-    return stations[:30]
+    except Exception as e:
+        logger.error(f"Error fetching charging stations from IRVE: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+    
+    # Si aucune borne n'a été trouvée, retourner des bornes de démo
+    if not stations:
+        logger.warning("No stations found, returning demo stations")
+        stations = [
+            ChargingStation(
+                name='Supercharger Paris-La Défense',
+                operator='Tesla',
+                powerKw=250,
+                price='0.40€/kWh',
+                status='Dispo',
+                latitude=48.8925,
+                longitude=2.2383,
+                address='Paris-La Défense'
+            ),
+            ChargingStation(
+                name='Ionity Autoroute A6',
+                operator='Ionity',
+                powerKw=350,
+                price='0.79€/kWh',
+                status='Dispo',
+                latitude=48.8566,
+                longitude=2.3522,
+                address='Autoroute A6'
+            ),
+            ChargingStation(
+                name='Total Energies Champs-Élysées',
+                operator='Total',
+                powerKw=175,
+                price='0.45€/kWh',
+                status='Dispo',
+                latitude=48.8698,
+                longitude=2.3081,
+                address='Champs-Élysées, Paris'
+            ),
+            ChargingStation(
+                name='Electra Parking Opéra',
+                operator='Electra',
+                powerKw=150,
+                price='0.44€/kWh',
+                status='Occupée',
+                latitude=48.8706,
+                longitude=2.3317,
+                address='Opéra, Paris'
+            ),
+        ]
+    
+    # Limiter à 500 bornes pour éviter de surcharger l'interface (mais permettre plus que 30)
+    # Si des filtres de distance sont appliqués, retourner toutes les bornes dans cette zone
+    max_results = 500 if (latitude and longitude and distance) else 1000
+    return stations[:max_results]
 
 # Root endpoint
 @app.get("/")
