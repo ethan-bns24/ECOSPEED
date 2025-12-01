@@ -107,7 +107,7 @@ const StationsPage = () => {
   const paginatedStations = filteredStations.slice(startIndex, endIndex);
 
   // Réinitialiser la page quand le terme de recherche change
-  React.useEffect(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
 

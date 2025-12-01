@@ -1098,34 +1098,59 @@ async def get_charging_stations(
     
     try:
         # API officielle française IRVE - fichier consolidé mis à jour quotidiennement
-        # URL du fichier GeoJSON consolidé des bornes IRVE
-        url = "https://transport.data.gouv.fr/api/datasets/consolidation-des-donnees-des-infrastructures-de-recharge-pour-vehicules-electriques-irve"
+        # URL directe du fichier GeoJSON consolidé (mis à jour quotidiennement)
+        # Format: https://transport.data.gouv.fr/api/datasets/{dataset_id}/resources/{resource_id}/download
+        # On essaie d'abord l'URL directe du fichier GeoJSON consolidé
+        geojson_urls = [
+            "https://transport.data.gouv.fr/api/datasets/consolidation-des-donnees-des-infrastructures-de-recharge-pour-vehicules-electriques-irve/resources/latest/download",
+            "https://transport.data.gouv.fr/api/datasets/consolidation-des-donnees-des-infrastructures-de-recharge-pour-vehicules-electriques-irve",
+        ]
         
-        # D'abord, récupérer les métadonnées du dataset pour obtenir l'URL du fichier
-        response = requests.get(url, timeout=15)
-        if response.status_code == 200:
-            dataset_info = response.json()
-            
-            # Trouver le fichier GeoJSON dans les ressources
-            resources = dataset_info.get('resources', [])
-            geojson_resource = None
-            for resource in resources:
-                if resource.get('format') == 'geojson' or 'geojson' in resource.get('url', '').lower():
-                    geojson_resource = resource
-                    break
-            
-            if not geojson_resource:
-                # Si pas de GeoJSON, chercher le dernier fichier mis à jour
-                resources.sort(key=lambda x: x.get('last_modified', ''), reverse=True)
-                geojson_resource = resources[0] if resources else None
-            
-            if geojson_resource:
-                geojson_url = geojson_resource.get('url')
-                logger.info(f"Fetching IRVE data from: {geojson_url}")
+        geojson_data = None
+        
+        # Essayer d'abord l'URL directe
+        for url in geojson_urls:
+            try:
+                logger.info(f"Trying to fetch IRVE data from: {url}")
+                response = requests.get(url, timeout=30, headers={'Accept': 'application/json'})
                 
-                # Télécharger le fichier GeoJSON
-                geojson_response = requests.get(geojson_url, timeout=30)
-                if geojson_response.status_code == 200:
+                if response.status_code == 200:
+                    # Vérifier si c'est déjà du GeoJSON ou des métadonnées
+                    content_type = response.headers.get('content-type', '').lower()
+                    data = response.json()
+                    
+                    if 'features' in data:
+                        # C'est déjà du GeoJSON
+                        geojson_data = data
+                        logger.info("Successfully fetched GeoJSON directly")
+                        break
+                    elif 'resources' in data:
+                        # C'est des métadonnées, chercher le fichier GeoJSON
+                        resources = data.get('resources', [])
+                        geojson_resource = None
+                        for resource in resources:
+                            if resource.get('format') == 'geojson' or 'geojson' in resource.get('url', '').lower():
+                                geojson_resource = resource
+                                break
+                        
+                        if not geojson_resource:
+                            # Si pas de GeoJSON, chercher le dernier fichier mis à jour
+                            resources.sort(key=lambda x: x.get('last_modified', ''), reverse=True)
+                            geojson_resource = resources[0] if resources else None
+                        
+                        if geojson_resource:
+                            geojson_url = geojson_resource.get('url')
+                            logger.info(f"Fetching GeoJSON from resource: {geojson_url}")
+                            geojson_response = requests.get(geojson_url, timeout=60)
+                            if geojson_response.status_code == 200:
+                                geojson_data = geojson_response.json()
+                                logger.info("Successfully fetched GeoJSON from resource")
+                                break
+            except Exception as e:
+                logger.warning(f"Failed to fetch from {url}: {e}")
+                continue
+        
+        if geojson_data:
                     geojson_data = geojson_response.json()
                     
                     features = geojson_data.get('features', [])
