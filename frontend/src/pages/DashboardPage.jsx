@@ -228,18 +228,18 @@ const DashboardPage = () => {
             <div className="flex flex-col md:flex-row md:items-center gap-6">
               <div className="flex-1 flex flex-col items-center justify-center">
                 <div className="relative inline-flex items-center justify-center">
-                  <div className="h-28 w-28 rounded-full border-[10px] border-emerald-200 flex items-center justify-center">
-                    <span className="text-2xl font-bold">{stats.ecoScore}</span>
+                  <div className={`h-28 w-28 rounded-full border-[10px] flex items-center justify-center ${isDark ? 'border-emerald-300/50' : 'border-emerald-200'}`}>
+                    <span className={`text-2xl font-bold ${isDark ? 'text-white' : ''}`}>{stats.ecoScore}</span>
                   </div>
                 </div>
-                <div className="mt-2 text-xs text-slate-500">/100 · À améliorer</div>
+                <div className={`mt-2 text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>/100 · À améliorer</div>
               </div>
               <div className="flex-1 space-y-3 text-sm">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-emerald-600" />
-                  <span className="font-semibold">+23% d&apos;économie d&apos;énergie</span>
+                  <TrendingUp className={`w-4 h-4 ${isDark ? 'text-emerald-100' : 'text-emerald-600'}`} />
+                  <span className={`font-semibold ${isDark ? 'text-white' : ''}`}>+23% d&apos;économie d&apos;énergie</span>
                 </div>
-                <p className="text-slate-600 text-xs md:text-sm">
+                <p className={`text-xs md:text-sm ${isDark ? 'text-emerald-50' : 'text-slate-600'}`}>
                   Continuez à suivre les recommandations de vitesse ECOSPEED pour
                   améliorer votre score et débloquer de nouveaux badges.
                 </p>
