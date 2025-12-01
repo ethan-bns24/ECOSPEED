@@ -173,8 +173,9 @@ const AnalysisPage = () => {
     // Charger les préférences véhicules
     try {
       const { enabledVehicles, defaultVehicleName } = getVehicleSettings() || {};
-      let profiles = VEHICLE_PROFILES;
+      let profiles = [];
 
+      // Seuls les véhicules marqués comme "par défaut" (dans enabledVehicles) apparaissent
       if (enabledVehicles && enabledVehicles.length > 0) {
         profiles = VEHICLE_PROFILES.filter((p) => enabledVehicles.includes(p.name));
       } else {
@@ -186,16 +187,20 @@ const AnalysisPage = () => {
             enabledVehicles: [first],
             defaultVehicleName: first,
           });
+        } else {
+          // Fallback : tous les véhicules si aucune préférence
+          profiles = VEHICLE_PROFILES;
         }
       }
 
       setAvailableProfiles(profiles);
 
+      // Sélectionner le véhicule par défaut, ou le premier de la liste filtrée
       const preferredName =
         (defaultVehicleName &&
           profiles.find((p) => p.name === defaultVehicleName)?.name) ||
         profiles[0]?.name ||
-        VEHICLE_PROFILES[0].name;
+        VEHICLE_PROFILES[0]?.name;
 
       setSelectedProfile(preferredName);
     } catch (e) {

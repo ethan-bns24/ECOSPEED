@@ -51,28 +51,37 @@ const VehiclesPage = () => {
   const isDark = theme === 'dark';
 
   const handleSetDefault = (name) => {
-    // Si le véhicule est déjà dans la liste, on ne fait que changer le "par défaut"
+    // Si le véhicule est déjà dans la liste, on le retire (toggle)
     if (enabledVehicles.includes(name)) {
-      setDefaultVehicleName(name);
+      const nextEnabled = enabledVehicles.filter(v => v !== name);
+      setEnabledVehicles(nextEnabled);
+      // Si c'était le véhicule par défaut, on change pour le premier de la liste restante
+      const newDefault = nextEnabled.length > 0 ? nextEnabled[0] : null;
+      setDefaultVehicleName(newDefault);
       updateVehicleSettings({
-        enabledVehicles,
-        defaultVehicleName: name,
+        enabledVehicles: nextEnabled,
+        defaultVehicleName: newDefault,
       });
       return;
     }
 
-    if (enabledVehicles.length >= 3) {
-      toast.error('Vous pouvez définir au maximum 3 véhicules par défaut.');
-      return;
-    }
-
+    // Sinon, on l'ajoute à la liste
     const nextEnabled = Array.from(new Set([...enabledVehicles, name]));
     setEnabledVehicles(nextEnabled);
-    setDefaultVehicleName(name);
-    updateVehicleSettings({
-      enabledVehicles: nextEnabled,
-      defaultVehicleName: name,
-    });
+    // Si c'est le premier véhicule ajouté, il devient le défaut
+    if (nextEnabled.length === 1) {
+      setDefaultVehicleName(name);
+      updateVehicleSettings({
+        enabledVehicles: nextEnabled,
+        defaultVehicleName: name,
+      });
+    } else {
+      // Sinon, on garde le défaut actuel
+      updateVehicleSettings({
+        enabledVehicles: nextEnabled,
+        defaultVehicleName: defaultVehicleName || name,
+      });
+    }
   };
 
   const isDefault = (name) => name === defaultVehicleName;
@@ -128,8 +137,8 @@ const VehiclesPage = () => {
                           : 'bg-slate-100 text-slate-500 border-slate-200'
                     }`}
                   >
-                    <Star className="w-3 h-3" />
-                    {isDefault(vehicle.name) ? 'Par défaut' : 'Définir par défaut'}
+                    <Star className={`w-3 h-3 ${isDefault(vehicle.name) ? 'fill-current' : ''}`} />
+                    {isDefault(vehicle.name) ? 'Par défaut' : 'Ajouter par défaut'}
                   </span>
                 </button>
               ))}
