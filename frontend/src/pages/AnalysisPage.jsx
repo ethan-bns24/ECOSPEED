@@ -20,7 +20,7 @@ import NavigationPanel from '../components/NavigationPanel';
 import { toast } from 'sonner';
 import { persistTripFromRoute } from '../lib/tripStorage';
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
-import { getVehicleSettings } from '../lib/settingsStorage';
+import { getVehicleSettings, updateVehicleSettings } from '../lib/settingsStorage';
 
 // Use environment variable or fallback to localhost for development
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
@@ -74,18 +74,32 @@ const AnalysisPage = () => {
   useEffect(() => {
     // Charger les préférences véhicules
     try {
-      const { enabledVehicles, defaultVehicleName } = getVehicleSettings?.() || {};
+      const { enabledVehicles, defaultVehicleName } = getVehicleSettings() || {};
       let profiles = VEHICLE_PROFILES;
+
       if (enabledVehicles && enabledVehicles.length > 0) {
         profiles = VEHICLE_PROFILES.filter((p) => enabledVehicles.includes(p.name));
+      } else {
+        // Si aucune préférence encore enregistrée, on choisit la première voiture
+        const first = VEHICLE_PROFILES[0]?.name;
+        if (first) {
+          profiles = VEHICLE_PROFILES.filter((p) => p.name === first);
+          updateVehicleSettings({
+            enabledVehicles: [first],
+            defaultVehicleName: first,
+          });
+        }
       }
+
       setAvailableProfiles(profiles);
-      const preferred =
+
+      const preferredName =
         (defaultVehicleName &&
           profiles.find((p) => p.name === defaultVehicleName)?.name) ||
         profiles[0]?.name ||
         VEHICLE_PROFILES[0].name;
-      setSelectedProfile(preferred);
+
+      setSelectedProfile(preferredName);
     } catch (e) {
       console.error('Failed to load vehicle settings', e);
     }

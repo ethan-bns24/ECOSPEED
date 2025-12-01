@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css';
 import HomePage from './pages/HomePage';
@@ -10,8 +10,14 @@ import HistoryPage from './pages/HistoryPage';
 import StatsPage from './pages/StatsPage';
 import StationsPage from './pages/StationsPage';
 import SettingsPage from './pages/SettingsPage';
+import { getAppSettings, applyTheme } from './lib/settingsStorage';
 
 function App() {
+  useEffect(() => {
+    const { theme } = getAppSettings();
+    applyTheme(theme);
+  }, []);
+
   return (
     <div className="App">
       <BrowserRouter>

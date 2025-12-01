@@ -3,6 +3,7 @@ import { Car, Star, Plus } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
 import { getVehicleSettings, updateVehicleSettings } from '../lib/settingsStorage';
+import { toast } from 'sonner';
 
 const VehiclesPage = () => {
   const [enabledVehicles, setEnabledVehicles] = useState([]);
@@ -28,6 +29,21 @@ const VehiclesPage = () => {
   }, []);
 
   const handleSetDefault = (name) => {
+    // Si le véhicule est déjà dans la liste, on ne fait que changer le "par défaut"
+    if (enabledVehicles.includes(name)) {
+      setDefaultVehicleName(name);
+      updateVehicleSettings({
+        enabledVehicles,
+        defaultVehicleName: name,
+      });
+      return;
+    }
+
+    if (enabledVehicles.length >= 3) {
+      toast.error('Vous pouvez définir au maximum 3 véhicules par défaut.');
+      return;
+    }
+
     const nextEnabled = Array.from(new Set([...enabledVehicles, name]));
     setEnabledVehicles(nextEnabled);
     setDefaultVehicleName(name);

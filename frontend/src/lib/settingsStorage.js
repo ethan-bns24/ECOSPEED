@@ -24,6 +24,8 @@ function saveSettings(settings) {
   }
 }
 
+// ================== Véhicules ==================
+
 export function getVehicleSettings() {
   const settings = loadSettings();
   return {
@@ -39,4 +41,32 @@ export function updateVehicleSettings(partial) {
   return next;
 }
 
+// ================== App (langue / thème) ==================
+
+export function getAppSettings() {
+  const settings = loadSettings();
+  return {
+    language: settings.language || 'fr', // français par défaut
+    theme: settings.theme || 'dark', // thème sombre par défaut (comme aujourd'hui)
+  };
+}
+
+export function updateAppSettings(partial) {
+  const current = loadSettings();
+  const next = { ...current, ...partial };
+  saveSettings(next);
+  applyTheme(next.theme);
+  return next;
+}
+
+export function applyTheme(theme) {
+  if (typeof document === 'undefined') return;
+  const body = document.body;
+  body.classList.remove('theme-light', 'theme-dark');
+  if (theme === 'light') {
+    body.classList.add('theme-light');
+  } else {
+    body.classList.add('theme-dark');
+  }
+}
 
