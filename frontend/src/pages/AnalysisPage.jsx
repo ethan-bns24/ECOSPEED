@@ -644,8 +644,18 @@ const AnalysisPage = () => {
                         type="number"
                         min="0"
                         max="100"
+                        step="1"
                         value={climateIntensity}
-                        onChange={(e) => setClimateIntensity(parseFloat(e.target.value) || 50)}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          if (!isNaN(val)) {
+                            // Limiter entre 0 et 100
+                            const clamped = Math.max(0, Math.min(100, val));
+                            setClimateIntensity(clamped);
+                          } else if (e.target.value === '' || e.target.value === '0') {
+                            setClimateIntensity(0);
+                          }
+                        }}
                         className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                       />
                     </div>
