@@ -84,7 +84,7 @@ const VehiclesPage = () => {
     }
   };
 
-  const isDefault = (name) => name === defaultVehicleName;
+  const isDefault = (name) => enabledVehicles.includes(name);
 
   return (
     <DashboardLayout>
