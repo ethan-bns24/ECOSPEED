@@ -571,7 +571,7 @@ const AnalysisPage = () => {
                   <Label className={isDark ? "text-white" : "text-slate-700"}>👥 {t.loadPassengers}</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.numPassengers}</Label>
+                      <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.numPassengers}</Label>
                       <Input
                         type="number"
                         min="1"
@@ -586,14 +586,14 @@ const AnalysisPage = () => {
                           const clamped = Math.max(1, Math.min(5, raw));
                           setNumPassengers(clamped);
                         }}
-                        className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                        className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                       />
                       <p className={`text-xs mt-1 ${isDark ? 'text-emerald-300/70' : 'text-slate-500'}`}>
                         {language === 'fr' ? 'Min : 1 personne, Max : 5 personnes (valeur par défaut : 1).' : 'Min: 1 person, Max: 5 people (default: 1).'}
                       </p>
                     </div>
                     <div>
-                      <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.avgWeight}</Label>
+                      <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.avgWeight}</Label>
                       <Input
                         type="number"
                         min="0"
@@ -608,7 +608,7 @@ const AnalysisPage = () => {
                             setAvgWeightKg(0);
                           }
                         }}
-                        className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                        className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                       />
                     </div>
                   </div>
