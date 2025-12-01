@@ -94,7 +94,7 @@ const DashboardPage = () => {
           <div className="flex items-center gap-4">
             <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-700/60 border border-emerald-300/30 text-sm">
               <Leaf className="w-4 h-4 text-emerald-100" />
-              <span>0 kg CO₂ évités</span>
+              <span>{totalCo2SavedKg.toFixed(1)} kg CO₂ évités</span>
             </div>
             <button
               type="button"

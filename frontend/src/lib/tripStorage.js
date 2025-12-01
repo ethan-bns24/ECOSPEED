@@ -162,4 +162,12 @@ export function getAllTrips() {
   return loadTrips().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 }
 
+// Supprime un trajet par son ID
+export function deleteTrip(tripId) {
+  const trips = loadTrips();
+  const filtered = trips.filter(t => t.id !== tripId);
+  saveTrips(filtered);
+  return filtered;
+}
+
 

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Clock, MapPin, Zap, Star } from 'lucide-react';
+import { Clock, MapPin, Zap, Star, Trash2 } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
-import { getAllTrips } from '../lib/tripStorage';
+import { getAllTrips, deleteTrip } from '../lib/tripStorage';
 import { getAppSettings } from '../lib/settingsStorage';
+import { toast } from 'sonner';
 
 const formatDateTime = (timestamp) => {
   if (!timestamp) return '';
@@ -55,6 +56,14 @@ const HistoryPage = () => {
           trips.reduce((sum, t) => sum + (t.ecoScore || 0), 0) / totalTrips
         )
       : 0;
+
+  const handleDeleteTrip = (tripId) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce trajet ?')) {
+      deleteTrip(tripId);
+      setTrips(getAllTrips());
+      toast.success('Trajet supprimé avec succès');
+    }
+  };
 
   return (
     <DashboardLayout>
