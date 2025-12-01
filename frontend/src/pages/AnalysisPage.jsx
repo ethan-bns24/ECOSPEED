@@ -20,7 +20,7 @@ import NavigationPanel from '../components/NavigationPanel';
 import { toast } from 'sonner';
 import { persistTripFromRoute } from '../lib/tripStorage';
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
-import { getVehicleSettings, updateVehicleSettings } from '../lib/settingsStorage';
+import { getVehicleSettings, updateVehicleSettings, getAppSettings } from '../lib/settingsStorage';
 
 // Use environment variable or fallback to localhost for development
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
@@ -32,8 +32,106 @@ console.log('API endpoint:', API);
 
 // Vehicle Profiles sont maintenant centralisés dans lib/vehicleProfiles
 
+const TRANSLATIONS = {
+  fr: {
+    back: 'Retour',
+    routeConfig: 'Configuration de l\'itinéraire',
+    routeConfigDesc: 'Entrez votre point de départ et d\'arrivée',
+    startLocation: 'Adresse de départ',
+    endLocation: 'Adresse d\'arrivée',
+    startPlaceholder: 'Ex: Paris, France',
+    endPlaceholder: 'Ex: Lyon, France',
+    calculate: 'Calculer le profil éco-vitesse',
+    calculating: 'Calcul en cours...',
+    vehicleParams: 'Paramètres du véhicule électrique',
+    vehicleParamsDesc: 'Ecospeed est conçu pour les véhicules électriques avec freinage régénératif',
+    vehicleProfile: 'Profil véhicule',
+    selectedAuto: 'sélectionné automatiquement',
+    loadPassengers: 'Charge et passagers',
+    numPassengers: 'Nombre de passagers',
+    avgWeight: 'Poids moyen par personne (kg)',
+    climate: 'Climatisation',
+    climateIntensity: 'Intensité climatisation (%)',
+    batteryStart: 'Batterie au départ (%)',
+    batteryEnd: 'Batterie à l\'arrivée (%)',
+    airDensity: 'Densité de l\'air (kg/m³)',
+    routeMap: 'Carte de l\'itinéraire',
+    emptyMass: 'Masse à vide (kg)',
+    extraLoad: 'Charge supplémentaire (kg)',
+    dragCoeff: 'Coefficient de traînée',
+    frontalArea: 'Surface frontale (m²)',
+    rollingResistance: 'Résistance au roulement',
+    motorEfficiency: 'Efficacité moteur',
+    regenEfficiency: 'Efficacité régénération',
+    auxPower: 'Puissance auxiliaire (kW)',
+    battery: 'Batterie (kWh)',
+  },
+  en: {
+    back: 'Back',
+    routeConfig: 'Route Configuration',
+    routeConfigDesc: 'Enter your start and end locations',
+    startLocation: 'Start Location',
+    endLocation: 'End Location',
+    startPlaceholder: 'e.g., Paris, France',
+    endPlaceholder: 'e.g., Lyon, France',
+    calculate: 'Calculate Eco-Speed Profile',
+    calculating: 'Calculating...',
+    vehicleParams: 'Electric Vehicle Parameters',
+    vehicleParamsDesc: 'Ecospeed is designed for electric vehicles with regenerative braking',
+    vehicleProfile: 'Vehicle Profile',
+    selectedAuto: 'automatically selected',
+    loadPassengers: 'Load and passengers',
+    numPassengers: 'Number of passengers',
+    avgWeight: 'Avg weight per person (kg)',
+    climate: 'Climate control',
+    climateIntensity: 'Climate intensity (%)',
+    batteryStart: 'Battery at start (%)',
+    batteryEnd: 'Battery at end (%)',
+    airDensity: 'Air density (kg/m³)',
+    routeMap: 'Route Map',
+    emptyMass: 'Empty Mass (kg)',
+    extraLoad: 'Extra Load (kg)',
+    dragCoeff: 'Drag Coeff',
+    frontalArea: 'Frontal Area (m²)',
+    rollingResistance: 'Rolling Resistance',
+    motorEfficiency: 'Motor Efficiency',
+    regenEfficiency: 'Regen Efficiency',
+    auxPower: 'Aux Power (kW)',
+    battery: 'Battery (kWh)',
+  },
+};
+
 const AnalysisPage = () => {
   const navigate = useNavigate();
+  
+  // Language and theme state
+  const [language, setLanguage] = useState('fr');
+  const [theme, setTheme] = useState('dark');
+  
+  useEffect(() => {
+    const { language: lang, theme: thm } = getAppSettings();
+    setLanguage(lang);
+    setTheme(thm);
+    
+    const handler = (event) => {
+      const detail = event.detail || {};
+      if (detail.language) setLanguage(detail.language);
+      if (detail.theme) setTheme(detail.theme);
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('ecospeed-settings-updated', handler);
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('ecospeed-settings-updated', handler);
+      }
+    };
+  }, []);
+  
+  const t = TRANSLATIONS[language] || TRANSLATIONS.fr;
+  const isDark = theme === 'dark';
   
   // Form state
   const [startLocation, setStartLocation] = useState('');
@@ -233,10 +331,18 @@ const AnalysisPage = () => {
     ? ((currentSegmentIndex + 1) / routeData.segments.length) * 100 
     : 0;
   
+  const bgClass = isDark 
+    ? "min-h-screen bg-gradient-to-br from-[#0a2e1a] via-[#1a4d2e] to-[#0f3d20] text-white pb-12"
+    : "min-h-screen bg-gradient-to-b from-emerald-50 to-slate-50 text-slate-900 pb-12";
+  
+  const headerClass = isDark
+    ? "bg-black/20 backdrop-blur-md border-b border-white/10 sticky top-0 z-50"
+    : "bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50";
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a2e1a] via-[#1a4d2e] to-[#0f3d20] text-white pb-12">
+    <div className={bgClass}>
       {/* Header */}
-      <header className="bg-black/20 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
+      <header className={headerClass}>
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
@@ -246,7 +352,7 @@ const AnalysisPage = () => {
               data-testid="back-home-btn"
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
-              Back
+              {t.back}
             </Button>
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -266,33 +372,33 @@ const AnalysisPage = () => {
           {/* Left Column - Configuration */}
           <div className="lg:col-span-1 space-y-6">
             {/* Route Configuration Card */}
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10" data-testid="route-config-card">
+            <Card className={isDark ? "bg-white/5 backdrop-blur-sm border-white/10" : "bg-white border-slate-200 shadow-sm"} data-testid="route-config-card">
               <CardHeader>
-                <CardTitle className="text-xl" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Route Configuration</CardTitle>
-                <CardDescription className="text-gray-300">Enter your start and end locations</CardDescription>
+                <CardTitle className={`text-xl ${isDark ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{t.routeConfig}</CardTitle>
+                <CardDescription className={isDark ? "text-gray-300" : "text-slate-600"}>{t.routeConfigDesc}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="start-location">Start Location</Label>
+                  <Label htmlFor="start-location" className={isDark ? "text-white" : "text-slate-700"}>{t.startLocation}</Label>
                   <Input
                     id="start-location"
                     data-testid="start-location-input"
-                    placeholder="e.g., Paris, France"
+                    placeholder={t.startPlaceholder}
                     value={startLocation}
                     onChange={(e) => setStartLocation(e.target.value)}
-                    className="bg-white/5 border-white/20 text-white placeholder:text-gray-400"
+                    className={isDark ? "bg-white/5 border-white/20 text-white placeholder:text-gray-400" : "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400"}
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="end-location">End Location</Label>
+                  <Label htmlFor="end-location" className={isDark ? "text-white" : "text-slate-700"}>{t.endLocation}</Label>
                   <Input
                     id="end-location"
                     data-testid="end-location-input"
-                    placeholder="e.g., Lyon, France"
+                    placeholder={t.endPlaceholder}
                     value={endLocation}
                     onChange={(e) => setEndLocation(e.target.value)}
-                    className="bg-white/5 border-white/20 text-white placeholder:text-gray-400"
+                    className={isDark ? "bg-white/5 border-white/20 text-white placeholder:text-gray-400" : "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400"}
                   />
                 </div>
                 
@@ -302,36 +408,36 @@ const AnalysisPage = () => {
                   disabled={loading}
                   className="w-full bg-[#4ade80] hover:bg-[#22c55e] text-[#0a2e1a] font-semibold"
                 >
-                  {loading ? 'Calculating...' : 'Calculate Eco-Speed Profile'}
+                  {loading ? t.calculating : t.calculate}
                 </Button>
               </CardContent>
             </Card>
 
             {/* Vehicle Configuration Card */}
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10" data-testid="vehicle-config-card">
+            <Card className={isDark ? "bg-white/5 backdrop-blur-sm border-white/10" : "bg-white border-slate-200 shadow-sm"} data-testid="vehicle-config-card">
               <CardHeader>
-                <CardTitle className="text-xl" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Electric Vehicle Parameters</CardTitle>
-                <CardDescription className="text-gray-300">
-                  Ecospeed is designed for electric vehicles with regenerative braking
+                <CardTitle className={`text-xl ${isDark ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{t.vehicleParams}</CardTitle>
+                <CardDescription className={isDark ? "text-gray-300" : "text-slate-600"}>
+                  {t.vehicleParamsDesc}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Vehicle Profile</Label>
+                  <Label className={isDark ? "text-white" : "text-slate-700"}>{t.vehicleProfile}</Label>
                   {availableProfiles.length === 1 ? (
-                    <div className="text-sm text-gray-200">
+                    <div className={`text-sm ${isDark ? 'text-gray-200' : 'text-slate-600'}`}>
                       <span className="font-semibold">{availableProfiles[0].name}</span>{' '}
-                      (sélectionné automatiquement)
+                      ({t.selectedAuto})
                     </div>
                   ) : (
                     <Select value={selectedProfile} onValueChange={setSelectedProfile}>
                       <SelectTrigger
                         data-testid="vehicle-profile-select"
-                        className="bg-white/5 border-white/20 text-white"
+                        className={isDark ? "bg-white/5 border-white/20 text-white" : "bg-white border-slate-300 text-slate-900"}
                       >
-                        <SelectValue placeholder="Select a vehicle profile" />
+                        <SelectValue placeholder={t.vehicleProfile} />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#1a4d2e] border-white/20 text-white">
+                      <SelectContent className={isDark ? "bg-[#1a4d2e] border-white/20 text-white" : "bg-white border-slate-200 text-slate-900"}>
                         {availableProfiles.map((profile) => (
                           <SelectItem key={profile.name} value={profile.name}>
                             {profile.name}
@@ -346,91 +452,91 @@ const AnalysisPage = () => {
                   <div className="space-y-3 pt-2">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <Label className="text-xs">Empty Mass (kg)</Label>
+                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.emptyMass}</Label>
                         <Input
                           type="number"
                           value={customVehicle.empty_mass}
                           onChange={(e) => setCustomVehicle({...customVehicle, empty_mass: parseFloat(e.target.value)})}
-                          className="bg-white/5 border-white/20 text-white text-sm"
+                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                       <div>
-                        <Label className="text-xs">Extra Load (kg)</Label>
+                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.extraLoad}</Label>
                         <Input
                           type="number"
                           value={customVehicle.extra_load}
                           onChange={(e) => setCustomVehicle({...customVehicle, extra_load: parseFloat(e.target.value)})}
-                          className="bg-white/5 border-white/20 text-white text-sm"
+                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                       <div>
-                        <Label className="text-xs">Drag Coeff</Label>
+                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.dragCoeff}</Label>
                         <Input
                           type="number"
                           step="0.01"
                           value={customVehicle.drag_coefficient}
                           onChange={(e) => setCustomVehicle({...customVehicle, drag_coefficient: parseFloat(e.target.value)})}
-                          className="bg-white/5 border-white/20 text-white text-sm"
+                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                       <div>
-                        <Label className="text-xs">Frontal Area (m²)</Label>
+                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.frontalArea}</Label>
                         <Input
                           type="number"
                           step="0.1"
                           value={customVehicle.frontal_area}
                           onChange={(e) => setCustomVehicle({...customVehicle, frontal_area: parseFloat(e.target.value)})}
-                          className="bg-white/5 border-white/20 text-white text-sm"
+                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                       <div>
-                        <Label className="text-xs">Rolling Resistance</Label>
+                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.rollingResistance}</Label>
                         <Input
                           type="number"
                           step="0.001"
                           value={customVehicle.rolling_resistance}
                           onChange={(e) => setCustomVehicle({...customVehicle, rolling_resistance: parseFloat(e.target.value)})}
-                          className="bg-white/5 border-white/20 text-white text-sm"
+                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                       <div>
-                        <Label className="text-xs">Motor Efficiency</Label>
+                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.motorEfficiency}</Label>
                         <Input
                           type="number"
                           step="0.01"
                           value={customVehicle.motor_efficiency}
                           onChange={(e) => setCustomVehicle({...customVehicle, motor_efficiency: parseFloat(e.target.value)})}
-                          className="bg-white/5 border-white/20 text-white text-sm"
+                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                       <div>
-                        <Label className="text-xs">Regen Efficiency</Label>
+                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.regenEfficiency}</Label>
                         <Input
                           type="number"
                           step="0.01"
                           value={customVehicle.regen_efficiency}
                           onChange={(e) => setCustomVehicle({...customVehicle, regen_efficiency: parseFloat(e.target.value)})}
-                          className="bg-white/5 border-white/20 text-white text-sm"
+                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                       <div>
-                        <Label className="text-xs">Aux Power (kW)</Label>
+                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.auxPower}</Label>
                         <Input
                           type="number"
                           step="0.1"
                           value={customVehicle.aux_power_kw || 2.0}
                           onChange={(e) => setCustomVehicle({...customVehicle, aux_power_kw: parseFloat(e.target.value)})}
-                          className="bg-white/5 border-white/20 text-white text-sm"
+                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                       <div>
-                        <Label className="text-xs">Battery (kWh)</Label>
+                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.battery}</Label>
                         <Input
                           type="number"
                           step="1"
                           value={customVehicle.battery_kwh || 60}
                           onChange={(e) => setCustomVehicle({...customVehicle, battery_kwh: parseFloat(e.target.value)})}
-                          className="bg-white/5 border-white/20 text-white text-sm"
+                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                     </div>
@@ -462,10 +568,10 @@ const AnalysisPage = () => {
                 
                 {/* Load and passengers */}
                 <div className="space-y-3">
-                  <Label>👥 Load and passengers</Label>
+                  <Label className={isDark ? "text-white" : "text-slate-700"}>👥 {t.loadPassengers}</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs">Number of passengers</Label>
+                      <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.numPassengers}</Label>
                       <Input
                         type="number"
                         min="1"
@@ -480,14 +586,14 @@ const AnalysisPage = () => {
                           const clamped = Math.max(1, Math.min(5, raw));
                           setNumPassengers(clamped);
                         }}
-                        className="bg-white/5 border-white/20 text-white text-sm"
+                        className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                       />
-                      <p className="text-xs text-gray-400 mt-1">
-                        Min&nbsp;: 1 personne, Max&nbsp;: 5 personnes (valeur par défaut&nbsp;: 1).
+                      <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+                        {language === 'fr' ? 'Min : 1 personne, Max : 5 personnes (valeur par défaut : 1).' : 'Min: 1 person, Max: 5 people (default: 1).'}
                       </p>
                     </div>
                     <div>
-                      <Label className="text-xs">Avg weight per person (kg)</Label>
+                      <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.avgWeight}</Label>
                       <Input
                         type="number"
                         min="0"
@@ -502,7 +608,7 @@ const AnalysisPage = () => {
                             setAvgWeightKg(0);
                           }
                         }}
-                        className="bg-white/5 border-white/20 text-white text-sm"
+                        className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                       />
                     </div>
                   </div>
@@ -512,7 +618,7 @@ const AnalysisPage = () => {
                 
                 {/* Driving conditions */}
                 <div className="space-y-3">
-                  <Label>🌡️ Driving conditions</Label>
+                  <Label className={isDark ? "text-white" : "text-slate-700"}>🌡️ {language === 'fr' ? 'Conditions de conduite' : 'Driving conditions'}</Label>
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
@@ -521,18 +627,18 @@ const AnalysisPage = () => {
                       onChange={(e) => setUseClimate(e.target.checked)}
                       className="w-4 h-4"
                     />
-                    <Label htmlFor="use-climate" className="cursor-pointer">Use HVAC</Label>
+                    <Label htmlFor="use-climate" className={`cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}>{t.climate}</Label>
                   </div>
                   {useClimate && (
                     <div>
-                      <Label className="text-xs">HVAC intensity (%)</Label>
+                      <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.climateIntensity}</Label>
                       <Input
                         type="number"
                         min="0"
                         max="100"
                         value={climateIntensity}
                         onChange={(e) => setClimateIntensity(parseFloat(e.target.value) || 50)}
-                        className="bg-white/5 border-white/20 text-white text-sm"
+                        className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                       />
                     </div>
                   )}

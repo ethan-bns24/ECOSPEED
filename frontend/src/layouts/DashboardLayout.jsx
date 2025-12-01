@@ -96,11 +96,15 @@ const DashboardLayout = ({ children }) => {
     ? 'hidden md:flex md:flex-col w-64 bg-white text-slate-900 border-r border-slate-200'
     : 'hidden md:flex md:flex-col w-64 bg-[#0b3b27] text-white';
   const mainBgClass = isLight
-    ? 'flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 bg-slate-50'
-    : 'flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 bg-gradient-to-b from-emerald-50 to-slate-100';
+    ? 'flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 bg-gradient-to-b from-white to-slate-50'
+    : 'flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 bg-gradient-to-b from-[#0a2e1a] via-[#1a4d2e] to-[#0f3d20]';
 
+  const containerClass = isLight
+    ? "min-h-screen bg-white flex text-slate-900"
+    : "min-h-screen bg-[#0a2e1a] flex text-white";
+  
   return (
-    <div className="min-h-screen bg-slate-100 flex text-slate-900">
+    <div className={containerClass}>
       {/* Sidebar */}
       <aside className={sidebarClass}>
         <div className="px-6 py-6 border-b border-white/10 flex items-center gap-3">
