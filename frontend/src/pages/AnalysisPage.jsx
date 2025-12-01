@@ -262,6 +262,9 @@ const AnalysisPage = () => {
         persistTripFromRoute(response.data, {
           vehicleName: vehicle.name,
           numPassengers: numPassengers,
+          batteryKwh: vehicle.battery_kwh || null,
+          batteryStartPct: batteryStartPct,
+          batteryEndPct: batteryEndPct,
         });
       } catch (e) {
         console.error('Failed to persist trip summary', e);

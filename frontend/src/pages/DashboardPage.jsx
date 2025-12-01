@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { ArrowUpRight, Leaf, Zap, Award, Car, TrendingUp } from 'lucide-react';
 import { getAllTrips } from '../lib/tripStorage';
@@ -15,6 +16,7 @@ const formatDate = (timestamp) => {
 };
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
   const [trips, setTrips] = useState([]);
   const [theme, setTheme] = useState('dark');
 
@@ -48,6 +50,7 @@ const DashboardPage = () => {
     0
   );
   const totalCo2SavedKg = trips.reduce((sum, t) => sum + (t.co2SavedKg || 0), 0);
+  const totalChargingStops = trips.reduce((sum, t) => sum + (t.chargingStops || 0), 0);
   const avgEcoScore =
     totalTrips > 0
       ? Math.round(
@@ -61,6 +64,7 @@ const DashboardPage = () => {
     distanceKm: totalDistanceKm.toFixed(0),
     energySavedKwh: totalEnergySavedKwh,
     co2SavedKg: totalCo2SavedKg,
+    chargingStops: totalChargingStops,
     ecoScore: avgEcoScore,
     points: totalTrips * 10, // ex : 10 pts par trajet
     improvement: {
@@ -94,7 +98,8 @@ const DashboardPage = () => {
             </div>
             <button
               type="button"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white text-emerald-700 font-semibold text-sm shadow-sm"
+              onClick={() => navigate('/analysis')}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white text-emerald-700 font-semibold text-sm shadow-sm hover:bg-emerald-50 transition"
             >
               + Nouveau trajet
             </button>
@@ -103,7 +108,7 @@ const DashboardPage = () => {
       </section>
 
       {/* KPI cards row */}
-      <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 mb-8">
+      <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 md:gap-4 mb-8">
         <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
           <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Trajets effectués</div>
           <div className={`text-2xl font-semibold ${isDark ? 'text-white' : ''}`}>{stats.trips}</div>
@@ -144,6 +149,13 @@ const DashboardPage = () => {
           <div className={`text-2xl font-semibold ${isDark ? 'text-white' : ''}`}>{stats.points}</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.points}%
+          </div>
+        </div>
+        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Recharges nécessaires</div>
+          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : ''}`}>{stats.chargingStops}</div>
+          <div className={`text-[11px] mt-1 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
+            {totalTrips > 0 ? `sur ${totalTrips} trajet${totalTrips > 1 ? 's' : ''}` : 'Aucun trajet'}
           </div>
         </div>
       </section>
@@ -208,6 +220,14 @@ const DashboardPage = () => {
                           {trip.ecoScore}/100
                         </div>
                       </div>
+                      {trip.chargingStops !== null && trip.chargingStops !== undefined && (
+                        <div>
+                          <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Recharges</div>
+                          <div className={`text-sm font-semibold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
+                            {trip.chargingStops}
+                          </div>
+                        </div>
+                      )}
                       <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${isDark ? 'border-emerald-300/50 bg-emerald-400/30 text-emerald-50' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
                         Terminé
                       </span>
@@ -298,6 +318,7 @@ const DashboardPage = () => {
               </h2>
               <button
                 type="button"
+                onClick={() => navigate('/vehicles')}
                 className={`text-xs font-medium ${isDark ? 'text-emerald-50 hover:text-white' : 'text-emerald-700 hover:text-emerald-800'}`}
               >
                 Gérer
@@ -317,7 +338,8 @@ const DashboardPage = () => {
                 <span>Ajouter un véhicule populaire ou personnalisé</span>
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-emerald-500 text-white text-lg"
+                  onClick={() => navigate('/vehicles')}
+                  className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-emerald-500 text-white text-lg hover:bg-emerald-600 transition"
                 >
                   +
                 </button>

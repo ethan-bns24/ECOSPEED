@@ -79,6 +79,32 @@ export function computeEcoScore(energySavedPercent) {
   return Math.round(Math.max(0, Math.min(100, score)));
 }
 
+// Calcule le nombre de recharges nécessaires pour un trajet
+export function calculateChargingStops(energyKwh, batteryKwh, batteryStartPct, batteryEndPct) {
+  if (!batteryKwh || batteryKwh <= 0) return 0;
+  
+  // Énergie disponible au départ (kWh)
+  const energyAtStart = batteryKwh * (batteryStartPct / 100);
+  
+  // Énergie nécessaire à l'arrivée (kWh)
+  const energyAtEnd = batteryKwh * (batteryEndPct / 100);
+  
+  // Énergie nette nécessaire (on doit avoir energyAtEnd à l'arrivée)
+  const netEnergyNeeded = energyKwh - (energyAtStart - energyAtEnd);
+  
+  // Si on a assez d'énergie, pas besoin de recharger
+  if (netEnergyNeeded <= 0) return 0;
+  
+  // Capacité utilisable de la batterie (on recharge typiquement de 20% à 80% = 60% utilisable)
+  // Mais on peut aussi utiliser 100% si nécessaire
+  const usableBatteryCapacity = batteryKwh * 0.8; // 80% de la capacité totale
+  
+  // Nombre de recharges nécessaires (arrondi vers le haut)
+  const chargingStops = Math.ceil(netEnergyNeeded / usableBatteryCapacity);
+  
+  return Math.max(0, chargingStops);
+}
+
 // Enregistre un trajet à partir de la réponse /route
 export function persistTripFromRoute(routeData, meta = {}) {
   if (!routeData || !routeData.segments) return;
@@ -94,6 +120,12 @@ export function persistTripFromRoute(routeData, meta = {}) {
   } = computeKpisFromSegments(routeData.segments);
 
   const ecoScore = computeEcoScore(energySavedVsLimitPercent);
+  
+  // Calculer le nombre de recharges nécessaires
+  const batteryKwh = meta.batteryKwh || null;
+  const batteryStartPct = meta.batteryStartPct || 100;
+  const batteryEndPct = meta.batteryEndPct || 20;
+  const chargingStops = batteryKwh ? calculateChargingStops(totalEcoEnergy, batteryKwh, batteryStartPct, batteryEndPct) : null;
 
   const trip = {
     id: routeData.route_id || `${Date.now()}`,
@@ -110,6 +142,7 @@ export function persistTripFromRoute(routeData, meta = {}) {
     ecoScore,
     vehicleName: meta.vehicleName || null,
     numPassengers: meta.numPassengers ?? null,
+    chargingStops,
   };
 
   const trips = loadTrips();
