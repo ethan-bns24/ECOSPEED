@@ -1166,15 +1166,13 @@ async def get_charging_stations(
                         
                         # Filtrer par distance si latitude/longitude/distance sont fournis
                         if latitude and longitude and distance:
-                            from math import radians, cos, sin, asin, sqrt
-                            
                             def haversine(lon1, lat1, lon2, lat2):
                                 """Calcule la distance entre deux points en km"""
-                                lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+                                lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
                                 dlon = lon2 - lon1
                                 dlat = lat2 - lat1
-                                a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-                                c = 2 * asin(sqrt(a))
+                                a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+                                c = 2 * math.asin(math.sqrt(a))
                                 return 6371 * c  # Rayon de la Terre en km
                             
                             dist = haversine(longitude, latitude, lon, lat)
