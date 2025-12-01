@@ -452,91 +452,91 @@ const AnalysisPage = () => {
                   <div className="space-y-3 pt-2">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.emptyMass}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.emptyMass}</Label>
                         <Input
                           type="number"
                           value={customVehicle.empty_mass}
                           onChange={(e) => setCustomVehicle({...customVehicle, empty_mass: parseFloat(e.target.value)})}
-                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                          className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.extraLoad}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.extraLoad}</Label>
                         <Input
                           type="number"
                           value={customVehicle.extra_load}
                           onChange={(e) => setCustomVehicle({...customVehicle, extra_load: parseFloat(e.target.value)})}
-                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                          className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.dragCoeff}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.dragCoeff}</Label>
                         <Input
                           type="number"
                           step="0.01"
                           value={customVehicle.drag_coefficient}
                           onChange={(e) => setCustomVehicle({...customVehicle, drag_coefficient: parseFloat(e.target.value)})}
-                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                          className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.frontalArea}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.frontalArea}</Label>
                         <Input
                           type="number"
                           step="0.1"
                           value={customVehicle.frontal_area}
                           onChange={(e) => setCustomVehicle({...customVehicle, frontal_area: parseFloat(e.target.value)})}
-                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                          className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.rollingResistance}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.rollingResistance}</Label>
                         <Input
                           type="number"
                           step="0.001"
                           value={customVehicle.rolling_resistance}
                           onChange={(e) => setCustomVehicle({...customVehicle, rolling_resistance: parseFloat(e.target.value)})}
-                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                          className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.motorEfficiency}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.motorEfficiency}</Label>
                         <Input
                           type="number"
                           step="0.01"
                           value={customVehicle.motor_efficiency}
                           onChange={(e) => setCustomVehicle({...customVehicle, motor_efficiency: parseFloat(e.target.value)})}
-                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                          className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.regenEfficiency}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.regenEfficiency}</Label>
                         <Input
                           type="number"
                           step="0.01"
                           value={customVehicle.regen_efficiency}
                           onChange={(e) => setCustomVehicle({...customVehicle, regen_efficiency: parseFloat(e.target.value)})}
-                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                          className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.auxPower}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.auxPower}</Label>
                         <Input
                           type="number"
                           step="0.1"
                           value={customVehicle.aux_power_kw || 2.0}
                           onChange={(e) => setCustomVehicle({...customVehicle, aux_power_kw: parseFloat(e.target.value)})}
-                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                          className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.battery}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.battery}</Label>
                         <Input
                           type="number"
                           step="1"
                           value={customVehicle.battery_kwh || 60}
                           onChange={(e) => setCustomVehicle({...customVehicle, battery_kwh: parseFloat(e.target.value)})}
-                          className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                          className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
                     </div>
@@ -631,14 +631,14 @@ const AnalysisPage = () => {
                   </div>
                   {useClimate && (
                     <div>
-                      <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.climateIntensity}</Label>
+                      <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.climateIntensity}</Label>
                       <Input
                         type="number"
                         min="0"
                         max="100"
                         value={climateIntensity}
                         onChange={(e) => setClimateIntensity(parseFloat(e.target.value) || 50)}
-                        className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                        className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                       />
                     </div>
                   )}
@@ -651,25 +651,25 @@ const AnalysisPage = () => {
                   <Label className={isDark ? "text-emerald-100" : "text-slate-700"}>🔋 {language === 'fr' ? 'État de la batterie' : 'Battery state'}</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.batteryStart}</Label>
+                      <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.batteryStart}</Label>
                       <Input
                         type="number"
                         min="20"
                         max="100"
                         value={batteryStartPct}
                         onChange={(e) => setBatteryStartPct(parseFloat(e.target.value) || 100)}
-                        className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                        className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                       />
                     </div>
                     <div>
-                      <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.batteryEnd}</Label>
+                      <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.batteryEnd}</Label>
                       <Input
                         type="number"
                         min="5"
                         max="90"
                         value={batteryEndPct}
                         onChange={(e) => setBatteryEndPct(parseFloat(e.target.value) || 20)}
-                        className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                        className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                       />
                     </div>
                   </div>
@@ -681,7 +681,7 @@ const AnalysisPage = () => {
                 <div className="space-y-3">
                   <Label className={isDark ? "text-emerald-100" : "text-slate-700"}>{language === 'fr' ? 'Options avancées' : 'Advanced options'}</Label>
                   <div>
-                    <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.airDensity}</Label>
+                    <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.airDensity}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -689,7 +689,7 @@ const AnalysisPage = () => {
                       max="1.5"
                       value={rhoAir}
                       onChange={(e) => setRhoAir(parseFloat(e.target.value) || 1.225)}
-                      className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                      className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                     />
                   </div>
                 </div>
