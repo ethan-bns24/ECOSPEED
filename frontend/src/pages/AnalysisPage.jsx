@@ -18,7 +18,7 @@ import TimeChart from '../components/TimeChart';
 import KPICards from '../components/KPICards';
 import NavigationPanel from '../components/NavigationPanel';
 import { toast } from 'sonner';
-import { persistTripFromRoute } from '../lib/tripStorage';
+import { persistTripFromRoute, calculateChargingStops } from '../lib/tripStorage';
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
 import { getVehicleSettings, updateVehicleSettings, getAppSettings } from '../lib/settingsStorage';
 
@@ -834,56 +834,87 @@ const AnalysisPage = () => {
                     const totalLimitTime = routeData.segments.reduce((sum, s) => sum + s.limit_time, 0) / 60;
                     const extraTime = totalEcoTime - totalLimitTime;
                     
+                    // Calculer le nombre de recharges nécessaires
+                    const vehicle = getSelectedVehicleData();
+                    const batteryKwh = vehicle?.battery_kwh || null;
+                    const chargingStops = batteryKwh 
+                      ? calculateChargingStops(totalEcoEnergy, batteryKwh, batteryStartPct, batteryEndPct)
+                      : null;
+                    
                     return (
-                      <Card className="bg-[#4ade80]/10 border-[#4ade80]/30 mt-6" data-testid="final-summary">
+                      <Card className={`${isDark ? 'bg-white/5 backdrop-blur-sm border-emerald-700/30' : 'bg-white border-slate-200'} mt-6`} data-testid="final-summary">
                         <CardContent className="p-6">
                           <div className="text-center">
-                            <h3 className="text-2xl font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                              Trip Summary
+                            <h3 className={`text-2xl font-bold mb-4 ${isDark ? 'text-emerald-100' : 'text-slate-900'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                              {language === 'fr' ? 'Résumé du trajet' : 'Trip Summary'}
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                              <div className="bg-white/5 rounded-lg p-4">
-                                <div className="text-sm text-gray-400 mb-2">Energy at Speed Limit</div>
-                                <div className="text-3xl font-bold text-white">
-                                  {totalLimitEnergy.toFixed(2)} <span className="text-lg text-gray-400">kWh</span>
+                              <div className={`${isDark ? 'bg-white/5' : 'bg-slate-50'} rounded-lg p-4`}>
+                                <div className={`text-sm mb-2 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                  {language === 'fr' ? 'Énergie à la limite' : 'Energy at Speed Limit'}
+                                </div>
+                                <div className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                  {totalLimitEnergy.toFixed(2)} <span className={`text-lg ${isDark ? 'text-emerald-200' : 'text-slate-500'}`}>kWh</span>
                                 </div>
                               </div>
-                              <div className="bg-[#4ade80]/20 rounded-lg p-4 border-2 border-[#4ade80]/50">
-                                <div className="text-sm text-gray-300 mb-2">Energy Saved</div>
-                                <div className="text-3xl font-bold text-[#4ade80]">
-                                  {energySavedVsLimit.toFixed(2)} <span className="text-lg text-gray-300">kWh</span>
+                              <div className={`${isDark ? 'bg-emerald-500/20 border-2 border-emerald-500/50' : 'bg-emerald-50 border-2 border-emerald-200'} rounded-lg p-4`}>
+                                <div className={`text-sm mb-2 ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
+                                  {language === 'fr' ? 'Énergie économisée' : 'Energy Saved'}
                                 </div>
-                                <div className="text-lg text-[#4ade80] mt-1 font-semibold">
-                                  ({energySavedPercent.toFixed(1)}% savings)
+                                <div className={`text-3xl font-bold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
+                                  {energySavedVsLimit.toFixed(2)} <span className={`text-lg ${isDark ? 'text-emerald-200' : 'text-emerald-600'}`}>kWh</span>
+                                </div>
+                                <div className={`text-lg mt-1 font-semibold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
+                                  ({energySavedPercent.toFixed(1)}% {language === 'fr' ? 'd\'économie' : 'savings'})
                                 </div>
                               </div>
-                              <div className="bg-white/5 rounded-lg p-4">
-                                <div className="text-sm text-gray-400 mb-2">Eco-Driving Energy</div>
-                                <div className="text-3xl font-bold text-[#4ade80]">
-                                  {totalEcoEnergy.toFixed(2)} <span className="text-lg text-gray-400">kWh</span>
+                              <div className={`${isDark ? 'bg-white/5' : 'bg-slate-50'} rounded-lg p-4`}>
+                                <div className={`text-sm mb-2 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                  {language === 'fr' ? 'Énergie éco-conduite' : 'Eco-Driving Energy'}
+                                </div>
+                                <div className={`text-3xl font-bold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
+                                  {totalEcoEnergy.toFixed(2)} <span className={`text-lg ${isDark ? 'text-emerald-200' : 'text-slate-500'}`}>kWh</span>
                                 </div>
                               </div>
                             </div>
-                            <div className="mt-6 pt-6 border-t border-white/10">
-                              <div className="flex items-center justify-center gap-8">
+                            <div className={`mt-6 pt-6 border-t ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
+                              <div className="flex items-center justify-center gap-8 flex-wrap">
                                 <div className="text-center">
-                                  <div className="text-sm text-gray-400 mb-1">Time at Speed Limit</div>
-                                  <div className="text-xl font-bold text-white">
-                                    {totalLimitTime.toFixed(1)} <span className="text-sm text-gray-400">min</span>
+                                  <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                    {language === 'fr' ? 'Temps à la limite' : 'Time at Speed Limit'}
+                                  </div>
+                                  <div className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                    {totalLimitTime.toFixed(1)} <span className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-500'}`}>min</span>
                                   </div>
                                 </div>
                                 <div className="text-center">
-                                  <div className="text-sm text-gray-400 mb-1">Eco-Driving Time</div>
-                                  <div className="text-xl font-bold text-[#4ade80]">
-                                    {totalEcoTime.toFixed(1)} <span className="text-sm text-gray-400">min</span>
+                                  <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                    {language === 'fr' ? 'Temps éco-conduite' : 'Eco-Driving Time'}
+                                  </div>
+                                  <div className={`text-xl font-bold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
+                                    {totalEcoTime.toFixed(1)} <span className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-500'}`}>min</span>
                                   </div>
                                 </div>
                                 <div className="text-center">
-                                  <div className="text-sm text-gray-400 mb-1">Extra Time</div>
-                                  <div className={`text-xl font-bold ${extraTime > 0 ? 'text-yellow-400' : 'text-[#4ade80]'}`}>
-                                    {extraTime >= 0 ? '+' : ''}{extraTime.toFixed(1)} <span className="text-sm text-gray-400">min</span>
+                                  <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                    {language === 'fr' ? 'Temps supplémentaire' : 'Extra Time'}
+                                  </div>
+                                  <div className={`text-xl font-bold ${extraTime > 0 ? (isDark ? 'text-yellow-300' : 'text-yellow-600') : (isDark ? 'text-emerald-100' : 'text-emerald-700')}`}>
+                                    {extraTime >= 0 ? '+' : ''}{extraTime.toFixed(1)} <span className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-500'}`}>min</span>
                                   </div>
                                 </div>
+                                {chargingStops !== null && (
+                                  <div className="text-center">
+                                    <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                      {language === 'fr' ? 'Recharges nécessaires' : 'Charging Stops'}
+                                    </div>
+                                    <div className={`text-xl font-bold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
+                                      {chargingStops} <span className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-500'}`}>
+                                        {language === 'fr' ? (chargingStops > 1 ? 'recharges' : 'recharge') : (chargingStops > 1 ? 'stops' : 'stop')}
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
