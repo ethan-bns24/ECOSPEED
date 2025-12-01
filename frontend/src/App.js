@@ -9,6 +9,7 @@ import BadgesPage from './pages/BadgesPage';
 import HistoryPage from './pages/HistoryPage';
 import StatsPage from './pages/StatsPage';
 import StationsPage from './pages/StationsPage';
+import SettingsPage from './pages/SettingsPage';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/stats" element={<StatsPage />} />
           <Route path="/stations" element={<StationsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
 
           {/* Page d'analyse existante conservée pour le flux « Nouveau trajet » */}
           <Route path="/analysis" element={<AnalysisPage />} />

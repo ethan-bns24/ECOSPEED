@@ -50,8 +50,12 @@ const StationsPage = () => {
           {/* On réutilise RouteMap simplement comme fond cartographique centrée sur la France */}
           <div className="h-[320px] rounded-2xl overflow-hidden">
             <RouteMap
+              segments={[]}
+              currentSegmentIndex={0}
+              startLocation="Paris"
+              endLocation="Paris"
               routeCoordinates={[
-                [48.8566, 2.3522], // Paris
+                [48.8566, 2.3522],
                 [48.8566, 2.3522],
               ]}
             />

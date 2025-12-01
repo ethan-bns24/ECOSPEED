@@ -19,6 +19,8 @@ import KPICards from '../components/KPICards';
 import NavigationPanel from '../components/NavigationPanel';
 import { toast } from 'sonner';
 import { persistTripFromRoute } from '../lib/tripStorage';
+import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
+import { getVehicleSettings } from '../lib/settingsStorage';
 
 // Use environment variable or fallback to localhost for development
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
@@ -28,154 +30,7 @@ const API = `${BACKEND_URL}/api`;
 console.log('Backend URL configured:', BACKEND_URL);
 console.log('API endpoint:', API);
 
-// Vehicle Profiles - defined directly in code (from Streamlit)
-// Note: drag_coefficient is actually CdA (Cd × A), so frontal_area is for display only
-const VEHICLE_PROFILES = [
-  {
-    name: "Tesla Model 3",
-    empty_mass: 1850,
-    extra_load: 150,
-    drag_coefficient: 0.58, // CdA (Cd × A)
-    frontal_area: 2.2, // Realistic frontal area in m²
-    rolling_resistance: 0.008,
-    motor_efficiency: 0.95,
-    regen_efficiency: 0.85,
-    aux_power_kw: 2.0,
-    battery_kwh: 75
-  },
-  {
-    name: "Tesla Model Y",
-    empty_mass: 2000,
-    extra_load: 150,
-    drag_coefficient: 0.62, // CdA
-    frontal_area: 2.4, // SUV - larger frontal area
-    rolling_resistance: 0.008,
-    motor_efficiency: 0.95,
-    regen_efficiency: 0.85,
-    aux_power_kw: 2.2,
-    battery_kwh: 75
-  },
-  {
-    name: "Audi Q4 e-tron",
-    empty_mass: 2100,
-    extra_load: 150,
-    drag_coefficient: 0.70, // CdA
-    frontal_area: 2.5, // SUV - larger frontal area
-    rolling_resistance: 0.009,
-    motor_efficiency: 0.92,
-    regen_efficiency: 0.80,
-    aux_power_kw: 2.5,
-    battery_kwh: 82
-  },
-  {
-    name: "BMW iX3",
-    empty_mass: 2180,
-    extra_load: 150,
-    drag_coefficient: 0.68, // CdA
-    frontal_area: 2.4, // SUV
-    rolling_resistance: 0.009,
-    motor_efficiency: 0.93,
-    regen_efficiency: 0.82,
-    aux_power_kw: 2.3,
-    battery_kwh: 80
-  },
-  {
-    name: "Mercedes EQC",
-    empty_mass: 2425,
-    extra_load: 150,
-    drag_coefficient: 0.72, // CdA
-    frontal_area: 2.5, // Large SUV
-    rolling_resistance: 0.010,
-    motor_efficiency: 0.91,
-    regen_efficiency: 0.78,
-    aux_power_kw: 2.8,
-    battery_kwh: 80
-  },
-  {
-    name: "Volkswagen ID.4",
-    empty_mass: 2120,
-    extra_load: 150,
-    drag_coefficient: 0.66, // CdA
-    frontal_area: 2.3, // SUV
-    rolling_resistance: 0.009,
-    motor_efficiency: 0.90,
-    regen_efficiency: 0.75,
-    aux_power_kw: 2.0,
-    battery_kwh: 77
-  },
-  {
-    name: "Renault Zoe",
-    empty_mass: 1500,
-    extra_load: 150,
-    drag_coefficient: 0.65, // CdA
-    frontal_area: 1.9, // Small car
-    rolling_resistance: 0.010,
-    motor_efficiency: 0.90,
-    regen_efficiency: 0.70,
-    aux_power_kw: 1.5,
-    battery_kwh: 52
-  },
-  {
-    name: "BMW i3",
-    empty_mass: 1200,
-    extra_load: 150,
-    drag_coefficient: 0.50, // CdA
-    frontal_area: 1.8, // Very small car
-    rolling_resistance: 0.008,
-    motor_efficiency: 0.92,
-    regen_efficiency: 0.80,
-    aux_power_kw: 1.8,
-    battery_kwh: 42
-  },
-  {
-    name: "Nissan Leaf",
-    empty_mass: 1600,
-    extra_load: 150,
-    drag_coefficient: 0.68, // CdA
-    frontal_area: 2.1, // Compact car
-    rolling_resistance: 0.010,
-    motor_efficiency: 0.88,
-    regen_efficiency: 0.75,
-    aux_power_kw: 1.7,
-    battery_kwh: 40
-  },
-  {
-    name: "Hyundai IONIQ 5",
-    empty_mass: 1950,
-    extra_load: 150,
-    drag_coefficient: 0.64, // CdA
-    frontal_area: 2.3, // SUV/Crossover
-    rolling_resistance: 0.008,
-    motor_efficiency: 0.94,
-    regen_efficiency: 0.83,
-    aux_power_kw: 2.1,
-    battery_kwh: 73
-  },
-  {
-    name: "Kia EV6",
-    empty_mass: 1980,
-    extra_load: 150,
-    drag_coefficient: 0.63, // CdA
-    frontal_area: 2.3, // SUV/Crossover
-    rolling_resistance: 0.008,
-    motor_efficiency: 0.94,
-    regen_efficiency: 0.83,
-    aux_power_kw: 2.1,
-    battery_kwh: 77
-  },
-  {
-    name: "Custom",
-    empty_mass: 1900,
-    extra_load: 150,
-    drag_coefficient: 0.62, // CdA
-    frontal_area: 2.2, // Default realistic value
-    rolling_resistance: 0.010,
-    motor_efficiency: 0.90,
-    regen_efficiency: 0.60,
-    aux_power_kw: 2.0,
-    battery_kwh: 60
-  }
-];
+// Vehicle Profiles sont maintenant centralisés dans lib/vehicleProfiles
 
 const AnalysisPage = () => {
   const navigate = useNavigate();
@@ -213,8 +68,29 @@ const AnalysisPage = () => {
   const [isNavigating, setIsNavigating] = useState(false);
   const [showResults, setShowResults] = useState(false);
   
-  // Vehicle profiles are defined directly in code, no API call needed
-  
+  // Vehicle profiles: filtrées par les préférences (véhicules actifs)
+  const [availableProfiles, setAvailableProfiles] = useState(VEHICLE_PROFILES);
+
+  useEffect(() => {
+    // Charger les préférences véhicules
+    try {
+      const { enabledVehicles, defaultVehicleName } = getVehicleSettings?.() || {};
+      let profiles = VEHICLE_PROFILES;
+      if (enabledVehicles && enabledVehicles.length > 0) {
+        profiles = VEHICLE_PROFILES.filter((p) => enabledVehicles.includes(p.name));
+      }
+      setAvailableProfiles(profiles);
+      const preferred =
+        (defaultVehicleName &&
+          profiles.find((p) => p.name === defaultVehicleName)?.name) ||
+        profiles[0]?.name ||
+        VEHICLE_PROFILES[0].name;
+      setSelectedProfile(preferred);
+    } catch (e) {
+      console.error('Failed to load vehicle settings', e);
+    }
+  }, []);
+
   const getSelectedVehicleData = () => {
     if (selectedProfile === 'Custom') {
       return customVehicle;
@@ -428,18 +304,28 @@ const AnalysisPage = () => {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Vehicle Profile</Label>
-                  <Select value={selectedProfile} onValueChange={setSelectedProfile}>
-                    <SelectTrigger data-testid="vehicle-profile-select" className="bg-white/5 border-white/20 text-white">
-                      <SelectValue placeholder="Select a vehicle profile" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#1a4d2e] border-white/20 text-white">
-                      {VEHICLE_PROFILES.map(profile => (
-                        <SelectItem key={profile.name} value={profile.name}>
-                          {profile.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {availableProfiles.length === 1 ? (
+                    <div className="text-sm text-gray-200">
+                      <span className="font-semibold">{availableProfiles[0].name}</span>{' '}
+                      (sélectionné automatiquement)
+                    </div>
+                  ) : (
+                    <Select value={selectedProfile} onValueChange={setSelectedProfile}>
+                      <SelectTrigger
+                        data-testid="vehicle-profile-select"
+                        className="bg-white/5 border-white/20 text-white"
+                      >
+                        <SelectValue placeholder="Select a vehicle profile" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1a4d2e] border-white/20 text-white">
+                        {availableProfiles.map((profile) => (
+                          <SelectItem key={profile.name} value={profile.name}>
+                            {profile.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 
                 {selectedProfile === 'Custom' && (
@@ -568,15 +454,23 @@ const AnalysisPage = () => {
                       <Label className="text-xs">Number of passengers</Label>
                       <Input
                         type="number"
-                        min="0"
-                        max="10"
+                        min="1"
+                        max="5"
                         value={numPassengers}
                         onChange={(e) => {
-                          const val = parseInt(e.target.value) || 0;
-                          setNumPassengers(val >= 0 ? val : 0);
+                          const raw = parseInt(e.target.value || '0', 10);
+                          if (Number.isNaN(raw)) {
+                            setNumPassengers(1);
+                            return;
+                          }
+                          const clamped = Math.max(1, Math.min(5, raw));
+                          setNumPassengers(clamped);
                         }}
                         className="bg-white/5 border-white/20 text-white text-sm"
                       />
+                      <p className="text-xs text-gray-400 mt-1">
+                        Min&nbsp;: 1 personne, Max&nbsp;: 5 personnes (valeur par défaut&nbsp;: 1).
+                      </p>
                     </div>
                     <div>
                       <Label className="text-xs">Avg weight per person (kg)</Label>

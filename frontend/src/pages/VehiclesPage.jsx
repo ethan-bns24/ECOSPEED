@@ -1,8 +1,44 @@
-import React from 'react';
-import { Car, Plus } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Car, Star } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
+import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
+import { getVehicleSettings, updateVehicleSettings } from '../lib/settingsStorage';
 
 const VehiclesPage = () => {
+  const [enabledVehicles, setEnabledVehicles] = useState([]);
+  const [defaultVehicleName, setDefaultVehicleName] = useState(null);
+
+  useEffect(() => {
+    const { enabledVehicles, defaultVehicleName } = getVehicleSettings();
+    if (enabledVehicles && enabledVehicles.length > 0) {
+      setEnabledVehicles(enabledVehicles);
+      setDefaultVehicleName(defaultVehicleName || enabledVehicles[0]);
+    } else {
+      // Par défaut, on active la première voiture
+      const first = VEHICLE_PROFILES[0]?.name;
+      if (first) {
+        setEnabledVehicles([first]);
+        setDefaultVehicleName(first);
+        updateVehicleSettings({
+          enabledVehicles: [first],
+          defaultVehicleName: first,
+        });
+      }
+    }
+  }, []);
+
+  const handleSetDefault = (name) => {
+    const nextEnabled = Array.from(new Set([...enabledVehicles, name]));
+    setEnabledVehicles(nextEnabled);
+    setDefaultVehicleName(name);
+    updateVehicleSettings({
+      enabledVehicles: nextEnabled,
+      defaultVehicleName: name,
+    });
+  };
+
+  const isDefault = (name) => name === defaultVehicleName;
+
   return (
     <DashboardLayout>
       <div className="mb-6">
@@ -30,15 +66,31 @@ const VehiclesPage = () => {
             </div>
 
             <div className="space-y-3 text-sm">
-              <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 flex items-center justify-between gap-3">
-                <div>
-                  <div className="font-semibold">Tesla Model 3</div>
-                  <div className="text-xs text-slate-500">75 kWh · 1850 kg</div>
-                </div>
-                <span className="text-[11px] px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                  Prédéfini
-                </span>
-              </div>
+              {VEHICLE_PROFILES.filter((v) => v.name !== 'Custom').map((vehicle) => (
+                <button
+                  key={vehicle.name}
+                  type="button"
+                  onClick={() => handleSetDefault(vehicle.name)}
+                  className="w-full rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 flex items-center justify-between gap-3 text-left hover:border-emerald-400 hover:bg-emerald-50 transition"
+                >
+                  <div>
+                    <div className="font-semibold">{vehicle.name}</div>
+                    <div className="text-xs text-slate-500">
+                      {vehicle.battery_kwh} kWh · {vehicle.empty_mass} kg
+                    </div>
+                  </div>
+                  <span
+                    className={`inline-flex items-center gap-1 text-[11px] px-3 py-1 rounded-full border ${
+                      isDefault(vehicle.name)
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-slate-100 text-slate-500 border-slate-200'
+                    }`}
+                  >
+                    <Star className="w-3 h-3" />
+                    {isDefault(vehicle.name) ? 'Par défaut' : 'Définir par défaut'}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -48,9 +100,11 @@ const VehiclesPage = () => {
             <h2 className="text-base md:text-lg font-semibold mb-2">
               Conseil
             </h2>
-            <p className="text-slate-600">
-              Pour de meilleurs résultats, créez un profil par véhicule que vous
-              utilisez réellement (voiture principale, véhicule de société, etc.).
+            <p className="text-slate-600 text-sm">
+              Le véhicule marqué <strong>Par défaut</strong> sera utilisé
+              automatiquement dans le calcul de trajet.  
+              Si vous en marquez plusieurs au fil du temps, vous pourrez toujours
+              les sélectionner dans l&apos;écran &laquo; Nouveau trajet &raquo;.
             </p>
           </div>
         </div>
