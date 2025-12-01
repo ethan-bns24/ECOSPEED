@@ -138,11 +138,11 @@ const VehiclesPage = () => {
         </div>
 
         <div className="space-y-4">
-          <div className="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-100 text-sm">
-            <h2 className="text-base md:text-lg font-semibold mb-2">
+          <div className={`rounded-3xl p-5 md:p-6 shadow-sm text-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
+            <h2 className={`text-base md:text-lg font-semibold mb-2 ${isDark ? 'text-white' : ''}`}>
               Conseil
             </h2>
-            <p className="text-slate-600 text-sm">
+            <p className={`text-sm ${isDark ? 'text-emerald-50' : 'text-slate-600'}`}>
               Le véhicule marqué <strong>Par défaut</strong> sera utilisé
               automatiquement dans le calcul de trajet.  
               Si vous en marquez plusieurs au fil du temps, vous pourrez toujours
