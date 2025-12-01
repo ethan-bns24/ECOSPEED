@@ -544,7 +544,7 @@ const AnalysisPage = () => {
                 )}
                 
                 {selectedProfile && selectedProfile !== 'Custom' && (
-                  <div className="text-sm text-gray-300 space-y-1 pt-2">
+                  <div className={`text-sm space-y-1 pt-2 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
                     {(() => {
                       const profile = VEHICLE_PROFILES.find(p => p.name === selectedProfile);
                       if (!profile) return null;
@@ -588,7 +588,7 @@ const AnalysisPage = () => {
                         }}
                         className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                       />
-                      <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+                      <p className={`text-xs mt-1 ${isDark ? 'text-emerald-300/70' : 'text-slate-500'}`}>
                         {language === 'fr' ? 'Min : 1 personne, Max : 5 personnes (valeur par défaut : 1).' : 'Min: 1 person, Max: 5 people (default: 1).'}
                       </p>
                     </div>
@@ -618,7 +618,7 @@ const AnalysisPage = () => {
                 
                 {/* Driving conditions */}
                 <div className="space-y-3">
-                  <Label className={isDark ? "text-white" : "text-slate-700"}>🌡️ {language === 'fr' ? 'Conditions de conduite' : 'Driving conditions'}</Label>
+                  <Label className={isDark ? "text-emerald-100" : "text-slate-700"}>🌡️ {language === 'fr' ? 'Conditions de conduite' : 'Driving conditions'}</Label>
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
@@ -627,7 +627,7 @@ const AnalysisPage = () => {
                       onChange={(e) => setUseClimate(e.target.checked)}
                       className="w-4 h-4"
                     />
-                    <Label htmlFor="use-climate" className={`cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}>{t.climate}</Label>
+                    <Label htmlFor="use-climate" className={`cursor-pointer ${isDark ? 'text-emerald-100' : 'text-slate-700'}`}>{t.climate}</Label>
                   </div>
                   {useClimate && (
                     <div>
@@ -648,7 +648,7 @@ const AnalysisPage = () => {
                 
                 {/* Battery state */}
                 <div className="space-y-3">
-                  <Label className={isDark ? "text-white" : "text-slate-700"}>🔋 {language === 'fr' ? 'État de la batterie' : 'Battery state'}</Label>
+                  <Label className={isDark ? "text-emerald-100" : "text-slate-700"}>🔋 {language === 'fr' ? 'État de la batterie' : 'Battery state'}</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.batteryStart}</Label>
@@ -679,7 +679,7 @@ const AnalysisPage = () => {
                 
                 {/* Advanced options */}
                 <div className="space-y-3">
-                  <Label className={isDark ? "text-white" : "text-slate-700"}>{language === 'fr' ? 'Options avancées' : 'Advanced options'}</Label>
+                  <Label className={isDark ? "text-emerald-100" : "text-slate-700"}>{language === 'fr' ? 'Options avancées' : 'Advanced options'}</Label>
                   <div>
                     <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.airDensity}</Label>
                     <Input

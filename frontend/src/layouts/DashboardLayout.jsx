@@ -153,15 +153,15 @@ const DashboardLayout = ({ children }) => {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar (mobile + desktop header) */}
-        <header className="h-16 px-4 md:px-8 flex items-center justify-between border-b bg-white">
+        <header className={`h-16 px-4 md:px-8 flex items-center justify-between border-b ${isLight ? 'bg-white border-slate-200' : 'bg-[#0a2e1a] border-emerald-800/30'}`}>
           <div className="flex items-center gap-3">
             {/* Mobile menu indicator (static for now) */}
             <div className="md:hidden h-9 w-9 rounded-full bg-[#0b3b27] text-white flex items-center justify-center font-semibold">
               E
             </div>
             <div>
-              <div className="text-sm text-slate-500">{t.greeting}</div>
-              <div className="text-lg font-semibold text-slate-900">
+              <div className={`text-sm ${isLight ? 'text-slate-500' : 'text-emerald-200'}`}>{t.greeting}</div>
+              <div className={`text-lg font-semibold ${isLight ? 'text-slate-900' : 'text-emerald-100'}`}>
                 {t.subtitle}
               </div>
             </div>
