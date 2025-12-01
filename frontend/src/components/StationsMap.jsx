@@ -83,6 +83,11 @@ const StationsMap = ({ stations = [], selectedStation = null, onStationClick }) 
     !isNaN(s.longitude)
   );
 
+  // N'afficher que la borne sélectionnée sur la carte (ou aucune si rien n'est sélectionné)
+  const stationsToDisplay = selectedStation && selectedStation.latitude && selectedStation.longitude
+    ? [selectedStation]
+    : [];
+
   return (
     <MapContainer
       center={defaultCenter}
@@ -96,12 +101,10 @@ const StationsMap = ({ stations = [], selectedStation = null, onStationClick }) 
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       
-      <MapView center={center} zoom={zoom} stations={validStations} />
+      <MapView center={center} zoom={zoom} stations={stationsToDisplay} />
       
-      {/* Charging station markers */}
-      {/* Limiter à 1000 marqueurs pour éviter de surcharger le navigateur */}
-      {validStations
-        .slice(0, 1000)
+      {/* Charging station markers - seulement la borne sélectionnée */}
+      {stationsToDisplay
         .map((station, index) => {
           const icon = createStationIcon(station.status || 'Dispo');
           const isSelected = selectedStation && 

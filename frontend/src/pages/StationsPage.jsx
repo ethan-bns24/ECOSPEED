@@ -129,7 +129,7 @@ const StationsPage = () => {
       <div className="mb-6">
         <h1 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-emerald-100' : ''}`}>Bornes de recharge</h1>
         <p className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
-          Toutes les bornes de recharge publiques en France ({stations.length} bornes trouvées, {Math.min(stations.filter(s => s.latitude && s.longitude).length, 1000)} affichées sur la carte).
+          Toutes les bornes de recharge publiques en France ({stations.length} bornes trouvées). Sélectionnez une borne dans le menu pour l'afficher sur la carte.
         </p>
       </div>
 
