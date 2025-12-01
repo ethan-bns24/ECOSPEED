@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
-import RouteMap from '../components/RouteMap';
+import StationsMap from '../components/StationsMap';
 import { getAppSettings } from '../lib/settingsStorage';
 import axios from 'axios';
 
@@ -14,6 +14,7 @@ const StationsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedStation, setSelectedStation] = useState(null);
   const stationsPerPage = 20;
 
   useEffect(() => {
@@ -120,8 +121,8 @@ const StationsPage = () => {
         </p>
       </div>
 
-      {/* Barre de recherche */}
-      <div className="mb-4">
+      {/* Barre de recherche et menu déroulant */}
+      <div className="mb-4 space-y-3">
         <input
           type="text"
           placeholder="Rechercher une borne, un opérateur ou une adresse..."
@@ -133,8 +134,40 @@ const StationsPage = () => {
               : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'
           } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
         />
+        
+        {/* Menu déroulant pour sélectionner une borne */}
+        <select
+          value={selectedStation ? `${selectedStation.latitude}-${selectedStation.longitude}` : ''}
+          onChange={(e) => {
+            if (e.target.value) {
+              const [lat, lon] = e.target.value.split('-').map(Number);
+              const station = stations.find(s => s.latitude === lat && s.longitude === lon);
+              if (station) {
+                setSelectedStation(station);
+              }
+            } else {
+              setSelectedStation(null);
+            }
+          }}
+          className={`w-full px-4 py-2 rounded-lg border ${
+            isDark
+              ? 'bg-white/5 border-white/20 text-white'
+              : 'bg-white border-slate-300 text-slate-900'
+          } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+        >
+          <option value="">-- Sélectionner une borne sur la carte --</option>
+          {stations.map((station, index) => (
+            <option
+              key={`${station.latitude}-${station.longitude}-${index}`}
+              value={`${station.latitude}-${station.longitude}`}
+            >
+              {station.name || 'Borne de recharge'} - {station.operator || 'Opérateur inconnu'} ({station.powerKw || 0} kW) - {station.address || 'Adresse inconnue'}
+            </option>
+          ))}
+        </select>
+        
         {searchTerm && (
-          <p className={`text-xs mt-1 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+          <p className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
             {filteredStations.length} borne{filteredStations.length > 1 ? 's' : ''} trouvée{filteredStations.length > 1 ? 's' : ''}
           </p>
         )}
@@ -142,19 +175,58 @@ const StationsPage = () => {
 
       <div className="grid lg:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)] gap-6">
         <div className={`rounded-3xl p-4 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
-          {/* On réutilise RouteMap simplement comme fond cartographique centrée sur la France */}
-          <div className="h-[320px] rounded-2xl overflow-hidden">
-            <RouteMap
-              segments={[]}
-              currentSegmentIndex={0}
-              startLocation="Paris"
-              endLocation="Paris"
-              routeCoordinates={[
-                [48.8566, 2.3522],
-                [48.8566, 2.3522],
-              ]}
+          {/* Carte avec toutes les bornes */}
+          <div className="h-[600px] rounded-2xl overflow-hidden">
+            <StationsMap
+              stations={filteredStations}
+              selectedStation={selectedStation}
+              onStationClick={(station) => {
+                setSelectedStation(station);
+                // Mettre à jour le select
+                const select = document.querySelector('select');
+                if (select) {
+                  select.value = `${station.latitude}-${station.longitude}`;
+                }
+              }}
             />
           </div>
+          {selectedStation && (
+            <div className={`mt-4 p-4 rounded-lg ${isDark ? 'bg-white/10' : 'bg-slate-50'}`}>
+              <h3 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                {selectedStation.name || 'Borne de recharge'}
+              </h3>
+              <div className={`text-sm space-y-1 ${isDark ? 'text-emerald-100' : 'text-slate-600'}`}>
+                <div><strong>Opérateur:</strong> {selectedStation.operator || 'Opérateur inconnu'}</div>
+                <div><strong>Puissance:</strong> {selectedStation.powerKw || 0} kW</div>
+                {selectedStation.address && (
+                  <div><strong>Adresse:</strong> {selectedStation.address}</div>
+                )}
+                {selectedStation.price && (
+                  <div><strong>Prix:</strong> {selectedStation.price}</div>
+                )}
+                <div>
+                  <strong>Statut:</strong>{' '}
+                  <span
+                    className={`px-2 py-1 rounded text-xs ${
+                      selectedStation.status === 'Dispo'
+                        ? isDark
+                          ? 'bg-emerald-400/40 text-emerald-50'
+                          : 'bg-emerald-50 text-emerald-700'
+                        : selectedStation.status === 'Occupée'
+                          ? isDark
+                            ? 'bg-amber-400/40 text-amber-50'
+                            : 'bg-amber-50 text-amber-700'
+                          : isDark
+                            ? 'bg-rose-400/40 text-rose-50'
+                            : 'bg-rose-50 text-rose-700'
+                    }`}
+                  >
+                    {selectedStation.status || 'Dispo'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className={`rounded-3xl p-4 md:p-6 shadow-sm text-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
