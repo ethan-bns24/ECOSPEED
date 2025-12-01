@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Home,
   Map,
@@ -10,26 +10,99 @@ import {
   Settings,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { getAppSettings } from '../lib/settingsStorage';
 
-const MENU_ITEMS = [
-  { label: 'Accueil', icon: Home, path: '/' },
-  { label: 'Nouveau trajet', icon: Map, path: '/analysis' },
-  { label: 'Mes véhicules', icon: Car, path: '/vehicles' },
-  { label: 'Historique', icon: History, path: '/history' },
-  { label: 'Statistiques', icon: BarChart2, path: '/stats' },
-  { label: 'Badges', icon: Award, path: '/badges' },
-  { label: 'Bornes', icon: Zap, path: '/stations' },
-  { label: 'Paramètres', icon: Settings, path: '/settings' },
-];
+const LABELS = {
+  fr: {
+    menu: {
+      home: 'Accueil',
+      newTrip: 'Nouveau trajet',
+      vehicles: 'Mes véhicules',
+      history: 'Historique',
+      stats: 'Statistiques',
+      badges: 'Badges',
+      stations: 'Bornes',
+      settings: 'Paramètres',
+    },
+    greeting: 'Bonjour Ethan !',
+    subtitle: 'Optimisez vos trajets 🚗⚡',
+    footerTitle: 'Conduisez écolo',
+    footerText: 'Optimisez votre consommation pour préserver la planète.',
+    level: 'Niveau 1 · Éco-conducteur',
+  },
+  en: {
+    menu: {
+      home: 'Home',
+      newTrip: 'New trip',
+      vehicles: 'My vehicles',
+      history: 'History',
+      stats: 'Statistics',
+      badges: 'Badges',
+      stations: 'Charging',
+      settings: 'Settings',
+    },
+    greeting: 'Hello Ethan! ',
+    subtitle: 'Optimize your trips 🚗⚡',
+    footerTitle: 'Drive green',
+    footerText: 'Optimize your consumption to protect the planet.',
+    level: 'Level 1 · Eco driver',
+  },
+};
 
 const DashboardLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [language, setLanguage] = useState('fr');
+  const [theme, setTheme] = useState('dark');
+
+  useEffect(() => {
+    const { language, theme } = getAppSettings();
+    setLanguage(language);
+    setTheme(theme);
+
+    const handler = (event) => {
+      const detail = event.detail || {};
+      if (detail.language) setLanguage(detail.language);
+      if (detail.theme) setTheme(detail.theme);
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('ecospeed-settings-updated', handler);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('ecospeed-settings-updated', handler);
+      }
+    };
+  }, []);
+
+  const t = LABELS[language] || LABELS.fr;
+
+  const menuItems = [
+    { label: t.menu.home, icon: Home, path: '/' },
+    { label: t.menu.newTrip, icon: Map, path: '/analysis' },
+    { label: t.menu.vehicles, icon: Car, path: '/vehicles' },
+    { label: t.menu.history, icon: History, path: '/history' },
+    { label: t.menu.stats, icon: BarChart2, path: '/stats' },
+    { label: t.menu.badges, icon: Award, path: '/badges' },
+    { label: t.menu.stations, icon: Zap, path: '/stations' },
+    { label: t.menu.settings, icon: Settings, path: '/settings' },
+  ];
+
+  const isLight = theme === 'light';
+  const sidebarClass = isLight
+    ? 'hidden md:flex md:flex-col w-64 bg-white text-slate-900 border-r border-slate-200'
+    : 'hidden md:flex md:flex-col w-64 bg-[#0b3b27] text-white';
+  const mainBgClass = isLight
+    ? 'flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 bg-slate-50'
+    : 'flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 bg-gradient-to-b from-emerald-50 to-slate-100';
+
   return (
     <div className="min-h-screen bg-slate-100 flex text-slate-900">
       {/* Sidebar */}
-      <aside className="hidden md:flex md:flex-col w-64 bg-[#0b3b27] text-white">
+      <aside className={sidebarClass}>
         <div className="px-6 py-6 border-b border-white/10 flex items-center gap-3">
           <div className="h-9 w-9 rounded-xl bg-[#22c55e] flex items-center justify-center text-[#0b3b27] font-bold">
             E
@@ -43,7 +116,7 @@ const DashboardLayout = ({ children }) => {
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {MENU_ITEMS.map((item) => {
+          {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive =
               item.path === '/'
@@ -69,8 +142,8 @@ const DashboardLayout = ({ children }) => {
         </nav>
 
         <div className="px-4 py-4 border-t border-white/10 text-xs text-emerald-100/70">
-          <div className="font-semibold mb-1">Conduisez écolo</div>
-          <p>Optimisez votre consommation pour préserver la planète.</p>
+          <div className="font-semibold mb-1">{t.footerTitle}</div>
+          <p>{t.footerText}</p>
         </div>
       </aside>
 
@@ -84,9 +157,9 @@ const DashboardLayout = ({ children }) => {
               E
             </div>
             <div>
-              <div className="text-sm text-slate-500">Bonjour Ethan !</div>
+              <div className="text-sm text-slate-500">{t.greeting}</div>
               <div className="text-lg font-semibold text-slate-900">
-                Optimisez vos trajets 🚗⚡
+                {t.subtitle}
               </div>
             </div>
           </div>
@@ -96,7 +169,7 @@ const DashboardLayout = ({ children }) => {
               type="button"
               className="hidden md:inline-flex text-xs px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 font-medium border border-emerald-100"
             >
-              Niveau 1 · Éco-conducteur
+              {t.level}
             </button>
             <div className="h-9 w-9 rounded-full bg-emerald-500 text-white flex items-center justify-center font-semibold">
               E
@@ -105,7 +178,7 @@ const DashboardLayout = ({ children }) => {
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 bg-gradient-to-b from-emerald-50 to-slate-100">
+        <main className={mainBgClass}>
           {children}
         </main>
       </div>

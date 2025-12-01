@@ -56,6 +56,12 @@ export function updateAppSettings(partial) {
   const next = { ...current, ...partial };
   saveSettings(next);
   applyTheme(next.theme);
+  // Notifier le reste de l'app qu'un réglage a changé (langue / thème)
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent('ecospeed-settings-updated', { detail: next })
+    );
+  }
   return next;
 }
 
