@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { ArrowUpRight, Leaf, Zap, Award, Car, TrendingUp } from 'lucide-react';
 import { getAllTrips } from '../lib/tripStorage';
+import { getAppSettings } from '../lib/settingsStorage';
 
 const formatDate = (timestamp) => {
   if (!timestamp) return '';
@@ -15,10 +16,30 @@ const formatDate = (timestamp) => {
 
 const DashboardPage = () => {
   const [trips, setTrips] = useState([]);
+  const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
     setTrips(getAllTrips());
+    const { theme: thm } = getAppSettings();
+    setTheme(thm);
+    
+    const handler = (event) => {
+      const detail = event.detail || {};
+      if (detail.theme) setTheme(detail.theme);
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('ecospeed-settings-updated', handler);
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('ecospeed-settings-updated', handler);
+      }
+    };
   }, []);
+  
+  const isDark = theme === 'dark';
 
   const totalTrips = trips.length;
   const totalDistanceKm = trips.reduce((sum, t) => sum + (t.distanceKm || 0), 0);
@@ -83,45 +104,45 @@ const DashboardPage = () => {
 
       {/* KPI cards row */}
       <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 mb-8">
-        <div className="bg-white rounded-2xl px-4 py-4 shadow-sm border border-slate-100">
-          <div className="text-xs text-slate-500 mb-1">Trajets effectués</div>
-          <div className="text-2xl font-semibold">{stats.trips}</div>
-          <div className="text-[11px] text-emerald-600 mt-1 flex items-center gap-1">
+        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Trajets effectués</div>
+          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : ''}`}>{stats.trips}</div>
+          <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +12%
           </div>
         </div>
-        <div className="bg-white rounded-2xl px-4 py-4 shadow-sm border border-slate-100">
-          <div className="text-xs text-slate-500 mb-1">Distance totale</div>
-          <div className="text-2xl font-semibold">{stats.distanceKm} km</div>
-          <div className="text-[11px] text-emerald-600 mt-1 flex items-center gap-1">
+        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Distance totale</div>
+          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : ''}`}>{stats.distanceKm} km</div>
+          <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.distance}%
           </div>
         </div>
-        <div className="bg-white rounded-2xl px-4 py-4 shadow-sm border border-slate-100">
-          <div className="text-xs text-slate-500 mb-1">Énergie économisée</div>
-          <div className="text-2xl font-semibold">{stats.energySavedKwh.toFixed(1)} kWh</div>
-          <div className="text-[11px] text-emerald-600 mt-1 flex items-center gap-1">
+        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Énergie économisée</div>
+          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : ''}`}>{stats.energySavedKwh.toFixed(1)} kWh</div>
+          <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.energy}%
           </div>
         </div>
-        <div className="bg-white rounded-2xl px-4 py-4 shadow-sm border border-slate-100">
-          <div className="text-xs text-slate-500 mb-1">CO₂ évité</div>
-          <div className="text-2xl font-semibold">{stats.co2SavedKg.toFixed(1)} kg</div>
-          <div className="text-[11px] text-emerald-600 mt-1 flex items-center gap-1">
+        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>CO₂ évité</div>
+          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : ''}`}>{stats.co2SavedKg.toFixed(1)} kg</div>
+          <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +18%
           </div>
         </div>
-        <div className="bg-white rounded-2xl px-4 py-4 shadow-sm border border-slate-100">
-          <div className="text-xs text-slate-500 mb-1">Score éco moyen</div>
-          <div className="text-2xl font-semibold">{stats.ecoScore}/100</div>
-          <div className="text-[11px] text-emerald-600 mt-1 flex items-center gap-1">
+        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Score éco moyen</div>
+          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : ''}`}>{stats.ecoScore}/100</div>
+          <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.score}%
           </div>
         </div>
-        <div className="bg-white rounded-2xl px-4 py-4 shadow-sm border border-slate-100">
-          <div className="text-xs text-slate-500 mb-1">Points totaux</div>
-          <div className="text-2xl font-semibold">{stats.points}</div>
-          <div className="text-[11px] text-emerald-600 mt-1 flex items-center gap-1">
+        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Points totaux</div>
+          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : ''}`}>{stats.points}</div>
+          <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.points}%
           </div>
         </div>
@@ -131,21 +152,21 @@ const DashboardPage = () => {
       <section className="grid lg:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)] gap-6">
         {/* Left column: recent trips + eco driving score */}
         <div className="space-y-6">
-          <div className="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-100">
+          <div className={`rounded-3xl p-5 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base md:text-lg font-semibold">
+              <h2 className={`text-base md:text-lg font-semibold ${isDark ? 'text-white' : ''}`}>
                 Trajets récents
               </h2>
               <button
                 type="button"
-                className="text-xs font-medium text-emerald-700 hover:text-emerald-800"
+                className={`text-xs font-medium ${isDark ? 'text-emerald-50 hover:text-white' : 'text-emerald-700 hover:text-emerald-800'}`}
               >
                 Voir tout
               </button>
             </div>
 
             {recentTrips.length === 0 ? (
-              <div className="text-sm text-slate-500">
+              <div className={`text-sm ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
                 Aucun trajet pour le moment. Planifiez votre premier trajet pour
                 commencer.
               </div>
@@ -197,12 +218,12 @@ const DashboardPage = () => {
             )}
           </div>
 
-          <div className="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-100">
+          <div className={`rounded-3xl p-5 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base md:text-lg font-semibold">
+              <h2 className={`text-base md:text-lg font-semibold ${isDark ? 'text-white' : ''}`}>
                 Score Éco-conduite
               </h2>
-              <span className="text-xs text-slate-500">Niveau 1</span>
+              <span className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Niveau 1</span>
             </div>
             <div className="flex flex-col md:flex-row md:items-center gap-6">
               <div className="flex-1 flex flex-col items-center justify-center">
