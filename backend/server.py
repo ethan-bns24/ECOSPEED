@@ -105,6 +105,16 @@ class KPIResponse(BaseModel):
     real_time: float  # minutes
     limit_time: float  # minutes
 
+class ChargingStation(BaseModel):
+    name: str
+    operator: str
+    powerKw: float
+    price: Optional[str] = None
+    status: str  # 'Dispo', 'Occupée', 'Hors service'
+    latitude: float
+    longitude: float
+    address: Optional[str] = None
+
 
 # ============================================================================
 # PHYSICS CALCULATIONS
