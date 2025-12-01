@@ -118,15 +118,15 @@ const HistoryPage = () => {
                 key={trip.id}
                 className={`rounded-2xl border px-4 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3 ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100 bg-slate-50/70'}`}
               >
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-emerald-700" />
+                <div className="flex items-center gap-3 flex-1">
+                  <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${isDark ? 'bg-emerald-400/30' : 'bg-emerald-100'}`}>
+                    <MapPin className={`w-5 h-5 ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`} />
                   </div>
-                  <div>
-                    <div className="text-sm font-semibold">
+                  <div className="flex-1">
+                    <div className={`text-sm font-semibold ${isDark ? 'text-white' : ''}`}>
                       {trip.startLocation} → {trip.endLocation}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
                       {formatDateTime(trip.createdAt)} ·{' '}
                       {trip.ecoTimeMin ? trip.ecoTimeMin.toFixed(0) : 0} min ·{' '}
                       {trip.distanceKm?.toFixed
@@ -139,24 +139,40 @@ const HistoryPage = () => {
 
                 <div className="flex items-center gap-4 md:text-right">
                   <div>
-                    <div className="text-xs text-slate-500">Énergie économisée</div>
-                    <div className="text-sm font-semibold text-emerald-700">
+                    <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Énergie économisée</div>
+                    <div className={`text-sm font-semibold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
                       -{(trip.energySavedKwh || 0).toFixed(2)} kWh
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-slate-500 flex items-center gap-1">
-                      <Star className="w-3 h-3 text-amber-500" />
+                    <div className={`text-xs flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
+                      <Star className={`w-3 h-3 ${isDark ? 'text-amber-200' : 'text-amber-500'}`} />
                       Score
                     </div>
-                    <div className="text-sm font-semibold text-amber-600">
+                    <div className={`text-sm font-semibold ${isDark ? 'text-amber-200' : 'text-amber-600'}`}>
                       {trip.ecoScore}/100
                     </div>
                   </div>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                  {trip.chargingStops !== null && trip.chargingStops !== undefined && (
+                    <div>
+                      <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Recharges</div>
+                      <div className={`text-sm font-semibold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
+                        {trip.chargingStops}
+                      </div>
+                    </div>
+                  )}
+                  <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${isDark ? 'border-emerald-300/50 bg-emerald-400/30 text-emerald-50' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
                     <Zap className="w-3 h-3" />
                     Optimisé
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteTrip(trip.id)}
+                    className={`p-2 rounded-lg transition ${isDark ? 'hover:bg-emerald-400/20 text-emerald-200 hover:text-red-300' : 'hover:bg-red-50 text-slate-400 hover:text-red-600'}`}
+                    title="Supprimer ce trajet"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             ))}
