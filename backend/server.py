@@ -1151,8 +1151,6 @@ async def get_charging_stations(
                 continue
         
         if geojson_data:
-                    geojson_data = geojson_response.json()
-                    
                     features = geojson_data.get('features', [])
                     logger.info(f"Found {len(features)} charging stations in IRVE database")
                     
