@@ -648,28 +648,28 @@ const AnalysisPage = () => {
                 
                 {/* Battery state */}
                 <div className="space-y-3">
-                  <Label>🔋 Battery state</Label>
+                  <Label className={isDark ? "text-white" : "text-slate-700"}>🔋 {language === 'fr' ? 'État de la batterie' : 'Battery state'}</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs">Battery at departure (%)</Label>
+                      <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.batteryStart}</Label>
                       <Input
                         type="number"
                         min="20"
                         max="100"
                         value={batteryStartPct}
                         onChange={(e) => setBatteryStartPct(parseFloat(e.target.value) || 100)}
-                        className="bg-white/5 border-white/20 text-white text-sm"
+                        className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                       />
                     </div>
                     <div>
-                      <Label className="text-xs">Target battery on arrival (%)</Label>
+                      <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.batteryEnd}</Label>
                       <Input
                         type="number"
                         min="5"
                         max="90"
                         value={batteryEndPct}
                         onChange={(e) => setBatteryEndPct(parseFloat(e.target.value) || 20)}
-                        className="bg-white/5 border-white/20 text-white text-sm"
+                        className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                       />
                     </div>
                   </div>
@@ -679,9 +679,9 @@ const AnalysisPage = () => {
                 
                 {/* Advanced options */}
                 <div className="space-y-3">
-                  <Label>Advanced options</Label>
+                  <Label className={isDark ? "text-white" : "text-slate-700"}>{language === 'fr' ? 'Options avancées' : 'Advanced options'}</Label>
                   <div>
-                    <Label className="text-xs">Air density (kg/m³)</Label>
+                    <Label className={`text-xs ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{t.airDensity}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -689,7 +689,7 @@ const AnalysisPage = () => {
                       max="1.5"
                       value={rhoAir}
                       onChange={(e) => setRhoAir(parseFloat(e.target.value) || 1.225)}
-                      className="bg-white/5 border-white/20 text-white text-sm"
+                      className={isDark ? "bg-white/5 border-white/20 text-white text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                     />
                   </div>
                 </div>
