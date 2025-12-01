@@ -259,31 +259,31 @@ const DashboardPage = () => {
               <span className="text-xs text-slate-500">0 / 9 badges</span>
             </div>
             <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-3 opacity-60">
-                <div className="font-semibold mb-1">Premier trajet</div>
-                <div className="text-slate-500">Premier trajet optimisé</div>
-                <div className="mt-2 h-1.5 rounded-full bg-slate-200">
+              <div className={`rounded-2xl border px-3 py-3 opacity-60 ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100 bg-slate-50/40'}`}>
+                <div className={`font-semibold mb-1 ${isDark ? 'text-white' : ''}`}>Premier trajet</div>
+                <div className={isDark ? 'text-emerald-50' : 'text-slate-500'}>Premier trajet optimisé</div>
+                <div className={`mt-2 h-1.5 rounded-full ${isDark ? 'bg-emerald-300/30' : 'bg-slate-200'}`}>
                   <div className="h-full w-0 rounded-full bg-emerald-500" />
                 </div>
               </div>
-              <div className="rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-3 opacity-60">
-                <div className="font-semibold mb-1">Économe</div>
-                <div className="text-slate-500">10 kWh économisés</div>
-                <div className="mt-2 h-1.5 rounded-full bg-slate-200">
+              <div className={`rounded-2xl border px-3 py-3 opacity-60 ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100 bg-slate-50/40'}`}>
+                <div className={`font-semibold mb-1 ${isDark ? 'text-white' : ''}`}>Économe</div>
+                <div className={isDark ? 'text-emerald-50' : 'text-slate-500'}>10 kWh économisés</div>
+                <div className={`mt-2 h-1.5 rounded-full ${isDark ? 'bg-emerald-300/30' : 'bg-slate-200'}`}>
                   <div className="h-full w-0 rounded-full bg-emerald-500" />
                 </div>
               </div>
-              <div className="rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-3 opacity-60">
-                <div className="font-semibold mb-1">Voyageur</div>
-                <div className="text-slate-500">500 km en mode ECO</div>
-                <div className="mt-2 h-1.5 rounded-full bg-slate-200">
+              <div className={`rounded-2xl border px-3 py-3 opacity-60 ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100 bg-slate-50/40'}`}>
+                <div className={`font-semibold mb-1 ${isDark ? 'text-white' : ''}`}>Voyageur</div>
+                <div className={isDark ? 'text-emerald-50' : 'text-slate-500'}>500 km en mode ECO</div>
+                <div className={`mt-2 h-1.5 rounded-full ${isDark ? 'bg-emerald-300/30' : 'bg-slate-200'}`}>
                   <div className="h-full w-0 rounded-full bg-emerald-500" />
                 </div>
               </div>
-              <div className="rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-3 opacity-60">
-                <div className="font-semibold mb-1">Éco-champion</div>
-                <div className="text-slate-500">50 kWh économisés</div>
-                <div className="mt-2 h-1.5 rounded-full bg-slate-200">
+              <div className={`rounded-2xl border px-3 py-3 opacity-60 ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100 bg-slate-50/40'}`}>
+                <div className={`font-semibold mb-1 ${isDark ? 'text-white' : ''}`}>Éco-champion</div>
+                <div className={isDark ? 'text-emerald-50' : 'text-slate-500'}>50 kWh économisés</div>
+                <div className={`mt-2 h-1.5 rounded-full ${isDark ? 'bg-emerald-300/30' : 'bg-slate-200'}`}>
                   <div className="h-full w-0 rounded-full bg-emerald-500" />
                 </div>
               </div>
