@@ -76,8 +76,10 @@ const StationsMap = ({ stations = [], selectedStation = null, onStationClick }) 
       <MapView center={center} zoom={zoom} stations={stations} />
       
       {/* Charging station markers */}
+      {/* Limiter à 1000 marqueurs pour éviter de surcharger le navigateur */}
       {stations
         .filter(s => s.latitude && s.longitude)
+        .slice(0, 1000)
         .map((station, index) => {
           const icon = createStationIcon(station.status || 'Dispo');
           const isSelected = selectedStation && 
