@@ -1151,10 +1151,10 @@ async def get_charging_stations(
                 continue
         
         if geojson_data:
-                    features = geojson_data.get('features', [])
-                    logger.info(f"Found {len(features)} charging stations in IRVE database")
-                    
-                    for feature in features:
+            features = geojson_data.get('features', [])
+            logger.info(f"Found {len(features)} charging stations in IRVE database")
+            
+            for feature in features:
                         properties = feature.get('properties', {})
                         geometry = feature.get('geometry', {})
                         coordinates = geometry.get('coordinates', [])
@@ -1234,14 +1234,8 @@ async def get_charging_stations(
                         )
                         
                         stations.append(station)
-                    
-                    logger.info(f"Successfully loaded {len(stations)} charging stations from IRVE")
-                else:
-                    logger.error(f"Failed to fetch GeoJSON: {geojson_response.status_code}")
-            else:
-                logger.error("No GeoJSON resource found in dataset")
-        else:
-            logger.error(f"Failed to fetch dataset info: {response.status_code}")
+            
+            logger.info(f"Successfully loaded {len(stations)} charging stations from IRVE")
     
     except Exception as e:
         logger.error(f"Error fetching charging stations from IRVE: {e}")
