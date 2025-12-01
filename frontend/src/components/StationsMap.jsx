@@ -56,29 +56,38 @@ const StationsMap = ({ stations = [], selectedStation = null, onStationClick }) 
   const defaultZoom = 6;
   
   // Center on selected station or default
-  const center = selectedStation 
+  const center = selectedStation && selectedStation.latitude && selectedStation.longitude
     ? [selectedStation.latitude, selectedStation.longitude]
     : defaultCenter;
   const zoom = selectedStation ? 13 : defaultZoom;
+
+  // Filtrer les stations valides avec coordonnées
+  const validStations = (stations || []).filter(s => 
+    s && 
+    typeof s.latitude === 'number' && 
+    typeof s.longitude === 'number' &&
+    !isNaN(s.latitude) && 
+    !isNaN(s.longitude)
+  );
 
   return (
     <MapContainer
       center={defaultCenter}
       zoom={defaultZoom}
-      style={{ height: '100%', width: '100%', borderRadius: '8px' }}
+      style={{ height: '100%', width: '100%', borderRadius: '8px', zIndex: 0 }}
       scrollWheelZoom={true}
+      key="stations-map"
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       
-      <MapView center={center} zoom={zoom} stations={stations} />
+      <MapView center={center} zoom={zoom} stations={validStations} />
       
       {/* Charging station markers */}
       {/* Limiter à 1000 marqueurs pour éviter de surcharger le navigateur */}
-      {stations
-        .filter(s => s.latitude && s.longitude)
+      {validStations
         .slice(0, 1000)
         .map((station, index) => {
           const icon = createStationIcon(station.status || 'Dispo');

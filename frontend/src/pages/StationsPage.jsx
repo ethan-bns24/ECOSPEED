@@ -49,7 +49,7 @@ const StationsPage = () => {
         setStations(response.data || []);
       } catch (error) {
         console.error('Error fetching charging stations:', error);
-        // En cas d'erreur, on garde les bornes de démo
+        // En cas d'erreur, on garde les bornes de démo avec coordonnées
         setStations([
           {
             name: 'Supercharger Paris-La Défense',
@@ -57,6 +57,9 @@ const StationsPage = () => {
             powerKw: 250,
             price: '0.40€/kWh',
             status: 'Dispo',
+            latitude: 48.8925,
+            longitude: 2.2383,
+            address: 'Paris-La Défense',
           },
           {
             name: 'Ionity Autoroute A6',
@@ -64,6 +67,9 @@ const StationsPage = () => {
             powerKw: 350,
             price: '0.79€/kWh',
             status: 'Dispo',
+            latitude: 48.8566,
+            longitude: 2.3522,
+            address: 'Autoroute A6',
           },
           {
             name: 'Total Energies Champs-Élysées',
@@ -71,6 +77,9 @@ const StationsPage = () => {
             powerKw: 175,
             price: '0.45€/kWh',
             status: 'Dispo',
+            latitude: 48.8698,
+            longitude: 2.3081,
+            address: 'Champs-Élysées, Paris',
           },
           {
             name: 'Electra Parking Opéra',
@@ -78,6 +87,9 @@ const StationsPage = () => {
             powerKw: 150,
             price: '0.44€/kWh',
             status: 'Occupée',
+            latitude: 48.8706,
+            longitude: 2.3317,
+            address: 'Opéra, Paris',
           },
         ]);
       } finally {
