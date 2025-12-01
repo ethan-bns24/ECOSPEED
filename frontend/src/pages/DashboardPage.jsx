@@ -250,13 +250,13 @@ const DashboardPage = () => {
 
         {/* Right column: badges & vehicles snapshot */}
         <div className="space-y-6">
-          <div className="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-100">
+          <div className={`rounded-3xl p-5 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base md:text-lg font-semibold flex items-center gap-2">
-                <Award className="w-4 h-4 text-amber-500" />
+              <h2 className={`text-base md:text-lg font-semibold flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
+                <Award className={`w-4 h-4 ${isDark ? 'text-amber-200' : 'text-amber-500'}`} />
                 Badges
               </h2>
-              <span className="text-xs text-slate-500">0 / 9 badges</span>
+              <span className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>0 / 9 badges</span>
             </div>
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className={`rounded-2xl border px-3 py-3 opacity-60 ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100 bg-slate-50/40'}`}>
@@ -290,30 +290,30 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-100">
+          <div className={`rounded-3xl p-5 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base md:text-lg font-semibold flex items-center gap-2">
-                <Car className="w-4 h-4 text-sky-600" />
+              <h2 className={`text-base md:text-lg font-semibold flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
+                <Car className={`w-4 h-4 ${isDark ? 'text-emerald-100' : 'text-sky-600'}`} />
                 Mes véhicules
               </h2>
               <button
                 type="button"
-                className="text-xs font-medium text-emerald-700 hover:text-emerald-800"
+                className={`text-xs font-medium ${isDark ? 'text-emerald-50 hover:text-white' : 'text-emerald-700 hover:text-emerald-800'}`}
               >
                 Gérer
               </button>
             </div>
             <div className="space-y-3 text-sm">
-              <div className="rounded-2xl border border-slate-100 bg-slate-50/60 px-4 py-3 flex items-center justify-between gap-3">
+              <div className={`rounded-2xl border px-4 py-3 flex items-center justify-between gap-3 ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100 bg-slate-50/60'}`}>
                 <div>
-                  <div className="font-semibold">Tesla Model 3</div>
-                  <div className="text-xs text-slate-500">75 kWh · 1850 kg</div>
+                  <div className={`font-semibold ${isDark ? 'text-white' : ''}`}>Tesla Model 3</div>
+                  <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>75 kWh · 1850 kg</div>
                 </div>
-                <span className="text-[11px] px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                <span className={`text-[11px] px-3 py-1 rounded-full border ${isDark ? 'bg-emerald-400/40 text-emerald-50 border-emerald-300/50' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
                   Prédéfini
                 </span>
               </div>
-              <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-3 flex items-center justify-between gap-3 text-xs text-slate-500">
+              <div className={`rounded-2xl border border-dashed px-4 py-3 flex items-center justify-between gap-3 text-xs ${isDark ? 'border-emerald-300/30 text-emerald-200' : 'border-slate-200 text-slate-500'}`}>
                 <span>Ajouter un véhicule populaire ou personnalisé</span>
                 <button
                   type="button"
