@@ -1,0 +1,314 @@
+import React, { useEffect, useState } from 'react';
+import DashboardLayout from '../layouts/DashboardLayout';
+import { ArrowUpRight, Leaf, Zap, Award, Car, TrendingUp } from 'lucide-react';
+import { getAllTrips } from '../lib/tripStorage';
+
+const formatDate = (timestamp) => {
+  if (!timestamp) return '';
+  const d = new Date(timestamp);
+  return d.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+};
+
+const DashboardPage = () => {
+  const [trips, setTrips] = useState([]);
+
+  useEffect(() => {
+    setTrips(getAllTrips());
+  }, []);
+
+  const totalTrips = trips.length;
+  const totalDistanceKm = trips.reduce((sum, t) => sum + (t.distanceKm || 0), 0);
+  const totalEnergySavedKwh = trips.reduce(
+    (sum, t) => sum + (t.energySavedKwh || 0),
+    0
+  );
+  const totalCo2SavedKg = trips.reduce((sum, t) => sum + (t.co2SavedKg || 0), 0);
+  const avgEcoScore =
+    totalTrips > 0
+      ? Math.round(
+          trips.reduce((sum, t) => sum + (t.ecoScore || 0), 0) / totalTrips
+        )
+      : 0;
+
+  // Pourcentages d'amélioration – approximations basées sur l'énergie économisée et le score
+  const stats = {
+    trips: totalTrips,
+    distanceKm: totalDistanceKm.toFixed(0),
+    energySavedKwh: totalEnergySavedKwh,
+    co2SavedKg: totalCo2SavedKg,
+    ecoScore: avgEcoScore,
+    points: totalTrips * 10, // ex : 10 pts par trajet
+    improvement: {
+      energy: totalEnergySavedKwh > 0 ? 23 : 0,
+      distance: totalDistanceKm > 0 ? 8 : 0,
+      score: avgEcoScore > 0 ? 5 : 0,
+      points: totalTrips > 0 ? 15 : 0,
+    },
+  };
+
+  const recentTrips = trips.slice(0, 3);
+
+  return (
+    <DashboardLayout>
+      {/* Top welcome banner */}
+      <section className="mb-6 md:mb-8">
+        <div className="rounded-3xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white px-6 py-6 md:px-8 md:py-7 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-lg shadow-emerald-500/20">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold mb-1">
+              Bonjour Ethan ! <span className="inline-block">👋</span>
+            </h1>
+            <p className="text-sm md:text-base text-emerald-50 max-w-xl">
+              Optimisez vos trajets et économisez de l&apos;énergie avec notre optimiseur
+              de conduite écologique.
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-700/60 border border-emerald-300/30 text-sm">
+              <Leaf className="w-4 h-4 text-emerald-100" />
+              <span>0 kg CO₂ évités</span>
+            </div>
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white text-emerald-700 font-semibold text-sm shadow-sm"
+            >
+              + Nouveau trajet
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* KPI cards row */}
+      <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 mb-8">
+        <div className="bg-white rounded-2xl px-4 py-4 shadow-sm border border-slate-100">
+          <div className="text-xs text-slate-500 mb-1">Trajets effectués</div>
+          <div className="text-2xl font-semibold">{stats.trips}</div>
+          <div className="text-[11px] text-emerald-600 mt-1 flex items-center gap-1">
+            <ArrowUpRight className="w-3 h-3" /> +12%
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl px-4 py-4 shadow-sm border border-slate-100">
+          <div className="text-xs text-slate-500 mb-1">Distance totale</div>
+          <div className="text-2xl font-semibold">{stats.distanceKm} km</div>
+          <div className="text-[11px] text-emerald-600 mt-1 flex items-center gap-1">
+            <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.distance}%
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl px-4 py-4 shadow-sm border border-slate-100">
+          <div className="text-xs text-slate-500 mb-1">Énergie économisée</div>
+          <div className="text-2xl font-semibold">{stats.energySavedKwh.toFixed(1)} kWh</div>
+          <div className="text-[11px] text-emerald-600 mt-1 flex items-center gap-1">
+            <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.energy}%
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl px-4 py-4 shadow-sm border border-slate-100">
+          <div className="text-xs text-slate-500 mb-1">CO₂ évité</div>
+          <div className="text-2xl font-semibold">{stats.co2SavedKg.toFixed(1)} kg</div>
+          <div className="text-[11px] text-emerald-600 mt-1 flex items-center gap-1">
+            <ArrowUpRight className="w-3 h-3" /> +18%
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl px-4 py-4 shadow-sm border border-slate-100">
+          <div className="text-xs text-slate-500 mb-1">Score éco moyen</div>
+          <div className="text-2xl font-semibold">{stats.ecoScore}/100</div>
+          <div className="text-[11px] text-emerald-600 mt-1 flex items-center gap-1">
+            <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.score}%
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl px-4 py-4 shadow-sm border border-slate-100">
+          <div className="text-xs text-slate-500 mb-1">Points totaux</div>
+          <div className="text-2xl font-semibold">{stats.points}</div>
+          <div className="text-[11px] text-emerald-600 mt-1 flex items-center gap-1">
+            <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.points}%
+          </div>
+        </div>
+      </section>
+
+      {/* Main content grid */}
+      <section className="grid lg:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)] gap-6">
+        {/* Left column: recent trips + eco driving score */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-100">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base md:text-lg font-semibold">
+                Trajets récents
+              </h2>
+              <button
+                type="button"
+                className="text-xs font-medium text-emerald-700 hover:text-emerald-800"
+              >
+                Voir tout
+              </button>
+            </div>
+
+            {recentTrips.length === 0 ? (
+              <div className="text-sm text-slate-500">
+                Aucun trajet pour le moment. Planifiez votre premier trajet pour
+                commencer.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentTrips.map((trip) => (
+                  <div
+                    key={trip.id}
+                    className="rounded-2xl border border-slate-100 bg-slate-50/60 px-4 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                        <Car className="w-5 h-5 text-emerald-700" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold">
+                          {trip.startLocation} → {trip.endLocation}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {formatDate(trip.createdAt)} ·{' '}
+                          {trip.ecoTimeMin ? trip.ecoTimeMin.toFixed(0) : 0} min ·{' '}
+                          {trip.distanceKm?.toFixed
+                            ? trip.distanceKm.toFixed(1)
+                            : trip.distanceKm}{' '}
+                          km
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 md:text-right">
+                      <div>
+                        <div className="text-xs text-slate-500">Énergie économisée</div>
+                        <div className="text-sm font-semibold text-emerald-700">
+                          -{(trip.energySavedKwh || 0).toFixed(1)} kWh
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-slate-500">Score</div>
+                        <div className="text-sm font-semibold text-amber-600">
+                          {trip.ecoScore}/100
+                        </div>
+                      </div>
+                      <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                        Terminé
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-100">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base md:text-lg font-semibold">
+                Score Éco-conduite
+              </h2>
+              <span className="text-xs text-slate-500">Niveau 1</span>
+            </div>
+            <div className="flex flex-col md:flex-row md:items-center gap-6">
+              <div className="flex-1 flex flex-col items-center justify-center">
+                <div className="relative inline-flex items-center justify-center">
+                  <div className="h-28 w-28 rounded-full border-[10px] border-emerald-200 flex items-center justify-center">
+                    <span className="text-2xl font-bold">{stats.ecoScore}</span>
+                  </div>
+                </div>
+                <div className="mt-2 text-xs text-slate-500">/100 · À améliorer</div>
+              </div>
+              <div className="flex-1 space-y-3 text-sm">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-emerald-600" />
+                  <span className="font-semibold">+23% d&apos;économie d&apos;énergie</span>
+                </div>
+                <p className="text-slate-600 text-xs md:text-sm">
+                  Continuez à suivre les recommandations de vitesse ECOSPEED pour
+                  améliorer votre score et débloquer de nouveaux badges.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right column: badges & vehicles snapshot */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-100">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base md:text-lg font-semibold flex items-center gap-2">
+                <Award className="w-4 h-4 text-amber-500" />
+                Badges
+              </h2>
+              <span className="text-xs text-slate-500">0 / 9 badges</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-3 opacity-60">
+                <div className="font-semibold mb-1">Premier trajet</div>
+                <div className="text-slate-500">Premier trajet optimisé</div>
+                <div className="mt-2 h-1.5 rounded-full bg-slate-200">
+                  <div className="h-full w-0 rounded-full bg-emerald-500" />
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-3 opacity-60">
+                <div className="font-semibold mb-1">Économe</div>
+                <div className="text-slate-500">10 kWh économisés</div>
+                <div className="mt-2 h-1.5 rounded-full bg-slate-200">
+                  <div className="h-full w-0 rounded-full bg-emerald-500" />
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-3 opacity-60">
+                <div className="font-semibold mb-1">Voyageur</div>
+                <div className="text-slate-500">500 km en mode ECO</div>
+                <div className="mt-2 h-1.5 rounded-full bg-slate-200">
+                  <div className="h-full w-0 rounded-full bg-emerald-500" />
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-3 opacity-60">
+                <div className="font-semibold mb-1">Éco-champion</div>
+                <div className="text-slate-500">50 kWh économisés</div>
+                <div className="mt-2 h-1.5 rounded-full bg-slate-200">
+                  <div className="h-full w-0 rounded-full bg-emerald-500" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-100">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base md:text-lg font-semibold flex items-center gap-2">
+                <Car className="w-4 h-4 text-sky-600" />
+                Mes véhicules
+              </h2>
+              <button
+                type="button"
+                className="text-xs font-medium text-emerald-700 hover:text-emerald-800"
+              >
+                Gérer
+              </button>
+            </div>
+            <div className="space-y-3 text-sm">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/60 px-4 py-3 flex items-center justify-between gap-3">
+                <div>
+                  <div className="font-semibold">Tesla Model 3</div>
+                  <div className="text-xs text-slate-500">75 kWh · 1850 kg</div>
+                </div>
+                <span className="text-[11px] px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                  Prédéfini
+                </span>
+              </div>
+              <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-3 flex items-center justify-between gap-3 text-xs text-slate-500">
+                <span>Ajouter un véhicule populaire ou personnalisé</span>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-emerald-500 text-white text-lg"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </DashboardLayout>
+  );
+};
+
+export default DashboardPage;
+
+

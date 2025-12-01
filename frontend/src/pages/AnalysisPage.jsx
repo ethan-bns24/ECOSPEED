@@ -18,6 +18,7 @@ import TimeChart from '../components/TimeChart';
 import KPICards from '../components/KPICards';
 import NavigationPanel from '../components/NavigationPanel';
 import { toast } from 'sonner';
+import { persistTripFromRoute } from '../lib/tripStorage';
 
 // Use environment variable or fallback to localhost for development
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
@@ -262,6 +263,16 @@ const AnalysisPage = () => {
       setRouteData(response.data);
       setCurrentSegmentIndex(0);
       setShowResults(true);
+      
+      // Persister ce trajet pour le dashboard / historique / stats
+      try {
+        persistTripFromRoute(response.data, {
+          vehicleName: vehicle.name,
+          numPassengers: numPassengers,
+        });
+      } catch (e) {
+        console.error('Failed to persist trip summary', e);
+      }
       
       toast.success(`Route calculated: ${response.data.start_location} → ${response.data.end_location}`);
     } catch (error) {
