@@ -177,6 +177,17 @@ export const TRANSLATIONS = {
     },
   },
   en: {
+    // Menu
+    menu: {
+      home: 'Home',
+      newTrip: 'New trip',
+      vehicles: 'My vehicles',
+      history: 'History',
+      stats: 'Statistics',
+      badges: 'Badges',
+      stations: 'Charging',
+      settings: 'Settings',
+    },
     // Dashboard
     dashboard: {
       greeting: 'Hello Ethan!',
