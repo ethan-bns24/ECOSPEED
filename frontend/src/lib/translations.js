@@ -36,6 +36,28 @@ export const TRANSLATIONS = {
       unlocked: 'badges débloqués',
       progression: 'Progression',
     },
+    badgeNames: {
+      'first-trip': 'Premier trajet',
+      'traveler': 'Voyageur',
+      'economical': 'Économe',
+      'eco-champion': 'Éco-champion',
+      'model-driver': 'Conducteur modèle',
+      'expert': 'Expert',
+      'regular': 'Habitué',
+      'frequent': 'Régulier',
+      'dedicated': 'Dévoué',
+    },
+    badgeDescriptions: {
+      'first-trip': 'Premier trajet optimisé',
+      'traveler': '500 km en mode ECO',
+      'economical': '10 kWh économisés',
+      'eco-champion': '50 kWh économisés',
+      'model-driver': 'Score de 80+',
+      'expert': 'Score de 90+',
+      'regular': '5 trajets',
+      'frequent': '20 trajets',
+      'dedicated': '1000 km parcourus',
+    },
     // Settings
     settings: {
       title: 'Paramètres',
@@ -65,6 +87,8 @@ export const TRANSLATIONS = {
       completed: 'Terminé',
       delete: 'Supprimer',
       confirmDelete: 'Êtes-vous sûr de vouloir supprimer ce trajet ?',
+      recharges: 'Recharges',
+      optimized: 'Optimisé',
     },
     // Stats
     stats: {
@@ -106,6 +130,29 @@ export const TRANSLATIONS = {
       occupied: 'Occupée',
       outOfService: 'Hors service',
     },
+    // Badges
+    badgeNames: {
+      'first-trip': 'Premier trajet',
+      'traveler': 'Voyageur',
+      'economical': 'Économe',
+      'eco-champion': 'Éco-champion',
+      'model-driver': 'Conducteur modèle',
+      'expert': 'Expert',
+      'regular': 'Habitué',
+      'frequent': 'Régulier',
+      'dedicated': 'Dévoué',
+    },
+    badgeDescriptions: {
+      'first-trip': 'Premier trajet optimisé',
+      'traveler': '500 km en mode ECO',
+      'economical': '10 kWh économisés',
+      'eco-champion': '50 kWh économisés',
+      'model-driver': 'Score de 80+',
+      'expert': 'Score de 90+',
+      'regular': '5 trajets',
+      'frequent': '20 trajets',
+      'dedicated': '1000 km parcourus',
+    },
   },
   en: {
     // Dashboard
@@ -143,6 +190,28 @@ export const TRANSLATIONS = {
       unlocked: 'badges unlocked',
       progression: 'Progress',
     },
+    badgeNames: {
+      'first-trip': 'First trip',
+      'traveler': 'Traveler',
+      'economical': 'Economical',
+      'eco-champion': 'Eco-champion',
+      'model-driver': 'Model driver',
+      'expert': 'Expert',
+      'regular': 'Regular',
+      'frequent': 'Frequent',
+      'dedicated': 'Dedicated',
+    },
+    badgeDescriptions: {
+      'first-trip': 'First optimized trip',
+      'traveler': '500 km in ECO mode',
+      'economical': '10 kWh saved',
+      'eco-champion': '50 kWh saved',
+      'model-driver': 'Score of 80+',
+      'expert': 'Score of 90+',
+      'regular': '5 trips',
+      'frequent': '20 trips',
+      'dedicated': '1000 km traveled',
+    },
     // Settings
     settings: {
       title: 'Settings',
@@ -172,6 +241,8 @@ export const TRANSLATIONS = {
       completed: 'Completed',
       delete: 'Delete',
       confirmDelete: 'Are you sure you want to delete this trip?',
+      recharges: 'Recharges',
+      optimized: 'Optimized',
     },
     // Stats
     stats: {
@@ -212,6 +283,29 @@ export const TRANSLATIONS = {
       available: 'Available',
       occupied: 'Occupied',
       outOfService: 'Out of service',
+    },
+    // Badges
+    badgeNames: {
+      'first-trip': 'First trip',
+      'traveler': 'Traveler',
+      'economical': 'Economical',
+      'eco-champion': 'Eco-champion',
+      'model-driver': 'Model driver',
+      'expert': 'Expert',
+      'regular': 'Regular',
+      'frequent': 'Frequent',
+      'dedicated': 'Dedicated',
+    },
+    badgeDescriptions: {
+      'first-trip': 'First optimized trip',
+      'traveler': '500 km in ECO mode',
+      'economical': '10 kWh saved',
+      'eco-champion': '50 kWh saved',
+      'model-driver': 'Score of 80+',
+      'expert': 'Score of 90+',
+      'regular': '5 trips',
+      'frequent': '20 trips',
+      'dedicated': '1000 km traveled',
     },
   },
 };

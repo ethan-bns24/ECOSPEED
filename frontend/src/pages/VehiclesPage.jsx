@@ -5,11 +5,13 @@ import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
 import { getVehicleSettings, updateVehicleSettings } from '../lib/settingsStorage';
 import { getAppSettings } from '../lib/settingsStorage';
 import { toast } from 'sonner';
+import { TRANSLATIONS } from '../lib/translations';
 
 const VehiclesPage = () => {
   const [enabledVehicles, setEnabledVehicles] = useState([]);
   const [defaultVehicleName, setDefaultVehicleName] = useState(null);
   const [theme, setTheme] = useState('dark');
+  const [language, setLanguage] = useState('en');
 
   useEffect(() => {
     const { enabledVehicles, defaultVehicleName } = getVehicleSettings();
@@ -29,12 +31,14 @@ const VehiclesPage = () => {
       }
     }
     
-    const { theme: thm } = getAppSettings();
+    const { theme: thm, language: lang } = getAppSettings();
     setTheme(thm);
+    setLanguage(lang);
     
     const handler = (event) => {
       const detail = event.detail || {};
       if (detail.theme) setTheme(detail.theme);
+      if (detail.language) setLanguage(detail.language);
     };
     
     if (typeof window !== 'undefined') {
@@ -49,6 +53,7 @@ const VehiclesPage = () => {
   }, []);
   
   const isDark = theme === 'dark';
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
   const handleSetDefault = (name) => {
     // Si le véhicule est déjà dans la liste, on le retire (toggle)
@@ -89,9 +94,9 @@ const VehiclesPage = () => {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-emerald-100' : ''}`}>Mes véhicules</h1>
+        <h1 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-emerald-100' : ''}`}>{t.vehicles.title}</h1>
         <p className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
-          Gérez vos véhicules électriques utilisés pour les simulations ECOSPEED.
+          {t.vehicles.subtitle}
         </p>
       </div>
 
@@ -138,7 +143,7 @@ const VehiclesPage = () => {
                     }`}
                   >
                     <Star className={`w-3 h-3 ${isDefault(vehicle.name) ? 'fill-current' : ''}`} />
-                    {isDefault(vehicle.name) ? 'Par défaut' : 'Ajouter par défaut'}
+                    {isDefault(vehicle.name) ? t.vehicles.setDefault : t.vehicles.removeDefault}
                   </span>
                 </button>
               ))}

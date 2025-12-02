@@ -36,7 +36,7 @@ const BadgesPage = () => {
   
   const isDark = theme === 'dark';
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
-  const badges = calculateBadges(trips);
+  const badges = calculateBadges(trips, language);
   const unlockedCount = badges.filter(b => b.unlocked).length;
 
   return (

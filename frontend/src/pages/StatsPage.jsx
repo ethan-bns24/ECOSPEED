@@ -3,19 +3,23 @@ import { Activity, BarChart2, Leaf, Zap } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { getAllTrips } from '../lib/tripStorage';
 import { getAppSettings } from '../lib/settingsStorage';
+import { TRANSLATIONS } from '../lib/translations';
 
 const StatsPage = () => {
   const [trips, setTrips] = useState([]);
   const [theme, setTheme] = useState('dark');
+  const [language, setLanguage] = useState('en');
 
   useEffect(() => {
     setTrips(getAllTrips());
-    const { theme: thm } = getAppSettings();
+    const { theme: thm, language: lang } = getAppSettings();
     setTheme(thm);
+    setLanguage(lang);
     
     const handler = (event) => {
       const detail = event.detail || {};
       if (detail.theme) setTheme(detail.theme);
+      if (detail.language) setLanguage(detail.language);
     };
     
     if (typeof window !== 'undefined') {
@@ -30,6 +34,7 @@ const StatsPage = () => {
   }, []);
   
   const isDark = theme === 'dark';
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
   const totalTrips = trips.length;
   const totalDistanceKm = trips.reduce((sum, t) => sum + (t.distanceKm || 0), 0);
@@ -48,9 +53,9 @@ const StatsPage = () => {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-emerald-100' : ''}`}>Statistiques</h1>
+        <h1 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-emerald-100' : ''}`}>{t.stats.title}</h1>
         <p className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
-          Analysez vos performances d&apos;éco-conduite.
+          {t.stats.subtitle}
         </p>
       </div>
 

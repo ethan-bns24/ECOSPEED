@@ -3,6 +3,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import StationsMap from '../components/StationsMap';
 import { getAppSettings } from '../lib/settingsStorage';
 import axios from 'axios';
+import { TRANSLATIONS } from '../lib/translations';
 
 // Use environment variable or fallback to localhost for development
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
@@ -10,6 +11,7 @@ const API = `${BACKEND_URL}/api`;
 
 const StationsPage = () => {
   const [theme, setTheme] = useState('dark');
+  const [language, setLanguage] = useState('en');
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,12 +20,14 @@ const StationsPage = () => {
   const stationsPerPage = 20;
 
   useEffect(() => {
-    const { theme: thm } = getAppSettings();
+    const { theme: thm, language: lang } = getAppSettings();
     setTheme(thm);
+    setLanguage(lang);
     
     const handler = (event) => {
       const detail = event.detail || {};
       if (detail.theme) setTheme(detail.theme);
+      if (detail.language) setLanguage(detail.language);
     };
     
     if (typeof window !== 'undefined') {
@@ -101,6 +105,7 @@ const StationsPage = () => {
   }, []);
   
   const isDark = theme === 'dark';
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
   // Filtrer les stations par terme de recherche
   const filteredStations = stations.filter(station => {

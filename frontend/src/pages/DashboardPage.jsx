@@ -104,7 +104,7 @@ const DashboardPage = () => {
   };
 
   const recentTrips = trips.slice(0, 3);
-  const badges = calculateBadges(trips);
+  const badges = calculateBadges(trips, language);
   const unlockedBadges = badges.filter(b => b.unlocked);
   const displayedBadges = unlockedBadges.length > 0 
     ? unlockedBadges.slice(0, 4) 
