@@ -506,11 +506,15 @@ const AnalysisPage = () => {
                         <SelectValue placeholder={t.vehicleProfile} />
                       </SelectTrigger>
                       <SelectContent className={isDark ? "bg-[#1a4d2e] border-emerald-700/30 text-emerald-100" : "bg-white border-slate-200 text-slate-900"}>
-                        {availableProfiles.map((profile) => (
-                          <SelectItem key={profile.name} value={profile.name}>
-                            {profile.name}
-                          </SelectItem>
-                        ))}
+                        {availableProfiles && availableProfiles.length > 0 ? (
+                          availableProfiles.map((profile) => (
+                            <SelectItem key={profile.name} value={profile.name}>
+                              {profile.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="Custom">Custom</SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   )}
