@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { persistTripFromRoute, calculateChargingStops } from '../lib/tripStorage';
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
 import { getVehicleSettings, updateVehicleSettings, getAppSettings } from '../lib/settingsStorage';
+import { findChargingStationsOnRoute } from '../lib/chargingUtils';
 
 // Use environment variable or fallback to localhost for development
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
@@ -175,6 +176,7 @@ const AnalysisPage = () => {
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
   const [isNavigating, setIsNavigating] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [routeChargingStations, setRouteChargingStations] = useState([]);
   
   // Vehicle profiles: filtrées par les préférences (véhicules actifs)
   const [availableProfiles, setAvailableProfiles] = useState(VEHICLE_PROFILES);
@@ -271,6 +273,33 @@ const AnalysisPage = () => {
       setRouteData(response.data);
       setCurrentSegmentIndex(0);
       setShowResults(true);
+      
+      // Récupérer les bornes de recharge et trouver celles sur le trajet
+      try {
+        const stationsResponse = await axios.get(`${API}/charging-stations`, {
+          timeout: 60000,
+        });
+        const allStations = stationsResponse.data || [];
+        setChargingStations(allStations);
+        
+        // Trouver les bornes sur le trajet
+        const vehicle = getSelectedVehicleData();
+        const batteryKwh = vehicle?.battery_kwh || null;
+        if (batteryKwh && response.data.segments && response.data.route_coordinates) {
+          const stationsOnRoute = findChargingStationsOnRoute(
+            response.data.segments,
+            response.data.route_coordinates,
+            batteryKwh,
+            batteryStartPct,
+            allStations
+          );
+          setRouteChargingStations(stationsOnRoute);
+        }
+      } catch (error) {
+        console.error('Error fetching charging stations:', error);
+        setChargingStations([]);
+        setRouteChargingStations([]);
+      }
       
       // Persister ce trajet pour le dashboard / historique / stats
       try {
@@ -739,6 +768,7 @@ const AnalysisPage = () => {
                     startLocation={routeData?.start_location}
                     endLocation={routeData?.end_location}
                     routeCoordinates={routeData?.route_coordinates || []}
+                    chargingStations={routeChargingStations}
                   />
                 </div>
               </CardContent>

@@ -27,7 +27,7 @@ function MapBounds({ coordinates }) {
   return null;
 }
 
-const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, routeCoordinates }) => {
+const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, routeCoordinates, chargingStations = [] }) => {
   const mapRef = useRef(null);
 
   // Use route_coordinates if available (full route path), otherwise fallback to segments
@@ -102,6 +102,17 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
     iconAnchor: [12, 12],
   });
 
+  const chargingIcon = new L.Icon({
+    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+        <circle cx="14" cy="14" r="12" fill="#f59e0b" stroke="white" stroke-width="2"/>
+        <text x="14" y="19" font-size="16" font-weight="bold" text-anchor="middle" fill="white">⚡</text>
+      </svg>
+    `),
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+  });
+
   return (
     <MapContainer
       center={center}
@@ -154,6 +165,59 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
           </Popup>
         </Marker>
       )}
+      
+      {/* Charging station markers */}
+      {chargingStations && chargingStations.length > 0 && chargingStations.map((chargingPoint, index) => {
+        if (!chargingPoint.station || !chargingPoint.station.latitude || !chargingPoint.station.longitude) {
+          return null;
+        }
+        
+        return (
+          <Marker
+            key={`charging-${index}`}
+            position={[chargingPoint.station.latitude, chargingPoint.station.longitude]}
+            icon={chargingIcon}
+          >
+            <Popup>
+              <div style={{ minWidth: '200px' }}>
+                <strong>{chargingPoint.station.name || 'Borne de recharge'}</strong>
+                <br />
+                <span style={{ fontSize: '12px', color: '#666' }}>
+                  {chargingPoint.station.operator || 'Opérateur inconnu'}
+                </span>
+                <br />
+                <span style={{ fontSize: '12px' }}>
+                  {chargingPoint.station.powerKw || 0} kW
+                </span>
+                {chargingPoint.station.address && (
+                  <>
+                    <br />
+                    <span style={{ fontSize: '11px', color: '#888' }}>
+                      {chargingPoint.station.address}
+                    </span>
+                  </>
+                )}
+                {chargingPoint.station.price && (
+                  <>
+                    <br />
+                    <span style={{ fontSize: '11px', color: '#4ade80', fontWeight: 'bold' }}>
+                      {chargingPoint.station.price}
+                    </span>
+                  </>
+                )}
+                {chargingPoint.distanceKm && (
+                  <>
+                    <br />
+                    <span style={{ fontSize: '11px', color: '#666' }}>
+                      Distance: {chargingPoint.distanceKm.toFixed(1)} km
+                    </span>
+                  </>
+                )}
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
     </MapContainer>
   );
 };

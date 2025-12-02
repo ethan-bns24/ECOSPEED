@@ -1,0 +1,123 @@
+/**
+ * Calcule la distance en kilomètres entre deux points GPS (formule de Haversine)
+ */
+export function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Rayon de la Terre en km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+/**
+ * Trouve la borne de recharge la plus proche d'un point donné
+ */
+export function findNearestStation(lat, lon, stations) {
+  if (!stations || stations.length === 0) return null;
+  
+  let nearest = null;
+  let minDistance = Infinity;
+  
+  stations.forEach(station => {
+    if (!station.latitude || !station.longitude || 
+        isNaN(station.latitude) || isNaN(station.longitude)) {
+      return;
+    }
+    
+    // Ne considérer que les stations disponibles
+    if (station.status !== 'Dispo') return;
+    
+    const distance = calculateDistance(lat, lon, station.latitude, station.longitude);
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearest = { ...station, distanceKm: distance };
+    }
+  });
+  
+  return nearest;
+}
+
+/**
+ * Calcule où sur le trajet on a besoin de recharger et trouve les bornes les plus proches
+ */
+export function findChargingStationsOnRoute(segments, routeCoordinates, batteryKwh, batteryStartPct, stations) {
+  if (!segments || segments.length === 0 || !batteryKwh || !stations || stations.length === 0) {
+    return [];
+  }
+  
+  const chargingPoints = [];
+  const energyAtStart = batteryKwh * (batteryStartPct / 100);
+  const usableCapacity = batteryKwh * 0.6; // 60% utilisable (de 20% à 80%)
+  
+  let cumulativeEnergy = 0;
+  let currentBatteryLevel = energyAtStart;
+  let lastChargeEnergy = 0;
+  
+  // Parcourir les segments pour trouver où on a besoin de recharger
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i];
+    cumulativeEnergy += segment.eco_energy || 0;
+    currentBatteryLevel = energyAtStart - cumulativeEnergy + lastChargeEnergy;
+    
+    // Si la batterie descend en dessous de 20%, on doit recharger
+    if (currentBatteryLevel < batteryKwh * 0.2) {
+      // Trouver la position sur le trajet où on arrive à 20%
+      // On cherche le segment où on passe sous 20%
+      const segmentStartEnergy = energyAtStart - (cumulativeEnergy - segment.eco_energy) + lastChargeEnergy;
+      const segmentEndEnergy = currentBatteryLevel;
+      
+      // Interpoler la position dans le segment
+      let chargeLat, chargeLon;
+      
+      if (routeCoordinates && routeCoordinates.length > 0) {
+        // Utiliser les coordonnées de la route pour une meilleure précision
+        // Estimer la position basée sur la proportion d'énergie consommée
+        const energyRatio = segment.eco_energy > 0 
+          ? (batteryKwh * 0.2 - segmentStartEnergy) / (segmentEndEnergy - segmentStartEnergy)
+          : 0.5;
+        
+        // Trouver l'index approximatif dans routeCoordinates
+        const segmentIndex = Math.floor((i / segments.length) * routeCoordinates.length);
+        const nextIndex = Math.min(segmentIndex + 1, routeCoordinates.length - 1);
+        
+        if (routeCoordinates[segmentIndex] && routeCoordinates[nextIndex]) {
+          chargeLat = routeCoordinates[segmentIndex][0] + 
+            (routeCoordinates[nextIndex][0] - routeCoordinates[segmentIndex][0]) * energyRatio;
+          chargeLon = routeCoordinates[segmentIndex][1] + 
+            (routeCoordinates[nextIndex][1] - routeCoordinates[segmentIndex][1]) * energyRatio;
+        } else {
+          chargeLat = segment.lat_end;
+          chargeLon = segment.lon_end;
+        }
+      } else {
+        // Fallback sur les coordonnées du segment
+        chargeLat = segment.lat_end;
+        chargeLon = segment.lon_end;
+      }
+      
+      // Trouver la borne la plus proche
+      const nearestStation = findNearestStation(chargeLat, chargeLon, stations);
+      
+      if (nearestStation) {
+        chargingPoints.push({
+          segmentIndex: i,
+          lat: chargeLat,
+          lon: chargeLon,
+          station: nearestStation,
+          batteryLevelAtCharge: 20, // On recharge quand on arrive à 20%
+        });
+        
+        // Après recharge, on remonte à 80%
+        lastChargeEnergy += usableCapacity;
+        currentBatteryLevel = batteryKwh * 0.8;
+      }
+    }
+  }
+  
+  return chargingPoints;
+}
+
