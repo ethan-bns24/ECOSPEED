@@ -180,7 +180,9 @@ const AnalysisPage = () => {
   const [routeChargingStations, setRouteChargingStations] = useState([]);
   
   // Vehicle profiles: filtrées par les préférences (véhicules actifs)
-  const [availableProfiles, setAvailableProfiles] = useState(VEHICLE_PROFILES);
+  const [availableProfiles, setAvailableProfiles] = useState(
+    VEHICLE_PROFILES && VEHICLE_PROFILES.length > 0 ? VEHICLE_PROFILES : []
+  );
 
   useEffect(() => {
     // Charger les préférences véhicules
@@ -225,7 +227,10 @@ const AnalysisPage = () => {
     if (selectedProfile === 'Custom') {
       return customVehicle;
     }
-    return VEHICLE_PROFILES.find(p => p.name === selectedProfile) || VEHICLE_PROFILES[0];
+    if (!VEHICLE_PROFILES || VEHICLE_PROFILES.length === 0) {
+      return customVehicle; // Fallback sur Custom si pas de profils
+    }
+    return VEHICLE_PROFILES.find(p => p.name === selectedProfile) || (VEHICLE_PROFILES[0] || customVehicle);
   };
   
   const handleCalculateRoute = async () => {
