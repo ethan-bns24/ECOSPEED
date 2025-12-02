@@ -101,6 +101,16 @@ const TRANSLATIONS = {
   },
 };
 
+// Helper function pour formater le temps en heures et minutes
+const formatTime = (minutes) => {
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
+  if (hours > 0) {
+    return `${hours}h ${mins}min`;
+  }
+  return `${mins}min`;
+};
+
 const AnalysisPage = () => {
   const navigate = useNavigate();
   
@@ -157,7 +167,6 @@ const AnalysisPage = () => {
   const [useClimate, setUseClimate] = useState(false);
   const [climateIntensity, setClimateIntensity] = useState(50);
   const [batteryStartPct, setBatteryStartPct] = useState(100);
-  const [batteryEndPct, setBatteryEndPct] = useState(20);
   const [rhoAir, setRhoAir] = useState(1.225);
   
   // Route and analysis state
@@ -238,7 +247,6 @@ const AnalysisPage = () => {
         use_climate: useClimate,
         climate_intensity: climateIntensity,
         battery_start_pct: batteryStartPct,
-        battery_end_pct: batteryEndPct,
         rho_air: rhoAir
       };
       
@@ -260,12 +268,22 @@ const AnalysisPage = () => {
       
       // Persister ce trajet pour le dashboard / historique / stats
       try {
+        // Calculer la batterie à l'arrivée pour la persistance
+        const batteryKwh = vehicle.battery_kwh || null;
+        let calculatedBatteryEndPct = null;
+        if (batteryKwh && batteryStartPct) {
+          const totalEcoEnergy = response.data.segments.reduce((sum, s) => sum + s.eco_energy, 0);
+          const energyAtStart = batteryKwh * (batteryStartPct / 100);
+          const energyRemaining = energyAtStart - totalEcoEnergy;
+          calculatedBatteryEndPct = Math.max(0, Math.min(100, (energyRemaining / batteryKwh) * 100));
+        }
+        
         persistTripFromRoute(response.data, {
           vehicleName: vehicle.name,
           numPassengers: numPassengers,
-          batteryKwh: vehicle.battery_kwh || null,
+          batteryKwh: batteryKwh,
           batteryStartPct: batteryStartPct,
-          batteryEndPct: batteryEndPct,
+          batteryEndPct: calculatedBatteryEndPct,
         });
       } catch (e) {
         console.error('Failed to persist trip summary', e);
@@ -665,29 +683,16 @@ const AnalysisPage = () => {
                 {/* Battery state */}
                 <div className="space-y-3">
                   <Label className={isDark ? "text-emerald-100" : "text-slate-700"}>🔋 {language === 'fr' ? 'État de la batterie' : 'Battery state'}</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.batteryStart}</Label>
-                      <Input
-                        type="number"
-                        min="20"
-                        max="100"
-                        value={batteryStartPct}
-                        onChange={(e) => setBatteryStartPct(parseFloat(e.target.value) || 100)}
-                        className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
-                      />
-                    </div>
-                    <div>
-                      <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.batteryEnd}</Label>
-                      <Input
-                        type="number"
-                        min="5"
-                        max="90"
-                        value={batteryEndPct}
-                        onChange={(e) => setBatteryEndPct(parseFloat(e.target.value) || 20)}
-                        className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
-                      />
-                    </div>
+                  <div>
+                    <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.batteryStart}</Label>
+                    <Input
+                      type="number"
+                      min="20"
+                      max="100"
+                      value={batteryStartPct}
+                      onChange={(e) => setBatteryStartPct(parseFloat(e.target.value) || 100)}
+                      className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                    />
                   </div>
                 </div>
                 
@@ -832,11 +837,19 @@ const AnalysisPage = () => {
                     const totalLimitTime = routeData.segments.reduce((sum, s) => sum + s.limit_time, 0) / 60;
                     const extraTime = totalEcoTime - totalLimitTime;
                     
-                    // Calculer le nombre de recharges nécessaires
+                    // Calculer la batterie à l'arrivée
                     const vehicle = getSelectedVehicleData();
                     const batteryKwh = vehicle?.battery_kwh || null;
-                    const chargingStops = batteryKwh 
-                      ? calculateChargingStops(totalEcoEnergy, batteryKwh, batteryStartPct, batteryEndPct)
+                    let batteryEndPct = null;
+                    if (batteryKwh && batteryStartPct) {
+                      const energyAtStart = batteryKwh * (batteryStartPct / 100);
+                      const energyRemaining = energyAtStart - totalEcoEnergy;
+                      batteryEndPct = Math.max(0, Math.min(100, (energyRemaining / batteryKwh) * 100));
+                    }
+                    
+                    // Calculer le nombre de recharges nécessaires (on utilise 20% comme minimum à l'arrivée)
+                    const chargingStops = batteryKwh && batteryEndPct !== null
+                      ? calculateChargingStops(totalEcoEnergy, batteryKwh, batteryStartPct, Math.max(20, batteryEndPct))
                       : null;
                     
                     return (
@@ -882,7 +895,7 @@ const AnalysisPage = () => {
                                     {language === 'fr' ? 'Temps à la limite' : 'Time at Speed Limit'}
                                   </div>
                                   <div className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                    {totalLimitTime.toFixed(1)} <span className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-500'}`}>min</span>
+                                    {formatTime(totalLimitTime)}
                                   </div>
                                 </div>
                                 <div className="text-center">
@@ -890,7 +903,7 @@ const AnalysisPage = () => {
                                     {language === 'fr' ? 'Temps éco-conduite' : 'Eco-Driving Time'}
                                   </div>
                                   <div className={`text-xl font-bold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
-                                    {totalEcoTime.toFixed(1)} <span className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-500'}`}>min</span>
+                                    {formatTime(totalEcoTime)}
                                   </div>
                                 </div>
                                 <div className="text-center">
@@ -898,9 +911,19 @@ const AnalysisPage = () => {
                                     {language === 'fr' ? 'Temps supplémentaire' : 'Extra Time'}
                                   </div>
                                   <div className={`text-xl font-bold ${extraTime > 0 ? (isDark ? 'text-yellow-300' : 'text-yellow-600') : (isDark ? 'text-emerald-100' : 'text-emerald-700')}`}>
-                                    {extraTime >= 0 ? '+' : ''}{extraTime.toFixed(1)} <span className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-500'}`}>min</span>
+                                    {extraTime >= 0 ? '+' : ''}{formatTime(Math.abs(extraTime))}
                                   </div>
                                 </div>
+                                {batteryEndPct !== null && batteryKwh && (
+                                  <div className="text-center">
+                                    <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                      {language === 'fr' ? 'Batterie à l\'arrivée' : 'Battery at Arrival'}
+                                    </div>
+                                    <div className={`text-xl font-bold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
+                                      {batteryEndPct.toFixed(1)}%
+                                    </div>
+                                  </div>
+                                )}
                                 {chargingStops !== null && (
                                   <div className="text-center">
                                     <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
