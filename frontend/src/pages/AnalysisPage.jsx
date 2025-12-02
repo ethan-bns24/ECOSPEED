@@ -141,13 +141,15 @@ const AnalysisPage = () => {
     };
   }, []);
   
-  const t = TRANSLATIONS[language] || TRANSLATIONS.fr;
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en || TRANSLATIONS.fr;
   const isDark = theme === 'dark';
   
   // Form state
   const [startLocation, setStartLocation] = useState('');
   const [endLocation, setEndLocation] = useState('');
-  const [selectedProfile, setSelectedProfile] = useState(VEHICLE_PROFILES[0].name);
+  const [selectedProfile, setSelectedProfile] = useState(
+    VEHICLE_PROFILES && VEHICLE_PROFILES.length > 0 ? VEHICLE_PROFILES[0].name : ''
+  );
   const [customVehicle, setCustomVehicle] = useState({
     name: 'Custom',
     empty_mass: 1900,
