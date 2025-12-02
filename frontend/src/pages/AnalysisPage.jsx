@@ -183,6 +183,7 @@ const AnalysisPage = () => {
   const [limitChargingStations, setLimitChargingStations] = useState([]);
   const [currentSpeed, setCurrentSpeed] = useState(0);
   const [currentPosition, setCurrentPosition] = useState(null);
+  const [distanceToNextTurn, setDistanceToNextTurn] = useState(0);
   
   // Vehicle profiles: filtrées par les préférences (véhicules actifs)
   const [availableProfiles, setAvailableProfiles] = useState(
@@ -427,6 +428,10 @@ const AnalysisPage = () => {
         const coordIndex = Math.floor(segmentStartIndex + (segmentEndIndex - segmentStartIndex) * progressRatio);
         if (coordIndex < routeData.route_coordinates.length) {
           setCurrentPosition(routeData.route_coordinates[coordIndex]);
+          
+          // Calculer la distance restante jusqu'à la fin du segment (prochain virage)
+          const remainingDistance = segmentDistance - progressInSegment; // en mètres
+          setDistanceToNextTurn(remainingDistance / 1000); // convertir en km
         }
       }
     }, 100); // Mise à jour toutes les 100ms pour une animation fluide
@@ -457,6 +462,7 @@ const AnalysisPage = () => {
     setShowResults(false);
     setCurrentSpeed(0);
     setCurrentPosition(null);
+    setDistanceToNextTurn(0);
   };
   
   const handleNextSegment = () => {
@@ -932,15 +938,7 @@ const AnalysisPage = () => {
                   nextSegment={currentSegmentIndex < routeData.segments.length - 1 ? routeData.segments[currentSegmentIndex + 1] : null}
                   segments={routeData.segments}
                   currentSegmentIndex={currentSegmentIndex}
-                  distanceToNextTurn={(() => {
-                    const currentSeg = routeData.segments[currentSegmentIndex];
-                    if (currentSeg) {
-                      // Calculer la distance restante dans le segment actuel
-                      const segmentDistance = currentSeg.distance || 0;
-                      return segmentDistance / 1000; // en km
-                    }
-                    return 0;
-                  })()}
+                  distanceToNextTurn={distanceToNextTurn}
                   currentPosition={currentPosition}
                 />
                 
