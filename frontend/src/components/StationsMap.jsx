@@ -83,10 +83,8 @@ const StationsMap = ({ stations = [], selectedStation = null, onStationClick }) 
     !isNaN(s.longitude)
   );
 
-  // N'afficher que la borne sélectionnée sur la carte (ou aucune si rien n'est sélectionné)
-  const stationsToDisplay = selectedStation && selectedStation.latitude && selectedStation.longitude
-    ? [selectedStation]
-    : [];
+  // Afficher toutes les bornes sur la carte
+  const stationsToDisplay = validStations;
 
   return (
     <MapContainer
