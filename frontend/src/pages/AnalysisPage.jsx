@@ -280,7 +280,6 @@ const AnalysisPage = () => {
           timeout: 60000,
         });
         const allStations = stationsResponse.data || [];
-        setChargingStations(allStations);
         
         // Trouver les bornes sur le trajet
         const vehicle = getSelectedVehicleData();
@@ -294,10 +293,11 @@ const AnalysisPage = () => {
             allStations
           );
           setRouteChargingStations(stationsOnRoute);
+        } else {
+          setRouteChargingStations([]);
         }
       } catch (error) {
         console.error('Error fetching charging stations:', error);
-        setChargingStations([]);
         setRouteChargingStations([]);
       }
       
