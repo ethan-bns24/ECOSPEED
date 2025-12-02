@@ -26,28 +26,29 @@ function calculateTurnAngle(prevBearing, currentBearing) {
 }
 
 // Fonction pour obtenir l'instruction de navigation
-function getNavigationInstruction(angle, distance) {
+function getNavigationInstruction(angle, distance, language = 'fr') {
   const absAngle = Math.abs(angle);
+  const t = TRANSLATIONS[language]?.navigation || TRANSLATIONS.en.navigation;
   
   if (absAngle < 15) {
-    return { type: 'straight', icon: ArrowUp, text: 'Continuez tout droit' };
+    return { type: 'straight', icon: ArrowUp, text: t.continueStraight || 'Continue straight' };
   } else if (absAngle < 45) {
     if (angle > 0) {
-      return { type: 'slight-right', icon: ArrowRight, text: 'Légèrement à droite' };
+      return { type: 'slight-right', icon: ArrowRight, text: t.slightRight || 'Slight right' };
     } else {
-      return { type: 'slight-left', icon: ArrowLeft, text: 'Légèrement à gauche' };
+      return { type: 'slight-left', icon: ArrowLeft, text: t.slightLeft || 'Slight left' };
     }
   } else if (absAngle < 135) {
     if (angle > 0) {
-      return { type: 'right', icon: ArrowRight, text: 'Tournez à droite' };
+      return { type: 'right', icon: ArrowRight, text: t.turnRight || 'Turn right' };
     } else {
-      return { type: 'left', icon: ArrowLeft, text: 'Tournez à gauche' };
+      return { type: 'left', icon: ArrowLeft, text: t.turnLeft || 'Turn left' };
     }
   } else {
     if (angle > 0) {
-      return { type: 'sharp-right', icon: RotateCw, text: 'Virage serré à droite' };
+      return { type: 'sharp-right', icon: RotateCw, text: t.sharpRight || 'Sharp right' };
     } else {
-      return { type: 'sharp-left', icon: RotateCw, text: 'Virage serré à gauche' };
+      return { type: 'sharp-left', icon: RotateCw, text: t.sharpLeft || 'Sharp left' };
     }
   }
 }
@@ -112,19 +113,12 @@ const GPSNavigation = ({
     // Calculer l'angle de virage
     const turnAngle = calculateTurnAngle(currentBearing, nextBearing);
     
-    // Obtenir l'instruction
-    instruction = getNavigationInstruction(turnAngle, distanceToTurn);
-    
-    // Si on est proche du virage, utiliser la distance restante dans le segment actuel
-    if (currentPosition && currentSegment) {
-      // Calculer la distance restante dans le segment actuel
-      const segmentDistance = currentSegment.distance || 0;
-      // Estimation basée sur la position actuelle (simplifié)
-      distanceToTurn = segmentDistance / 1000; // en km
-    }
+    // Obtenir l'instruction avec la langue
+    instruction = getNavigationInstruction(turnAngle, distanceToTurn, language);
   } else {
     // Pas de segment suivant, continuer tout droit
-    instruction = { type: 'straight', icon: ArrowUp, text: language === 'fr' ? 'Continuez tout droit' : 'Continue straight' };
+    const t = TRANSLATIONS[language]?.navigation || TRANSLATIONS.en.navigation;
+    instruction = { type: 'straight', icon: ArrowUp, text: t.continueStraight || 'Continue straight' };
   }
 
   const InstructionIcon = instruction?.icon || ArrowUp;
@@ -169,10 +163,10 @@ const GPSNavigation = ({
             </div>
             <div>
               <div className="text-sm md:text-base text-emerald-200/70 mb-1">
-                {language === 'fr' ? 'Dans' : 'In'} {formatDistance(distanceToTurn)}
+                {t.in || 'In'} {formatDistance(distanceToTurn)}
               </div>
               <div className="text-lg md:text-2xl font-bold text-white">
-                {instruction?.text || (language === 'fr' ? 'Continuez tout droit' : 'Continue straight')}
+                {instruction?.text || t.continueStraight || 'Continue straight'}
               </div>
             </div>
           </div>
@@ -181,7 +175,7 @@ const GPSNavigation = ({
           {segments && currentSegmentIndex < segments.length && (
             <div className="text-right">
               <div className="text-xs text-emerald-200/70 mb-1">
-                {language === 'fr' ? 'Distance restante' : 'Distance remaining'}
+                {t.distanceRemaining || 'Distance remaining'}
               </div>
               <div className="text-xl md:text-2xl font-bold text-emerald-400">
                 {(() => {
