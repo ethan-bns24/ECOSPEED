@@ -68,47 +68,43 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
   const defaultCenter = [46.6034, 1.8883];
   const center = startMarker || defaultCenter;
 
-  // Custom icons
+  // Custom icons - utiliser encodeURIComponent au lieu de btoa pour éviter les problèmes avec les caractères spéciaux
+  const startIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+    <circle cx="16" cy="16" r="14" fill="#4ade80" stroke="#0a2e1a" stroke-width="2"/>
+    <text x="16" y="22" font-size="18" font-weight="bold" text-anchor="middle" fill="#0a2e1a">S</text>
+  </svg>`;
   const startIcon = new L.Icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-        <circle cx="16" cy="16" r="14" fill="#4ade80" stroke="#0a2e1a" stroke-width="2"/>
-        <text x="16" y="22" font-size="18" font-weight="bold" text-anchor="middle" fill="#0a2e1a">S</text>
-      </svg>
-    `),
+    iconUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(startIconSvg),
     iconSize: [32, 32],
     iconAnchor: [16, 16],
   });
 
+  const endIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+    <circle cx="16" cy="16" r="14" fill="#ef4444" stroke="#7f1d1d" stroke-width="2"/>
+    <text x="16" y="22" font-size="18" font-weight="bold" text-anchor="middle" fill="white">E</text>
+  </svg>`;
   const endIcon = new L.Icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-        <circle cx="16" cy="16" r="14" fill="#ef4444" stroke="#7f1d1d" stroke-width="2"/>
-        <text x="16" y="22" font-size="18" font-weight="bold" text-anchor="middle" fill="white">E</text>
-      </svg>
-    `),
+    iconUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(endIconSvg),
     iconSize: [32, 32],
     iconAnchor: [16, 16],
   });
 
+  const currentIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10" fill="#3b82f6" stroke="white" stroke-width="2"/>
+    <circle cx="12" cy="12" r="4" fill="white"/>
+  </svg>`;
   const currentIcon = new L.Icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" fill="#3b82f6" stroke="white" stroke-width="2"/>
-        <circle cx="12" cy="12" r="4" fill="white"/>
-      </svg>
-    `),
+    iconUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(currentIconSvg),
     iconSize: [24, 24],
     iconAnchor: [12, 12],
   });
 
+  const chargingIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+    <circle cx="14" cy="14" r="12" fill="#f59e0b" stroke="white" stroke-width="2"/>
+    <text x="14" y="19" font-size="16" font-weight="bold" text-anchor="middle" fill="white">+</text>
+  </svg>`;
   const chargingIcon = new L.Icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
-        <circle cx="14" cy="14" r="12" fill="#f59e0b" stroke="white" stroke-width="2"/>
-        <text x="14" y="19" font-size="16" font-weight="bold" text-anchor="middle" fill="white">⚡</text>
-      </svg>
-    `),
+    iconUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(chargingIconSvg),
     iconSize: [28, 28],
     iconAnchor: [14, 14],
   });
