@@ -24,6 +24,7 @@ import { persistTripFromRoute, calculateChargingStops } from '../lib/tripStorage
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
 import { getVehicleSettings, updateVehicleSettings, getAppSettings } from '../lib/settingsStorage';
 import { findChargingStationsOnRoute } from '../lib/chargingUtils';
+import { TRANSLATIONS as APP_TRANSLATIONS } from '../lib/translations';
 
 // Use environment variable or fallback to localhost for development
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
@@ -35,7 +36,8 @@ console.log('API endpoint:', API);
 
 // Vehicle Profiles sont maintenant centralisés dans lib/vehicleProfiles
 
-const TRANSLATIONS = {
+// Traductions locales pour cette page (fusionnées avec les traductions globales)
+const PAGE_TRANSLATIONS = {
   fr: {
     back: 'Retour',
     routeConfig: 'Configuration de l\'itinéraire',
@@ -102,6 +104,12 @@ const TRANSLATIONS = {
     auxPower: 'Aux Power (kW)',
     battery: 'Battery (kWh)',
   },
+};
+
+// Fusionner les traductions locales avec les traductions globales
+const TRANSLATIONS = {
+  fr: { ...APP_TRANSLATIONS.fr, ...PAGE_TRANSLATIONS.fr },
+  en: { ...APP_TRANSLATIONS.en, ...PAGE_TRANSLATIONS.en },
 };
 
 // Helper function pour formater le temps en heures et minutes
