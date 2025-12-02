@@ -14,13 +14,14 @@ export function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 /**
- * Trouve la borne de recharge la plus proche d'un point donné
+ * Trouve la meilleure borne de recharge en combinant distance et puissance
+ * Privilégie les bornes avec une grande puissance pour charger plus vite
  */
-export function findNearestStation(lat, lon, stations) {
+export function findNearestStation(lat, lon, stations, maxDistanceKm = 30) {
   if (!stations || stations.length === 0) return null;
   
-  let nearest = null;
-  let minDistance = Infinity;
+  let bestStation = null;
+  let bestScore = -Infinity;
   
   stations.forEach(station => {
     if (!station.latitude || !station.longitude || 
@@ -32,13 +33,29 @@ export function findNearestStation(lat, lon, stations) {
     if (station.status !== 'Dispo') return;
     
     const distance = calculateDistance(lat, lon, station.latitude, station.longitude);
-    if (distance < minDistance) {
-      minDistance = distance;
-      nearest = { ...station, distanceKm: distance };
+    
+    // Ignorer les stations trop éloignées
+    if (distance > maxDistanceKm) return;
+    
+    // Puissance de la borne (défaut 50 kW si non spécifiée)
+    const powerKw = station.powerKw || 50;
+    
+    // Score qui combine distance et puissance
+    // Plus la puissance est élevée, meilleur est le score
+    // Plus la distance est faible, meilleur est le score
+    // On pondère la puissance plus fortement (x3) car elle impacte directement le temps de charge
+    // Score = (puissance * 3) / (distance + 1) pour éviter division par zéro
+    // On ajoute aussi un bonus pour les très fortes puissances (>150 kW)
+    const powerBonus = powerKw > 150 ? 50 : powerKw > 100 ? 25 : 0;
+    const score = (powerKw * 3 + powerBonus) / (distance + 1);
+    
+    if (score > bestScore) {
+      bestScore = score;
+      bestStation = { ...station, distanceKm: distance };
     }
   });
   
-  return nearest;
+  return bestStation;
 }
 
 /**
