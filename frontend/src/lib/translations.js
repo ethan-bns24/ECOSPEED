@@ -70,6 +70,15 @@ export const TRANSLATIONS = {
       darkMode: 'Mode sombre',
       savedInBrowser: 'Les paramètres sont enregistrés dans ce navigateur uniquement.',
     },
+    // Sidebar
+    sidebar: {
+      greenDrivingOptimizer: 'Optimiseur de Conduite Écologique',
+    },
+    greeting: 'Bonjour Ethan !',
+    subtitle: 'Optimisez vos trajets 🚗⚡',
+    footerTitle: 'Conduisez écolo',
+    footerText: 'Optimisez votre consommation pour préserver la planète.',
+    level: 'Niveau 1 · Éco-conducteur',
     // History
     history: {
       title: 'Historique',
