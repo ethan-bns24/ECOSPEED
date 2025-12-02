@@ -172,20 +172,20 @@ const StationsPage = () => {
               : 'bg-white border-slate-300 text-slate-900'
           } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
         >
-          <option value="">-- Sélectionner une borne sur la carte --</option>
+          <option value="">-- {t.stations.selectStation} --</option>
           {stations.map((station, index) => (
             <option
               key={`${station.latitude}-${station.longitude}-${index}`}
               value={`${station.latitude}-${station.longitude}`}
             >
-              {station.name || 'Borne de recharge'} - {station.operator || 'Opérateur inconnu'} ({station.powerKw || 0} kW) - {station.address || 'Adresse inconnue'}
+              {station.name || (language === 'fr' ? 'Borne de recharge' : 'Charging station')} - {station.operator || (language === 'fr' ? 'Opérateur inconnu' : 'Unknown operator')} ({station.powerKw || 0} kW) - {station.address || (language === 'fr' ? 'Adresse inconnue' : 'Unknown address')}
             </option>
           ))}
         </select>
         
         {searchTerm && (
           <p className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
-            {filteredStations.length} borne{filteredStations.length > 1 ? 's' : ''} trouvée{filteredStations.length > 1 ? 's' : ''}
+            {filteredStations.length} {language === 'fr' ? `borne${filteredStations.length > 1 ? 's' : ''} trouvée${filteredStations.length > 1 ? 's' : ''}` : `station${filteredStations.length > 1 ? 's' : ''} found`}
           </p>
         )}
       </div>
@@ -198,7 +198,7 @@ const StationsPage = () => {
               <div className={`absolute inset-0 flex items-center justify-center z-10 ${isDark ? 'bg-emerald-500/90' : 'bg-white/90'}`}>
                 <div className={`text-center ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto mb-4"></div>
-                  <p>Chargement de la carte...</p>
+                  <p>{t.stations.loading}</p>
                 </div>
               </div>
             ) : (
@@ -221,19 +221,19 @@ const StationsPage = () => {
           {selectedStation && (
             <div className={`mt-4 p-4 rounded-lg ${isDark ? 'bg-white/10' : 'bg-slate-50'}`}>
               <h3 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                {selectedStation.name || 'Borne de recharge'}
+                {selectedStation.name || (language === 'fr' ? 'Borne de recharge' : 'Charging station')}
               </h3>
               <div className={`text-sm space-y-1 ${isDark ? 'text-emerald-100' : 'text-slate-600'}`}>
-                <div><strong>Opérateur:</strong> {selectedStation.operator || 'Opérateur inconnu'}</div>
-                <div><strong>Puissance:</strong> {selectedStation.powerKw || 0} kW</div>
+                <div><strong>{t.stations.operator}:</strong> {selectedStation.operator || (language === 'fr' ? 'Opérateur inconnu' : 'Unknown operator')}</div>
+                <div><strong>{t.stations.power}:</strong> {selectedStation.powerKw || 0} kW</div>
                 {selectedStation.address && (
-                  <div><strong>Adresse:</strong> {selectedStation.address}</div>
+                  <div><strong>{t.stations.address}:</strong> {selectedStation.address}</div>
                 )}
                 {selectedStation.price && (
-                  <div><strong>Prix:</strong> {selectedStation.price}</div>
+                  <div><strong>{t.stations.price}:</strong> {selectedStation.price}</div>
                 )}
                 <div>
-                  <strong>Statut:</strong>{' '}
+                  <strong>{t.stations.status}:</strong>{' '}
                   <span
                     className={`px-2 py-1 rounded text-xs ${
                       selectedStation.status === 'Dispo'
@@ -249,7 +249,7 @@ const StationsPage = () => {
                             : 'bg-rose-50 text-rose-700'
                     }`}
                   >
-                    {selectedStation.status || 'Dispo'}
+                    {selectedStation.status === 'Dispo' ? t.stations.available : selectedStation.status === 'Occupée' ? t.stations.occupied : t.stations.outOfService}
                   </span>
                 </div>
               </div>
@@ -305,7 +305,7 @@ const StationsPage = () => {
                               : 'bg-rose-50 text-rose-700 border-rose-200'
                       }`}
                     >
-                      {s.status || 'Dispo'}
+                      {s.status === 'Dispo' ? t.stations.available : s.status === 'Occupée' ? t.stations.occupied : t.stations.outOfService}
                     </span>
                   </div>
                 ))}

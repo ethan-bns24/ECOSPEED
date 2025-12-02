@@ -61,25 +61,25 @@ const StatsPage = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
         <div className="bg-emerald-600 text-white rounded-2xl px-4 py-4 shadow-sm">
-          <div className="text-xs text-emerald-100 mb-1">kWh économisés</div>
+          <div className="text-xs text-emerald-100 mb-1">{t.stats.energySavedLabel}</div>
           <div className="text-2xl font-semibold">
             {totalEnergySavedKwh.toFixed(1)}
           </div>
         </div>
         <div className="bg-sky-600 text-white rounded-2xl px-4 py-4 shadow-sm">
-          <div className="text-xs text-sky-100 mb-1">km parcourus</div>
+          <div className="text-xs text-sky-100 mb-1">{t.stats.distanceLabel}</div>
           <div className="text-2xl font-semibold">
             {totalDistanceKm.toFixed(0)}
           </div>
         </div>
         <div className="bg-emerald-700 text-white rounded-2xl px-4 py-4 shadow-sm">
-          <div className="text-xs text-emerald-100 mb-1">kg CO₂ évités</div>
+          <div className="text-xs text-emerald-100 mb-1">{t.stats.co2AvoidedLabel}</div>
           <div className="text-2xl font-semibold">
             {totalCo2SavedKg.toFixed(1)}
           </div>
         </div>
         <div className="bg-amber-500 text-white rounded-2xl px-4 py-4 shadow-sm">
-          <div className="text-xs text-amber-100 mb-1">Score moyen /100</div>
+          <div className="text-xs text-amber-100 mb-1">{t.stats.avgScoreLabel}</div>
           <div className="text-2xl font-semibold">{avgScore}</div>
         </div>
       </div>
@@ -88,12 +88,12 @@ const StatsPage = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className={`text-base md:text-lg font-semibold flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
             <Zap className={`w-4 h-4 ${isDark ? 'text-emerald-100' : 'text-emerald-600'}`} />
-            Énergie économisée par trajet
+            {t.stats.energySavedPerTrip}
           </h2>
         </div>
         {trips.length === 0 ? (
           <div className={`text-sm ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
-            Aucune donnée disponible pour l&apos;instant.
+            {t.stats.noData}
           </div>
         ) : (
           <ul className="space-y-2 text-sm">
@@ -118,28 +118,27 @@ const StatsPage = () => {
         <div className={`rounded-3xl p-5 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
           <h2 className={`text-base md:text-lg font-semibold mb-3 flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
             <BarChart2 className={`w-4 h-4 ${isDark ? 'text-emerald-100' : 'text-slate-600'}`} />
-            Comparaison avec la moyenne
+            {t.stats.comparison}
           </h2>
           <p className={`text-3xl font-bold mb-1 ${isDark ? 'text-emerald-100' : 'text-emerald-600'}`}>
             {totalEnergySavedKwh > 0 ? '+23%' : '0%'}
           </p>
           <p className={`text-sm ${isDark ? 'text-emerald-50' : 'text-slate-600'}`}>
-            Vous économisez plus d&apos;énergie que la moyenne des conducteurs
-            (valeur indicative).
+            {t.stats.comparisonText}
           </p>
         </div>
 
         <div className={`rounded-3xl p-5 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
           <h2 className={`text-base md:text-lg font-semibold mb-3 flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
             <Leaf className={`w-4 h-4 ${isDark ? 'text-emerald-100' : 'text-emerald-600'}`} />
-            Impact environnemental
+            {t.stats.environmentalImpact}
           </h2>
           <p className={`text-sm ${isDark ? 'text-emerald-50' : 'text-slate-600'}`}>
-            Grâce à vos économies d&apos;énergie, vous avez évité environ{' '}
+            {t.stats.environmentalImpactText}{' '}
             <span className="font-semibold">
-              {totalCo2SavedKg.toFixed(1)} kg de CO₂
+              {totalCo2SavedKg.toFixed(1)} {t.stats.co2Equivalent}
             </span>
-            , soit l&apos;équivalent de plusieurs arbres plantés.
+            {t.stats.treesEquivalent}
           </p>
         </div>
       </div>

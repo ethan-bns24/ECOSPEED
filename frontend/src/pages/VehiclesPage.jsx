@@ -106,14 +106,14 @@ const VehiclesPage = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className={`text-base md:text-lg font-semibold flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
                 <Car className={`w-5 h-5 ${isDark ? 'text-emerald-100' : 'text-emerald-600'}`} />
-                Mes véhicules
+                {t.vehicles.title}
               </h2>
               <button
                 type="button"
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500 text-white text-xs font-medium"
               >
                 <Plus className="w-3 h-3" />
-                Ajouter un véhicule
+                {t.vehicles.addVehicle}
               </button>
             </div>
 
@@ -154,13 +154,10 @@ const VehiclesPage = () => {
         <div className="space-y-4">
           <div className={`rounded-3xl p-5 md:p-6 shadow-sm text-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
             <h2 className={`text-base md:text-lg font-semibold mb-2 ${isDark ? 'text-white' : ''}`}>
-              Conseil
+              {t.vehicles.tip}
             </h2>
             <p className={`text-sm ${isDark ? 'text-emerald-50' : 'text-slate-600'}`}>
-              Le véhicule marqué <strong>Par défaut</strong> sera utilisé
-              automatiquement dans le calcul de trajet.  
-              Si vous en marquez plusieurs au fil du temps, vous pourrez toujours
-              les sélectionner dans l&apos;écran &laquo; Nouveau trajet &raquo;.
+              {t.vehicles.tipText}
             </p>
           </div>
         </div>
