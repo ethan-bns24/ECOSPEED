@@ -843,20 +843,36 @@ const AnalysisPage = () => {
                     const totalLimitTime = routeData.segments.reduce((sum, s) => sum + s.limit_time, 0) / 60;
                     const extraTime = totalEcoTime - totalLimitTime;
                     
-                    // Calculer la batterie à l'arrivée
+                    // Calculer la batterie à l'arrivée en tenant compte des recharges
                     const vehicle = getSelectedVehicleData();
                     const batteryKwh = vehicle?.battery_kwh || null;
                     let batteryEndPct = null;
+                    let chargingStops = null;
+                    
                     if (batteryKwh && batteryStartPct) {
                       const energyAtStart = batteryKwh * (batteryStartPct / 100);
-                      const energyRemaining = energyAtStart - totalEcoEnergy;
-                      batteryEndPct = Math.max(0, Math.min(100, (energyRemaining / batteryKwh) * 100));
+                      
+                      // Calculer d'abord la batterie sans recharges
+                      const energyRemainingWithoutCharges = energyAtStart - totalEcoEnergy;
+                      const batteryEndPctWithoutCharges = Math.max(0, Math.min(100, (energyRemainingWithoutCharges / batteryKwh) * 100));
+                      
+                      // Calculer le nombre de recharges nécessaires (on veut arriver avec au moins 20%)
+                      chargingStops = calculateChargingStops(totalEcoEnergy, batteryKwh, batteryStartPct, 20);
+                      
+                      // Si on a besoin de recharges, recalculer la batterie finale
+                      if (chargingStops > 0) {
+                        // Chaque recharge ajoute 80% de la capacité (de 20% à 100%)
+                        const energyPerCharge = batteryKwh * 0.8;
+                        const totalEnergyAdded = chargingStops * energyPerCharge;
+                        
+                        // Énergie finale = énergie au départ - énergie consommée + énergie rechargée
+                        const finalEnergy = energyAtStart - totalEcoEnergy + totalEnergyAdded;
+                        batteryEndPct = Math.max(20, Math.min(100, (finalEnergy / batteryKwh) * 100));
+                      } else {
+                        // Pas de recharges nécessaires, utiliser le calcul direct
+                        batteryEndPct = batteryEndPctWithoutCharges;
+                      }
                     }
-                    
-                    // Calculer le nombre de recharges nécessaires (on utilise 20% comme minimum à l'arrivée)
-                    const chargingStops = batteryKwh && batteryEndPct !== null
-                      ? calculateChargingStops(totalEcoEnergy, batteryKwh, batteryStartPct, Math.max(20, batteryEndPct))
-                      : null;
                     
                     return (
                       <Card className={`${isDark ? 'bg-white/5 backdrop-blur-sm border-emerald-700/30' : 'bg-white border-slate-200'} mt-6`} data-testid="final-summary">
