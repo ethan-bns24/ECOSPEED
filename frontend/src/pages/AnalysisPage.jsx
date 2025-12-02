@@ -492,12 +492,12 @@ const AnalysisPage = () => {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label className={isDark ? "text-emerald-100" : "text-slate-700"}>{t.vehicleProfile}</Label>
-                  {availableProfiles.length === 1 ? (
+                  {availableProfiles && availableProfiles.length === 1 ? (
                     <div className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
-                      <span className="font-semibold">{availableProfiles[0].name}</span>{' '}
+                      <span className="font-semibold">{availableProfiles[0]?.name || 'N/A'}</span>{' '}
                       ({t.selectedAuto})
                     </div>
-                  ) : (
+                  ) : availableProfiles && availableProfiles.length > 1 ? (
                     <Select value={selectedProfile} onValueChange={setSelectedProfile}>
                       <SelectTrigger
                         data-testid="vehicle-profile-select"
