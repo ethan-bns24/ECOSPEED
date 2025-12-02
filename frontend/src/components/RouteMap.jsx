@@ -27,6 +27,22 @@ function MapBounds({ coordinates }) {
   return null;
 }
 
+// Component to follow current position during navigation
+function FollowPosition({ position }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (position && Array.isArray(position) && position.length === 2) {
+      const [lat, lon] = position;
+      if (typeof lat === 'number' && typeof lon === 'number' && !isNaN(lat) && !isNaN(lon)) {
+        map.setView([lat, lon], map.getZoom(), { animate: true, duration: 0.5 });
+      }
+    }
+  }, [position, map]);
+  
+  return null;
+}
+
 const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, routeCoordinates, chargingStations = [], currentPosition = null }) => {
   const mapRef = useRef(null);
 
