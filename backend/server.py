@@ -904,6 +904,61 @@ async def get_route_from_ors(start: str, end: str, user_max_speed: int = 130) ->
             if "values" in waytype_extra:
                 waytype_ranges = waytype_extra["values"]
         
+        # Détecter si on est en zone urbaine
+        # Méthode 1: Analyser les types de routes (si >40% sont résidentielles/unclassified, on est en ville)
+        urban_indicators = {"residential", "unclassified", "service"}
+        urban_segment_count = 0
+        total_segment_length = 0
+        
+        if waytype_ranges:
+            for waytype_range in waytype_ranges:
+                start_idx, end_idx, waytype_id = waytype_range
+                waytype_name = waytype_mapping.get(waytype_id, "unclassified")
+                segment_length = end_idx - start_idx
+                total_segment_length += segment_length
+                if waytype_name in urban_indicators:
+                    urban_segment_count += segment_length
+        
+        is_urban_by_road_type = total_segment_length > 0 and (urban_segment_count / total_segment_length) > 0.4
+        
+        # Méthode 2: Vérifier via géocodage inverse si départ/arrivée sont en zone urbaine
+        is_urban_by_geocoding = False
+        try:
+            if coords_list:
+                # Vérifier le point de départ
+                start_coord = coords_list[0]
+                lon_start, lat_start = start_coord[0], start_coord[1]
+                geolocator = Nominatim(user_agent="ecospeed", timeout=5)
+                location_start = geolocator.reverse(f"{lat_start}, {lon_start}", language='fr')
+                
+                if location_start:
+                    address_start = location_start.raw.get('address', {})
+                    # Vérifier si on est dans une ville
+                    place_types = ['city', 'town', 'village', 'suburb', 'municipality', 'hamlet']
+                    is_start_urban = any(address_start.get(pt) for pt in place_types)
+                    
+                    # Vérifier aussi le point d'arrivée
+                    end_coord = coords_list[-1] if len(coords_list) > 1 else start_coord
+                    lon_end, lat_end = end_coord[0], end_coord[1]
+                    location_end = geolocator.reverse(f"{lat_end}, {lon_end}", language='fr')
+                    
+                    if location_end:
+                        address_end = location_end.raw.get('address', {})
+                        is_end_urban = any(address_end.get(pt) for pt in place_types)
+                        
+                        # Si départ ET arrivée sont en zone urbaine, considérer tout le trajet comme urbain
+                        if is_start_urban and is_end_urban:
+                            is_urban_by_geocoding = True
+                            logger.info(f"Detected urban route: start={address_start.get('city') or address_start.get('town')}, end={address_end.get('city') or address_end.get('town')}")
+        except Exception as e:
+            logger.warning(f"Could not determine urban zone from geocoding: {e}")
+        
+        # Considérer comme zone urbaine si l'une des deux méthodes le détecte
+        is_urban_route = is_urban_by_geocoding or is_urban_by_road_type
+        
+        if is_urban_route:
+            logger.info(f"Route detected as urban - applying 50 km/h speed limit (except motorways)")
+        
         # Assign speed limits to each point based on waytype
         for i, coord in enumerate(coords_list):
             lon, lat = coord[0], coord[1]
@@ -917,8 +972,11 @@ async def get_route_from_ors(start: str, end: str, user_max_speed: int = 130) ->
                     start_idx, end_idx, waytype_id = waytype_range
                     if start_idx <= i < end_idx:
                         waytype_name = waytype_mapping.get(waytype_id, "unclassified")
-                        speed_limit = get_speed_limit_by_road_type(waytype_name, user_max_speed)
+                        speed_limit = get_speed_limit_by_road_type(waytype_name, user_max_speed, is_urban_route)
                         break
+            else:
+                # Si pas de waytype disponible, utiliser la détection urbaine
+                speed_limit = get_speed_limit_by_road_type("unclassified", user_max_speed, is_urban_route)
             
             points.append({
                 "lat": lat,
