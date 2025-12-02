@@ -8,6 +8,29 @@ const RealTimeNavigation = ({
 }) => {
   const [currentSpeed, setCurrentSpeed] = useState(0);
   const [speedHistory, setSpeedHistory] = useState([]);
+  const [language, setLanguage] = useState('en');
+
+  useEffect(() => {
+    const { language: lang } = getAppSettings();
+    setLanguage(lang);
+
+    const handler = (event) => {
+      const detail = event.detail || {};
+      if (detail.language) setLanguage(detail.language);
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('ecospeed-settings-updated', handler);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('ecospeed-settings-updated', handler);
+      }
+    };
+  }, []);
+
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
   useEffect(() => {
     if (!isNavigating || !currentSegment) {
@@ -68,32 +91,36 @@ const RealTimeNavigation = ({
   // Déterminer le statut de la vitesse
   const getSpeedStatus = () => {
     if (Math.abs(speedDiff) < 2) {
-      return { 
-        type: 'optimal', 
-        color: 'text-emerald-400', 
-        bgColor: 'bg-emerald-500/20',
-        borderColor: 'border-emerald-400/50',
-        icon: CheckCircle,
-        message: 'Vitesse optimale'
-      };
+        return { 
+          type: 'optimal', 
+          color: 'text-emerald-400', 
+          bgColor: 'bg-emerald-500/20',
+          borderColor: 'border-emerald-400/50',
+          icon: CheckCircle,
+          message: language === 'fr' ? 'Vitesse optimale' : 'Optimal speed'
+        };
     } else if (speedDiff > 0) {
-      return { 
-        type: 'above', 
-        color: 'text-amber-400', 
-        bgColor: 'bg-amber-500/20',
-        borderColor: 'border-amber-400/50',
-        icon: TrendingUp,
-        message: `+${speedDiff.toFixed(1)} km/h au-dessus`
-      };
+        return { 
+          type: 'above', 
+          color: 'text-amber-400', 
+          bgColor: 'bg-amber-500/20',
+          borderColor: 'border-amber-400/50',
+          icon: TrendingUp,
+          message: language === 'fr' 
+            ? `+${speedDiff.toFixed(1)} km/h au-dessus`
+            : `+${speedDiff.toFixed(1)} km/h above`
+        };
     } else {
-      return { 
-        type: 'below', 
-        color: 'text-blue-400', 
-        bgColor: 'bg-blue-500/20',
-        borderColor: 'border-blue-400/50',
-        icon: TrendingDown,
-        message: `${Math.abs(speedDiff).toFixed(1)} km/h en-dessous`
-      };
+        return { 
+          type: 'below', 
+          color: 'text-blue-400', 
+          bgColor: 'bg-blue-500/20',
+          borderColor: 'border-blue-400/50',
+          icon: TrendingDown,
+          message: language === 'fr'
+            ? `${Math.abs(speedDiff).toFixed(1)} km/h en-dessous`
+            : `${Math.abs(speedDiff).toFixed(1)} km/h below`
+        };
     }
   };
 
@@ -108,7 +135,7 @@ const RealTimeNavigation = ({
           <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
             <div className="text-xs text-emerald-200/70 mb-2 flex items-center gap-2">
               <Gauge className="w-4 h-4" />
-              <span>Vitesse actuelle</span>
+              <span>{language === 'fr' ? 'Vitesse actuelle' : 'Current speed'}</span>
             </div>
             <div className="text-4xl md:text-5xl font-bold text-white mb-1">
               {Math.round(currentSpeed)}
@@ -122,7 +149,7 @@ const RealTimeNavigation = ({
 
           {/* Limitation de vitesse */}
           <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-            <div className="text-xs text-emerald-200/70 mb-2">Limitation</div>
+            <div className="text-xs text-emerald-200/70 mb-2">{language === 'fr' ? 'Limitation' : 'Speed limit'}</div>
             <div className="flex items-center gap-3">
               <div className="text-4xl md:text-5xl font-bold text-red-400">
                 {speedLimit}
@@ -143,7 +170,7 @@ const RealTimeNavigation = ({
           <div className="bg-emerald-500/20 backdrop-blur-sm rounded-2xl p-4 border border-emerald-400/30">
             <div className="text-xs text-emerald-200/70 mb-2 flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
-              <span>Éco conseillée</span>
+              <span>{language === 'fr' ? 'Éco conseillée' : 'Eco recommended'}</span>
             </div>
             <div className="text-4xl md:text-5xl font-bold text-emerald-400 mb-1">
               {Math.round(ecoSpeed)}
@@ -152,14 +179,20 @@ const RealTimeNavigation = ({
             <div className="text-xs text-emerald-200/70">
               {speedDiffPercent > 0 ? (
                 <span className="text-amber-400">
-                  Ralentissez de {speedDiff.toFixed(1)} km/h pour économiser
+                  {language === 'fr' 
+                    ? `Ralentissez de ${speedDiff.toFixed(1)} km/h pour économiser`
+                    : `Slow down by ${speedDiff.toFixed(1)} km/h to save energy`}
                 </span>
               ) : speedDiffPercent < 0 ? (
                 <span className="text-blue-400">
-                  Accélérez de {Math.abs(speedDiff).toFixed(1)} km/h pour optimiser
+                  {language === 'fr'
+                    ? `Accélérez de ${Math.abs(speedDiff).toFixed(1)} km/h pour optimiser`
+                    : `Speed up by ${Math.abs(speedDiff).toFixed(1)} km/h to optimize`}
                 </span>
               ) : (
-                <span className="text-emerald-400">Vitesse optimale !</span>
+                <span className="text-emerald-400">
+                  {language === 'fr' ? 'Vitesse optimale !' : 'Optimal speed!'}
+                </span>
               )}
             </div>
           </div>
@@ -169,7 +202,7 @@ const RealTimeNavigation = ({
         {currentSegment && (
           <div className="mt-4 text-center">
             <div className="text-xs text-emerald-200/70">
-              Segment {currentSegment.index + 1} • {currentSegment.distance ? (currentSegment.distance / 1000).toFixed(2) : '0.00'} km
+              {language === 'fr' ? 'Segment' : 'Segment'} {currentSegment.index + 1} • {currentSegment.distance ? (currentSegment.distance / 1000).toFixed(2) : '0.00'} km
             </div>
           </div>
         )}
