@@ -4,6 +4,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import { ArrowUpRight, Leaf, Zap, Award, Car, TrendingUp } from 'lucide-react';
 import { getAllTrips } from '../lib/tripStorage';
 import { getAppSettings } from '../lib/settingsStorage';
+import { calculateBadges } from '../lib/badges';
 
 const formatDate = (timestamp) => {
   if (!timestamp) return '';
@@ -74,6 +75,11 @@ const DashboardPage = () => {
   };
 
   const recentTrips = trips.slice(0, 3);
+  const badges = calculateBadges(trips);
+  const unlockedBadges = badges.filter(b => b.unlocked);
+  const displayedBadges = unlockedBadges.length > 0 
+    ? unlockedBadges.slice(0, 4) 
+    : badges.slice(0, 4);
 
   return (
     <DashboardLayout>
@@ -266,38 +272,66 @@ const DashboardPage = () => {
                 <Award className={`w-4 h-4 ${isDark ? 'text-amber-200' : 'text-amber-500'}`} />
                 Badges
               </h2>
-              <span className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>0 / 9 badges</span>
+              <span className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
+                {unlockedBadges.length} / {badges.length} badges
+              </span>
             </div>
             <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className={`rounded-2xl border px-3 py-3 opacity-60 ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100 bg-slate-50/40'}`}>
-                <div className={`font-semibold mb-1 ${isDark ? 'text-white' : ''}`}>Premier trajet</div>
-                <div className={isDark ? 'text-emerald-50' : 'text-slate-500'}>Premier trajet optimisé</div>
-                <div className={`mt-2 h-1.5 rounded-full ${isDark ? 'bg-emerald-300/30' : 'bg-slate-200'}`}>
-                  <div className="h-full w-0 rounded-full bg-emerald-500" />
-                </div>
-              </div>
-              <div className={`rounded-2xl border px-3 py-3 opacity-60 ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100 bg-slate-50/40'}`}>
-                <div className={`font-semibold mb-1 ${isDark ? 'text-white' : ''}`}>Économe</div>
-                <div className={isDark ? 'text-emerald-50' : 'text-slate-500'}>10 kWh économisés</div>
-                <div className={`mt-2 h-1.5 rounded-full ${isDark ? 'bg-emerald-300/30' : 'bg-slate-200'}`}>
-                  <div className="h-full w-0 rounded-full bg-emerald-500" />
-                </div>
-              </div>
-              <div className={`rounded-2xl border px-3 py-3 opacity-60 ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100 bg-slate-50/40'}`}>
-                <div className={`font-semibold mb-1 ${isDark ? 'text-white' : ''}`}>Voyageur</div>
-                <div className={isDark ? 'text-emerald-50' : 'text-slate-500'}>500 km en mode ECO</div>
-                <div className={`mt-2 h-1.5 rounded-full ${isDark ? 'bg-emerald-300/30' : 'bg-slate-200'}`}>
-                  <div className="h-full w-0 rounded-full bg-emerald-500" />
-                </div>
-              </div>
-              <div className={`rounded-2xl border px-3 py-3 opacity-60 ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100 bg-slate-50/40'}`}>
-                <div className={`font-semibold mb-1 ${isDark ? 'text-white' : ''}`}>Éco-champion</div>
-                <div className={isDark ? 'text-emerald-50' : 'text-slate-500'}>50 kWh économisés</div>
-                <div className={`mt-2 h-1.5 rounded-full ${isDark ? 'bg-emerald-300/30' : 'bg-slate-200'}`}>
-                  <div className="h-full w-0 rounded-full bg-emerald-500" />
-                </div>
-              </div>
+              {displayedBadges.map((badge) => {
+                const IconComponent = badge.icon;
+                return (
+                  <div
+                    key={badge.id}
+                    className={`rounded-2xl border px-3 py-3 ${
+                      badge.unlocked
+                        ? isDark
+                          ? 'border-emerald-300/50 bg-emerald-400/30'
+                          : 'border-emerald-200 bg-emerald-50/80'
+                        : isDark
+                          ? 'border-emerald-300/30 bg-emerald-400/20 opacity-60'
+                          : 'border-slate-100 bg-slate-50/40 opacity-60'
+                    }`}
+                  >
+                    <div className="flex items-start gap-2 mb-1">
+                      <IconComponent 
+                        className={`w-4 h-4 mt-0.5 ${
+                          badge.unlocked
+                            ? isDark
+                              ? 'text-emerald-100'
+                              : 'text-emerald-600'
+                            : isDark
+                              ? 'text-emerald-200/50'
+                              : 'text-slate-400'
+                        }`} 
+                      />
+                      <div className="flex-1">
+                        <div className={`font-semibold ${isDark ? 'text-white' : ''}`}>{badge.name}</div>
+                        <div className={`text-[10px] mt-0.5 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
+                          {badge.description}
+                        </div>
+                      </div>
+                    </div>
+                    <div className={`mt-2 h-1.5 rounded-full ${isDark ? 'bg-emerald-300/30' : 'bg-slate-200'}`}>
+                      <div
+                        className={`h-full rounded-full ${
+                          badge.unlocked
+                            ? 'bg-emerald-500'
+                            : isDark
+                              ? 'bg-emerald-400/50'
+                              : 'bg-emerald-300'
+                        }`}
+                        style={{ width: `${Math.min(100, badge.progress)}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
+            {unlockedBadges.length === 0 && (
+              <p className={`text-xs mt-3 text-center ${isDark ? 'text-emerald-100' : 'text-slate-500'}`}>
+                Complétez des trajets pour débloquer vos premiers badges !
+              </p>
+            )}
           </div>
 
           <div className={`rounded-3xl p-5 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
