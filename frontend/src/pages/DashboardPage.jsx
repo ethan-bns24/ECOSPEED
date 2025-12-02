@@ -355,7 +355,7 @@ const DashboardPage = () => {
             </div>
             {unlockedBadges.length === 0 && (
               <p className={`text-xs mt-3 text-center ${isDark ? 'text-emerald-100' : 'text-slate-500'}`}>
-                Complétez des trajets pour débloquer vos premiers badges !
+                {t.dashboard.unlockBadges}
               </p>
             )}
           </div>
@@ -364,7 +364,7 @@ const DashboardPage = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className={`text-base md:text-lg font-semibold flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
                 <Car className={`w-4 h-4 ${isDark ? 'text-emerald-100' : 'text-sky-600'}`} />
-                Mes véhicules
+                {t.dashboard.myVehicles}
               </h2>
               <button
                 type="button"
