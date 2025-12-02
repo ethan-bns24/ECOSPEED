@@ -103,18 +103,26 @@ const StationsMap = ({ stations = [], selectedStation = null, onStationClick }) 
       
       <MapView center={center} zoom={zoom} stations={stationsToDisplay} />
       
-      {/* Charging station markers - seulement la borne sélectionnée */}
+      {/* Charging station markers */}
       {stationsToDisplay.length > 0 && stationsToDisplay
         .map((station, index) => {
+          // Vérifier que les coordonnées sont valides
+          if (!station.latitude || !station.longitude || 
+              isNaN(station.latitude) || isNaN(station.longitude)) {
+            return null;
+          }
+          
           const icon = createStationIcon(station.status || 'Dispo');
-          const isSelected = selectedStation && 
-            selectedStation.latitude === station.latitude && 
-            selectedStation.longitude === station.longitude;
+          
+          // Nettoyer les chaînes pour éviter les caractères invalides
+          const cleanName = String(station.name || 'Borne de recharge').replace(/[^\w\s\-.,()]/g, '');
+          const cleanOperator = String(station.operator || 'Opérateur inconnu').replace(/[^\w\s\-.,()]/g, '');
+          const cleanAddress = station.address ? String(station.address).replace(/[^\w\s\-.,()]/g, '') : '';
           
           return (
             <Marker
               key={`${station.latitude}-${station.longitude}-${index}`}
-              position={[station.latitude, station.longitude]}
+              position={[Number(station.latitude), Number(station.longitude)]}
               icon={icon}
               eventHandlers={{
                 click: () => {
@@ -126,20 +134,20 @@ const StationsMap = ({ stations = [], selectedStation = null, onStationClick }) 
             >
               <Popup>
                 <div style={{ minWidth: '200px' }}>
-                  <strong>{station.name || 'Borne de recharge'}</strong>
+                  <strong>{cleanName}</strong>
                   <br />
                   <span style={{ fontSize: '12px', color: '#666' }}>
-                    {station.operator || 'Opérateur inconnu'}
+                    {cleanOperator}
                   </span>
                   <br />
                   <span style={{ fontSize: '12px' }}>
                     {station.powerKw || 0} kW
                   </span>
-                  {station.address && (
+                  {cleanAddress && (
                     <>
                       <br />
                       <span style={{ fontSize: '11px', color: '#888' }}>
-                        {station.address}
+                        {cleanAddress}
                       </span>
                     </>
                   )}
@@ -147,7 +155,7 @@ const StationsMap = ({ stations = [], selectedStation = null, onStationClick }) 
                     <>
                       <br />
                       <span style={{ fontSize: '11px', color: '#4ade80', fontWeight: 'bold' }}>
-                        {station.price}
+                        {String(station.price)}
                       </span>
                     </>
                   )}
@@ -169,7 +177,9 @@ const StationsMap = ({ stations = [], selectedStation = null, onStationClick }) 
               </Popup>
             </Marker>
           );
-        })}
+        })
+        .filter(Boolean) // Filtrer les null
+      }
       </MapContainer>
     );
   } catch (error) {
