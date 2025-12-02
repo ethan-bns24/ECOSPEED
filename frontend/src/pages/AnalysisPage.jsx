@@ -104,9 +104,10 @@ const TRANSLATIONS = {
 const AnalysisPage = () => {
   const navigate = useNavigate();
   
-  // Language and theme state
-  const [language, setLanguage] = useState('fr');
-  const [theme, setTheme] = useState('dark');
+  // Language and theme state - utiliser les valeurs par défaut depuis getAppSettings
+  const { language: defaultLang, theme: defaultTheme } = getAppSettings();
+  const [language, setLanguage] = useState(defaultLang);
+  const [theme, setTheme] = useState(defaultTheme);
   
   useEffect(() => {
     const { language: lang, theme: thm } = getAppSettings();

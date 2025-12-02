@@ -45,9 +45,17 @@ export function updateVehicleSettings(partial) {
 
 export function getAppSettings() {
   const settings = loadSettings();
+  const language = settings.language || 'en'; // anglais par défaut
+  const theme = settings.theme || 'light'; // thème clair par défaut
+  
+  // Appliquer le thème au chargement si pas encore appliqué
+  if (typeof document !== 'undefined') {
+    applyTheme(theme);
+  }
+  
   return {
-    language: settings.language || 'fr', // français par défaut
-    theme: settings.theme || 'dark', // thème sombre par défaut (comme aujourd'hui)
+    language,
+    theme,
   };
 }
 

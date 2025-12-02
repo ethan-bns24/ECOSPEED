@@ -3,8 +3,10 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import { getAppSettings, updateAppSettings, applyTheme } from '../lib/settingsStorage';
 
 const SettingsPage = () => {
-  const [language, setLanguage] = useState('fr');
-  const [theme, setTheme] = useState('dark');
+  // Utiliser les valeurs par défaut depuis getAppSettings
+  const { language: defaultLang, theme: defaultTheme } = getAppSettings();
+  const [language, setLanguage] = useState(defaultLang);
+  const [theme, setTheme] = useState(defaultTheme);
 
   useEffect(() => {
     const { language, theme } = getAppSettings();
