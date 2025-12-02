@@ -178,6 +178,7 @@ const AnalysisPage = () => {
   const [isNavigating, setIsNavigating] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [routeChargingStations, setRouteChargingStations] = useState([]);
+  const [limitChargingStations, setLimitChargingStations] = useState([]);
   
   // Vehicle profiles: filtrées par les préférences (véhicules actifs)
   const [availableProfiles, setAvailableProfiles] = useState(
@@ -242,6 +243,7 @@ const AnalysisPage = () => {
     setLoading(true);
     setShowResults(false);
     setRouteChargingStations([]); // Réinitialiser les bornes de recharge au début du calcul
+    setLimitChargingStations([]); // Réinitialiser aussi les bornes pour le mode limite
     
     try {
       const vehicle = getSelectedVehicleData();
@@ -282,30 +284,46 @@ const AnalysisPage = () => {
       setShowResults(true);
       
       // Récupérer les bornes de recharge et trouver celles sur le trajet
+      // On calcule les bornes pour les deux modes (éco-conduite et limite de vitesse)
       try {
         const stationsResponse = await axios.get(`${API}/charging-stations`, {
           timeout: 60000,
         });
         const allStations = stationsResponse.data || [];
         
-        // Trouver les bornes sur le trajet
+        // Trouver les bornes sur le trajet pour les deux modes
         const vehicle = getSelectedVehicleData();
         const batteryKwh = vehicle?.battery_kwh || null;
         if (batteryKwh && response.data.segments && response.data.route_coordinates) {
-          const stationsOnRoute = findChargingStationsOnRoute(
+          // Bornes pour le mode éco-conduite
+          const ecoStationsOnRoute = findChargingStationsOnRoute(
             response.data.segments,
             response.data.route_coordinates,
             batteryKwh,
             batteryStartPct,
-            allStations
+            allStations,
+            'eco_energy' // Mode éco-conduite
           );
-          setRouteChargingStations(stationsOnRoute);
+          setRouteChargingStations(ecoStationsOnRoute);
+          
+          // Bornes pour le mode limite de vitesse
+          const limitStationsOnRoute = findChargingStationsOnRoute(
+            response.data.segments,
+            response.data.route_coordinates,
+            batteryKwh,
+            batteryStartPct,
+            allStations,
+            'limit_energy' // Mode limite de vitesse
+          );
+          setLimitChargingStations(limitStationsOnRoute);
         } else {
           setRouteChargingStations([]);
+          setLimitChargingStations([]);
         }
       } catch (error) {
         console.error('Error fetching charging stations:', error);
         setRouteChargingStations([]);
+        setLimitChargingStations([]);
       }
       
       // Persister ce trajet pour le dashboard / historique / stats
@@ -887,14 +905,25 @@ const AnalysisPage = () => {
                     const baseEcoTime = routeData.segments.reduce((sum, s) => sum + s.eco_time, 0) / 60;
                     const baseLimitTime = routeData.segments.reduce((sum, s) => sum + s.limit_time, 0) / 60;
                     
-                    // Ajouter le temps de charge si des bornes sont utilisées
-                    const totalChargingTime = (routeChargingStations && Array.isArray(routeChargingStations))
-                      ? routeChargingStations.reduce((sum, cp) => 
-                          sum + (cp?.chargingTimeMinutes || 0), 0
-                        )
-                      : 0;
-                    const totalEcoTime = baseEcoTime + (totalChargingTime / 60);
-                    const totalLimitTime = baseLimitTime + (totalChargingTime / 60);
+                    // Calculer les temps de charge séparément pour chaque mode de conduite
+                    // Car le nombre de recharges peut être différent selon la consommation
+                    const ecoChargingStationsList = routeChargingStations && Array.isArray(routeChargingStations)
+                      ? routeChargingStations
+                      : [];
+                    const limitChargingStationsList = limitChargingStations && Array.isArray(limitChargingStations)
+                      ? limitChargingStations
+                      : [];
+                    
+                    const totalEcoChargingTime = ecoChargingStationsList.reduce((sum, cp) => 
+                      sum + (cp?.chargingTimeMinutes || 0), 0
+                    );
+                    const totalLimitChargingTime = limitChargingStationsList.reduce((sum, cp) => 
+                      sum + (cp?.chargingTimeMinutes || 0), 0
+                    );
+                    
+                    // Ajouter les temps de charge aux temps de trajet
+                    const totalEcoTime = baseEcoTime + (totalEcoChargingTime / 60);
+                    const totalLimitTime = baseLimitTime + (totalLimitChargingTime / 60);
                     const extraTime = totalEcoTime - totalLimitTime;
                     
                     // Calculer la batterie à l'arrivée en tenant compte des recharges

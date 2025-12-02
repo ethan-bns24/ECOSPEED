@@ -60,8 +60,9 @@ export function findNearestStation(lat, lon, stations, maxDistanceKm = 30) {
 
 /**
  * Calcule où sur le trajet on a besoin de recharger et trouve les bornes les plus proches
+ * @param {string} energyType - 'eco_energy' ou 'limit_energy' pour calculer les recharges selon le mode de conduite
  */
-export function findChargingStationsOnRoute(segments, routeCoordinates, batteryKwh, batteryStartPct, stations) {
+export function findChargingStationsOnRoute(segments, routeCoordinates, batteryKwh, batteryStartPct, stations, energyType = 'eco_energy') {
   if (!segments || segments.length === 0 || !batteryKwh || !stations || stations.length === 0) {
     return [];
   }
@@ -77,14 +78,16 @@ export function findChargingStationsOnRoute(segments, routeCoordinates, batteryK
   // Parcourir les segments pour trouver où on a besoin de recharger
   for (let i = 0; i < segments.length; i++) {
     const segment = segments[i];
-    cumulativeEnergy += segment.eco_energy || 0;
+    // Utiliser le type d'énergie spécifié (eco_energy ou limit_energy)
+    const segmentEnergy = segment[energyType] || 0;
+    cumulativeEnergy += segmentEnergy;
     currentBatteryLevel = energyAtStart - cumulativeEnergy + lastChargeEnergy;
     
     // Si la batterie descend en dessous de 20%, on doit recharger
     if (currentBatteryLevel < batteryKwh * 0.2) {
       // Trouver la position sur le trajet où on arrive à 20%
       // On cherche le segment où on passe sous 20%
-      const segmentStartEnergy = energyAtStart - (cumulativeEnergy - segment.eco_energy) + lastChargeEnergy;
+      const segmentStartEnergy = energyAtStart - (cumulativeEnergy - segmentEnergy) + lastChargeEnergy;
       const segmentEndEnergy = currentBatteryLevel;
       
       // Interpoler la position dans le segment
@@ -93,7 +96,7 @@ export function findChargingStationsOnRoute(segments, routeCoordinates, batteryK
       if (routeCoordinates && routeCoordinates.length > 0) {
         // Utiliser les coordonnées de la route pour une meilleure précision
         // Estimer la position basée sur la proportion d'énergie consommée
-        const energyRatio = segment.eco_energy > 0 
+        const energyRatio = segmentEnergy > 0 
           ? (batteryKwh * 0.2 - segmentStartEnergy) / (segmentEndEnergy - segmentStartEnergy)
           : 0.5;
         
