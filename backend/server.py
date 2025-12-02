@@ -610,11 +610,25 @@ async def get_vehicle_profiles() -> List[VehicleProfile]:
     ]
     return profiles
 
-def get_speed_limit_by_road_type(road_type: str, user_max_speed: int = 130) -> int:
+def get_speed_limit_by_road_type(road_type: str, user_max_speed: int = 130, is_urban: bool = False) -> int:
     """
     Retourne la limitation de vitesse typique selon le type de route.
     Mapping des types de route ORS vers limitations de vitesse en France.
+    
+    Args:
+        road_type: Type de route depuis OpenRouteService
+        user_max_speed: Vitesse maximale configurée par l'utilisateur
+        is_urban: Si True, on est en zone urbaine (limitation 50 km/h sauf autoroute)
     """
+    # En zone urbaine, toutes les routes sauf autoroute sont limitées à 50 km/h
+    if is_urban:
+        road_type_lower = road_type.lower() if road_type else ""
+        if "motorway" in road_type_lower:
+            return min(130, user_max_speed)  # Autoroute même en ville
+        else:
+            return 50  # Toutes les autres routes en ville = 50 km/h
+    
+    # Hors zone urbaine
     speed_mapping = {
         "motorway": min(130, user_max_speed),  # Autoroute
         "trunk": min(110, user_max_speed),     # Route express
