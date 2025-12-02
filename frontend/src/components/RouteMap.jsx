@@ -27,7 +27,7 @@ function MapBounds({ coordinates }) {
   return null;
 }
 
-const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, routeCoordinates, chargingStations = [] }) => {
+const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, routeCoordinates, chargingStations = [], currentPosition = null }) => {
   const mapRef = useRef(null);
 
   // Use route_coordinates if available (full route path), otherwise fallback to segments
@@ -59,8 +59,10 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
     ? [segments[segments.length - 1].lat_end, segments[segments.length - 1].lon_end]
     : null;
   
-  // Current position marker
-  const currentMarker = segments.length > 0 && currentSegmentIndex >= 0 && currentSegmentIndex < segments.length
+  // Current position marker - utiliser currentPosition si fourni (navigation temps réel), sinon utiliser le segment
+  const currentMarker = currentPosition 
+    ? currentPosition
+    : segments.length > 0 && currentSegmentIndex >= 0 && currentSegmentIndex < segments.length
     ? [segments[currentSegmentIndex].lat_start, segments[currentSegmentIndex].lon_start]
     : null;
 
@@ -121,8 +123,11 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       
-      {/* Auto-adjust map bounds to fit route */}
-      {polylineCoords.length > 0 && <MapBounds coordinates={polylineCoords} />}
+      {/* Auto-adjust map bounds to fit route - seulement si pas de navigation active */}
+      {polylineCoords.length > 0 && !currentPosition && <MapBounds coordinates={polylineCoords} />}
+      
+      {/* Suivre la position en temps réel pendant la navigation */}
+      {currentPosition && <FollowPosition position={currentPosition} />}
       
       {/* Route polyline */}
       {polylineCoords.length > 0 && (
@@ -152,8 +157,8 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
         </Marker>
       )}
       
-      {/* Current position marker */}
-      {currentMarker && currentSegmentIndex > 0 && (
+      {/* Current position marker - afficher si navigation active ou si on a dépassé le premier segment */}
+      {currentMarker && (currentPosition || currentSegmentIndex > 0) && (
         <Marker position={currentMarker} icon={currentIcon}>
           <Popup>
             <strong>Current Position</strong><br />

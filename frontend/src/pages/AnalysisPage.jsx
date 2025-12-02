@@ -17,6 +17,7 @@ import EnergyChart from '../components/EnergyChart';
 import TimeChart from '../components/TimeChart';
 import KPICards from '../components/KPICards';
 import NavigationPanel from '../components/NavigationPanel';
+import RealTimeNavigation from '../components/RealTimeNavigation';
 import { toast } from 'sonner';
 import { persistTripFromRoute, calculateChargingStops } from '../lib/tripStorage';
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
@@ -179,6 +180,8 @@ const AnalysisPage = () => {
   const [showResults, setShowResults] = useState(false);
   const [routeChargingStations, setRouteChargingStations] = useState([]);
   const [limitChargingStations, setLimitChargingStations] = useState([]);
+  const [currentSpeed, setCurrentSpeed] = useState(0);
+  const [currentPosition, setCurrentPosition] = useState(null);
   
   // Vehicle profiles: filtrées par les préférences (véhicules actifs)
   const [availableProfiles, setAvailableProfiles] = useState(
@@ -375,26 +378,69 @@ const AnalysisPage = () => {
     }
   };
   
-  // Navigation simulation
+  // Navigation simulation avec mise à jour de position en temps réel
   useEffect(() => {
-    if (isNavigating && routeData && currentSegmentIndex < routeData.segments.length - 1) {
-      const timer = setTimeout(() => {
-        setCurrentSegmentIndex(prev => prev + 1);
-      }, 1500); // Move to next segment every 1.5 seconds
-      
-      return () => clearTimeout(timer);
-    } else if (isNavigating && currentSegmentIndex >= routeData?.segments.length - 1) {
-      setIsNavigating(false);
-      setShowResults(true);
-      toast.success('Navigation complete! View results below.');
+    if (!isNavigating || !routeData || !routeData.route_coordinates || routeData.route_coordinates.length === 0) {
+      setCurrentPosition(null);
+      return;
     }
-  }, [isNavigating, currentSegmentIndex, routeData]);
+
+    const currentSegment = routeData.segments[currentSegmentIndex];
+    if (!currentSegment) return;
+
+    // Calculer les indices de coordonnées pour ce segment
+    const segmentStartIndex = Math.floor((currentSegmentIndex / routeData.segments.length) * routeData.route_coordinates.length);
+    const segmentEndIndex = Math.min(
+      Math.floor(((currentSegmentIndex + 1) / routeData.segments.length) * routeData.route_coordinates.length),
+      routeData.route_coordinates.length - 1
+    );
+
+    // Simuler la progression dans le segment basée sur la vitesse
+    const segmentDistance = currentSegment.distance || 0; // en mètres
+    const speedMs = currentSpeed > 0 ? (currentSpeed / 3.6) : (currentSegment.eco_speed / 3.6); // convertir km/h en m/s
+
+    let progressInSegment = 0;
+    const progressInterval = setInterval(() => {
+      progressInSegment += speedMs * 0.1; // Mise à jour toutes les 100ms
+      const progressRatio = Math.min(1, progressInSegment / segmentDistance);
+
+      if (progressRatio >= 1) {
+        // Passer au segment suivant
+        if (currentSegmentIndex < routeData.segments.length - 1) {
+          setCurrentSegmentIndex(prev => prev + 1);
+          progressInSegment = 0;
+        } else {
+          // Navigation terminée
+          setIsNavigating(false);
+          setShowResults(true);
+          setCurrentPosition(null);
+          setCurrentSpeed(0);
+          toast.success('Navigation complete! View results below.');
+          clearInterval(progressInterval);
+          return;
+        }
+      } else {
+        // Calculer la position actuelle dans le segment
+        const coordIndex = Math.floor(segmentStartIndex + (segmentEndIndex - segmentStartIndex) * progressRatio);
+        if (coordIndex < routeData.route_coordinates.length) {
+          setCurrentPosition(routeData.route_coordinates[coordIndex]);
+        }
+      }
+    }, 100); // Mise à jour toutes les 100ms pour une animation fluide
+
+    return () => clearInterval(progressInterval);
+  }, [isNavigating, currentSegmentIndex, routeData, currentSpeed]);
   
   const handleStartNavigation = () => {
     if (routeData) {
       setCurrentSegmentIndex(0);
       setIsNavigating(true);
       setShowResults(false);
+      setCurrentSpeed(0);
+      // Initialiser la position au début du trajet
+      if (routeData.route_coordinates && routeData.route_coordinates.length > 0) {
+        setCurrentPosition(routeData.route_coordinates[0]);
+      }
     }
   };
   
@@ -406,6 +452,8 @@ const AnalysisPage = () => {
     setCurrentSegmentIndex(0);
     setIsNavigating(false);
     setShowResults(false);
+    setCurrentSpeed(0);
+    setCurrentPosition(null);
   };
   
   const handleNextSegment = () => {
@@ -807,14 +855,14 @@ const AnalysisPage = () => {
               </CardContent>
             </Card>
 
-            {/* Navigation Panel */}
-            {routeData && (
+            {/* Navigation Panel - Afficher seulement si pas en navigation temps réel */}
+            {routeData && !isNavigating && (
               <Card className="bg-white/5 backdrop-blur-sm border-white/10" data-testid="navigation-panel">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Navigation</CardTitle>
                     <div className="flex gap-2">
-                      {!isNavigating && currentSegmentIndex === 0 && (
+                      {currentSegmentIndex === 0 && (
                         <Button
                           data-testid="start-navigation-btn"
                           onClick={handleStartNavigation}
@@ -825,19 +873,7 @@ const AnalysisPage = () => {
                           Start
                         </Button>
                       )}
-                      {isNavigating && (
-                        <Button
-                          data-testid="pause-navigation-btn"
-                          onClick={handlePauseNavigation}
-                          size="sm"
-                          variant="outline"
-                          className="border-white/20 hover:bg-white/10"
-                        >
-                          <Pause className="w-4 h-4 mr-1" />
-                          Pause
-                        </Button>
-                      )}
-                      {!isNavigating && currentSegmentIndex > 0 && (
+                      {currentSegmentIndex > 0 && (
                         <Button
                           data-testid="continue-navigation-btn"
                           onClick={() => setIsNavigating(true)}
@@ -881,6 +917,36 @@ const AnalysisPage = () => {
                   </div>
                 </CardContent>
               </Card>
+            )}
+
+            {/* Navigation en temps réel style Waze */}
+            {isNavigating && routeData && routeData.segments[currentSegmentIndex] && (
+              <>
+                <RealTimeNavigation
+                  currentSegment={routeData.segments[currentSegmentIndex]}
+                  isNavigating={isNavigating}
+                  onSpeedChange={setCurrentSpeed}
+                />
+                {/* Boutons de contrôle en overlay */}
+                <div className="fixed top-20 right-4 z-50 flex flex-col gap-2">
+                  <Button
+                    onClick={handlePauseNavigation}
+                    size="sm"
+                    className="bg-red-500/90 hover:bg-red-600 text-white backdrop-blur-sm"
+                  >
+                    <Pause className="w-4 h-4 mr-1" />
+                    Pause
+                  </Button>
+                  <Button
+                    onClick={handleResetNavigation}
+                    size="sm"
+                    variant="outline"
+                    className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border-white/20"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </Button>
+                </div>
+              </>
             )}
 
             {/* Results Dashboard */}
