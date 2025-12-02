@@ -517,6 +517,10 @@ const AnalysisPage = () => {
                         )}
                       </SelectContent>
                     </Select>
+                  ) : (
+                    <div className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                      {t.vehicleProfile}: Custom
+                    </div>
                   )}
                 </div>
                 
