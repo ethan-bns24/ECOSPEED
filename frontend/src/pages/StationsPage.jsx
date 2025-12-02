@@ -132,9 +132,9 @@ const StationsPage = () => {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-emerald-100' : ''}`}>Bornes de recharge</h1>
+        <h1 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-emerald-100' : ''}`}>{t.stations.title}</h1>
         <p className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
-          Toutes les bornes de recharge publiques en France ({stations.length} bornes trouvées). Sélectionnez une borne dans le menu pour l'afficher sur la carte.
+          {t.stations.subtitle} ({stations.length} {t.stations.stationsFound}). {language === 'fr' ? 'Sélectionnez une borne dans le menu pour l\'afficher sur la carte.' : 'Select a station from the menu to display it on the map.'}
         </p>
       </div>
 
@@ -260,11 +260,11 @@ const StationsPage = () => {
         <div className={`rounded-3xl p-4 md:p-6 shadow-sm text-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
           {loading ? (
             <div className={`text-center py-8 ${isDark ? 'text-emerald-100' : 'text-slate-600'}`}>
-              Chargement des bornes de recharge... (cela peut prendre quelques secondes)
+              {t.stations.loading} ({language === 'fr' ? 'cela peut prendre quelques secondes' : 'this may take a few seconds'})
             </div>
           ) : filteredStations.length === 0 ? (
             <div className={`text-center py-8 ${isDark ? 'text-emerald-100' : 'text-slate-600'}`}>
-              {searchTerm ? 'Aucune borne ne correspond à votre recherche.' : 'Aucune borne de recharge trouvée.'}
+              {searchTerm ? t.stations.noResults : t.stations.noStations}
             </div>
           ) : (
             <>
@@ -275,9 +275,9 @@ const StationsPage = () => {
                     className={`rounded-2xl border px-4 py-3 flex items-center justify-between gap-3 ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100'}`}
                   >
                     <div className="flex-1 min-w-0">
-                      <div className={`font-semibold ${isDark ? 'text-white' : ''} truncate`}>{s.name || 'Borne de recharge'}</div>
+                      <div className={`font-semibold ${isDark ? 'text-white' : ''} truncate`}>{s.name || (language === 'fr' ? 'Borne de recharge' : 'Charging station')}</div>
                       <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
-                        {s.operator || 'Opérateur inconnu'} · {s.powerKw || 0} kW
+                        {s.operator || (language === 'fr' ? 'Opérateur inconnu' : 'Unknown operator')} · {s.powerKw || 0} kW
                       </div>
                       {s.address && (
                         <div className={`text-xs mt-0.5 ${isDark ? 'text-emerald-100' : 'text-slate-600'}`}>
