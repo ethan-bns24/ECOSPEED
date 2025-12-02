@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { ArrowUpRight, Leaf, Zap, Award, Car, TrendingUp } from 'lucide-react';
 import { getAllTrips } from '../lib/tripStorage';
-import { getAppSettings } from '../lib/settingsStorage';
+import { getAppSettings, getVehicleSettings } from '../lib/settingsStorage';
 import { calculateBadges } from '../lib/badges';
+import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
 
 const formatDate = (timestamp) => {
   if (!timestamp) return '';
@@ -20,15 +21,33 @@ const DashboardPage = () => {
   const navigate = useNavigate();
   const [trips, setTrips] = useState([]);
   const [theme, setTheme] = useState('dark');
+  const [enabledVehicles, setEnabledVehicles] = useState([]);
 
   useEffect(() => {
     setTrips(getAllTrips());
     const { theme: thm } = getAppSettings();
     setTheme(thm);
     
+    // Récupérer les véhicules activés
+    const { enabledVehicles: enabled } = getVehicleSettings();
+    if (enabled && enabled.length > 0) {
+      setEnabledVehicles(enabled);
+    } else {
+      // Par défaut, afficher le premier véhicule
+      const first = VEHICLE_PROFILES[0]?.name;
+      if (first) {
+        setEnabledVehicles([first]);
+      }
+    }
+    
     const handler = (event) => {
       const detail = event.detail || {};
       if (detail.theme) setTheme(detail.theme);
+      // Recharger les véhicules si les settings changent
+      const { enabledVehicles: updated } = getVehicleSettings();
+      if (updated && updated.length > 0) {
+        setEnabledVehicles(updated);
+      }
     };
     
     if (typeof window !== 'undefined') {
@@ -43,6 +62,11 @@ const DashboardPage = () => {
   }, []);
   
   const isDark = theme === 'dark';
+  
+  // Filtrer les véhicules activés
+  const defaultVehicles = VEHICLE_PROFILES.filter(v => 
+    enabledVehicles.includes(v.name)
+  );
 
   const totalTrips = trips.length;
   const totalDistanceKm = trips.reduce((sum, t) => sum + (t.distanceKm || 0), 0);
@@ -349,15 +373,30 @@ const DashboardPage = () => {
               </button>
             </div>
             <div className="space-y-3 text-sm">
-              <div className={`rounded-2xl border px-4 py-3 flex items-center justify-between gap-3 ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100 bg-slate-50/60'}`}>
-                <div>
-                  <div className={`font-semibold ${isDark ? 'text-white' : ''}`}>Tesla Model 3</div>
-                  <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>75 kWh · 1850 kg</div>
+              {defaultVehicles.length > 0 ? (
+                defaultVehicles.map((vehicle) => (
+                  <div
+                    key={vehicle.name}
+                    className={`rounded-2xl border px-4 py-3 flex items-center justify-between gap-3 ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100 bg-slate-50/60'}`}
+                  >
+                    <div>
+                      <div className={`font-semibold ${isDark ? 'text-white' : ''}`}>{vehicle.name}</div>
+                      <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
+                        {vehicle.battery_kwh} kWh · {vehicle.empty_mass} kg
+                      </div>
+                    </div>
+                    <span className={`text-[11px] px-3 py-1 rounded-full border ${isDark ? 'bg-emerald-400/40 text-emerald-50 border-emerald-300/50' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
+                      Par défaut
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className={`rounded-2xl border px-4 py-3 text-center ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100 bg-slate-50/60'}`}>
+                  <div className={`text-sm ${isDark ? 'text-emerald-100' : 'text-slate-600'}`}>
+                    Aucun véhicule par défaut
+                  </div>
                 </div>
-                <span className={`text-[11px] px-3 py-1 rounded-full border ${isDark ? 'bg-emerald-400/40 text-emerald-50 border-emerald-300/50' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
-                  Prédéfini
-                </span>
-              </div>
+              )}
               <div className={`rounded-2xl border border-dashed px-4 py-3 flex items-center justify-between gap-3 text-xs ${isDark ? 'border-emerald-300/30 text-emerald-200' : 'border-slate-200 text-slate-500'}`}>
                 <span>Ajouter un véhicule populaire ou personnalisé</span>
                 <button
