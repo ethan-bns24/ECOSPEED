@@ -467,8 +467,8 @@ const AnalysisPage = () => {
     : 0;
   
   const bgClass = isDark 
-    ? "min-h-screen bg-gradient-to-br from-[#0a2e1a] via-[#1a4d2e] to-[#0f3d20] text-emerald-100 pb-12"
-    : "min-h-screen bg-white text-slate-900 pb-12";
+    ? `min-h-screen bg-gradient-to-br from-[#0a2e1a] via-[#1a4d2e] to-[#0f3d20] text-emerald-100 ${isNavigating ? 'pb-48' : 'pb-12'}`
+    : `min-h-screen bg-white text-slate-900 ${isNavigating ? 'pb-48' : 'pb-12'}`;
   
   const headerClass = isDark
     ? "bg-[#0a2e1a]/80 backdrop-blur-md border-b border-emerald-800/30 sticky top-0 z-50"
