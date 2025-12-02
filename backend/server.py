@@ -1091,152 +1091,211 @@ async def get_charging_stations(
     distance: float = None  # km - optionnel
 ) -> List[ChargingStation]:
     """
-    Récupère toutes les bornes de recharge de France depuis la base officielle IRVE.
-    Utilise l'API transport.data.gouv.fr qui fournit toutes les bornes publiques françaises.
+    Récupère toutes les bornes de recharge de France depuis l'API Open Charge Map.
+    Utilise l'API Open Charge Map avec la clé API fournie.
     """
     stations = []
     
+    # Clé API Open Charge Map
+    API_KEY = "4141afa0-52ab-4c97-9487-f91daa6c436d"
+    
     try:
-        # API officielle française IRVE - fichier consolidé mis à jour quotidiennement
-        # URL directe du fichier GeoJSON consolidé (mis à jour quotidiennement)
-        # Format: https://transport.data.gouv.fr/api/datasets/{dataset_id}/resources/{resource_id}/download
-        # On essaie d'abord l'URL directe du fichier GeoJSON consolidé
-        geojson_urls = [
-            "https://transport.data.gouv.fr/api/datasets/consolidation-des-donnees-des-infrastructures-de-recharge-pour-vehicules-electriques-irve/resources/latest/download",
-            "https://transport.data.gouv.fr/api/datasets/consolidation-des-donnees-des-infrastructures-de-recharge-pour-vehicules-electriques-irve",
-        ]
-        
-        geojson_data = None
-        
-        # Essayer d'abord l'URL directe
-        for url in geojson_urls:
-            try:
-                logger.info(f"Trying to fetch IRVE data from: {url}")
-                response = requests.get(url, timeout=30, headers={'Accept': 'application/json'})
+        # Si des coordonnées sont fournies, chercher autour de ce point
+        if latitude and longitude:
+            # Recherche autour d'un point spécifique
+            url = "https://api.openchargemap.io/v3/poi/"
+            params = {
+                'output': 'json',
+                'latitude': latitude,
+                'longitude': longitude,
+                'distance': distance if distance else 50,  # 50 km par défaut
+                'distanceunit': 'KM',
+                'maxresults': 1000,  # Maximum autorisé par l'API
+                'key': API_KEY,
+                'countrycode': 'FR',  # Filtrer pour la France uniquement
+            }
+            
+            response = requests.get(url, params=params, timeout=30)
+            if response.status_code == 200:
+                data = response.json()
+                logger.info(f"Found {len(data)} charging stations near coordinates")
                 
-                if response.status_code == 200:
-                    # Vérifier si c'est déjà du GeoJSON ou des métadonnées
-                    content_type = response.headers.get('content-type', '').lower()
-                    data = response.json()
+                for poi in data:
+                    address_info = poi.get('AddressInfo', {})
+                    connections = poi.get('Connections', [])
                     
-                    if 'features' in data:
-                        # C'est déjà du GeoJSON
-                        geojson_data = data
-                        logger.info("Successfully fetched GeoJSON directly")
-                        break
-                    elif 'resources' in data:
-                        # C'est des métadonnées, chercher le fichier GeoJSON
-                        resources = data.get('resources', [])
-                        geojson_resource = None
-                        for resource in resources:
-                            if resource.get('format') == 'geojson' or 'geojson' in resource.get('url', '').lower():
-                                geojson_resource = resource
-                                break
-                        
-                        if not geojson_resource:
-                            # Si pas de GeoJSON, chercher le dernier fichier mis à jour
-                            resources.sort(key=lambda x: x.get('last_modified', ''), reverse=True)
-                            geojson_resource = resources[0] if resources else None
-                        
-                        if geojson_resource:
-                            geojson_url = geojson_resource.get('url')
-                            logger.info(f"Fetching GeoJSON from resource: {geojson_url}")
-                            geojson_response = requests.get(geojson_url, timeout=60)
-                            if geojson_response.status_code == 200:
-                                geojson_data = geojson_response.json()
-                                logger.info("Successfully fetched GeoJSON from resource")
-                                break
-            except Exception as e:
-                logger.warning(f"Failed to fetch from {url}: {e}")
-                continue
-        
-        if geojson_data:
-            features = geojson_data.get('features', [])
-            logger.info(f"Found {len(features)} charging stations in IRVE database")
+                    if not connections or not address_info.get('Latitude') or not address_info.get('Longitude'):
+                        continue
+                    
+                    # Prendre la connexion avec la plus haute puissance
+                    max_power = 0
+                    for conn in connections:
+                        power_kw = conn.get('PowerKW', 0) or 0
+                        if power_kw > max_power:
+                            max_power = power_kw
+                    
+                    if max_power == 0:
+                        max_power = 22  # Valeur par défaut
+                    
+                    # Statut
+                    status_type = poi.get('StatusType', {})
+                    status_id = status_type.get('ID', 0) if status_type else 0
+                    if status_id == 50:  # En service
+                        status = 'Dispo'
+                    elif status_id == 0:  # Inconnu
+                        status = 'Dispo'
+                    else:
+                        status = 'Hors service'
+                    
+                    # Nom de l'opérateur
+                    operator_info = poi.get('OperatorInfo', {})
+                    operator = operator_info.get('Title', 'Opérateur inconnu') if operator_info else 'Opérateur inconnu'
+                    
+                    # Nom de la station
+                    name = address_info.get('Title', 'Borne de recharge')
+                    
+                    # Adresse
+                    address_line = address_info.get('AddressLine1', '')
+                    town = address_info.get('Town', '')
+                    address = f"{address_line}, {town}".strip(', ')
+                    
+                    # Prix (si disponible)
+                    usage_info = poi.get('UsageType', {})
+                    price = None
+                    if usage_info and usage_info.get('IsPayAtLocation'):
+                        price = 'Tarif variable'
+                    
+                    station = ChargingStation(
+                        name=name,
+                        operator=operator,
+                        powerKw=float(max_power),
+                        price=price,
+                        status=status,
+                        latitude=address_info.get('Latitude'),
+                        longitude=address_info.get('Longitude'),
+                        address=address if address else town
+                    )
+                    
+                    stations.append(station)
+        else:
+            # Récupérer toutes les bornes de France en faisant plusieurs requêtes
+            # La France s'étend approximativement de 42°N à 51°N et de -5°E à 8°E
+            # On divise en grille pour récupérer toutes les bornes
             
-            for feature in features:
-                        properties = feature.get('properties', {})
-                        geometry = feature.get('geometry', {})
-                        coordinates = geometry.get('coordinates', [])
+            # Coordonnées approximatives de la France (centres de régions)
+            france_centers = [
+                (48.8566, 2.3522),   # Paris/Île-de-France
+                (45.7640, 4.8357),   # Lyon/Auvergne-Rhône-Alpes
+                (43.2965, 5.3698),   # Marseille/Provence-Alpes-Côte d'Azur
+                (44.8378, -0.5792),  # Bordeaux/Nouvelle-Aquitaine
+                (47.2184, -1.5536),  # Nantes/Pays de la Loire
+                (50.6292, 3.0573),   # Lille/Hauts-de-France
+                (49.4431, 1.0993),   # Rouen/Normandie
+                (48.1173, -1.6778),  # Rennes/Bretagne
+                (47.2378, 6.0241),   # Besançon/Bourgogne-Franche-Comté
+                (48.5734, 7.7521),   # Strasbourg/Grand Est
+                (46.2276, 2.2137),   # Orléans/Centre-Val de Loire
+                (46.3072, -0.3376),  # Poitiers/Nouvelle-Aquitaine
+                (43.6108, 1.4442),   # Toulouse/Occitanie
+                (43.7102, 7.2620),   # Nice/Provence-Alpes-Côte d'Azur
+            ]
+            
+            all_stations_dict = {}  # Utiliser un dict pour éviter les doublons
+            
+            for lat, lon in france_centers:
+                try:
+                    url = "https://api.openchargemap.io/v3/poi/"
+                    params = {
+                        'output': 'json',
+                        'latitude': lat,
+                        'longitude': lon,
+                        'distance': 200,  # 200 km pour couvrir une grande zone
+                        'distanceunit': 'KM',
+                        'maxresults': 1000,
+                        'key': API_KEY,
+                        'countrycode': 'FR',
+                    }
+                    
+                    response = requests.get(url, params=params, timeout=30)
+                    if response.status_code == 200:
+                        data = response.json()
+                        logger.info(f"Found {len(data)} stations near ({lat}, {lon})")
                         
-                        if not coordinates or len(coordinates) < 2:
-                            continue
-                        
-                        lon, lat = coordinates[0], coordinates[1]
-                        
-                        # Filtrer par distance si latitude/longitude/distance sont fournis
-                        if latitude and longitude and distance:
-                            def haversine(lon1, lat1, lon2, lat2):
-                                """Calcule la distance entre deux points en km"""
-                                lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
-                                dlon = lon2 - lon1
-                                dlat = lat2 - lat1
-                                a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
-                                c = 2 * math.asin(math.sqrt(a))
-                                return 6371 * c  # Rayon de la Terre en km
+                        for poi in data:
+                            address_info = poi.get('AddressInfo', {})
+                            connections = poi.get('Connections', [])
                             
-                            dist = haversine(longitude, latitude, lon, lat)
-                            if dist > distance:
+                            if not connections or not address_info.get('Latitude') or not address_info.get('Longitude'):
                                 continue
-                        
-                        # Extraire les informations de la borne
-                        nom_station = properties.get('nom_station', 'Borne de recharge')
-                        nom_operateur = properties.get('nom_operateur', 'Opérateur inconnu')
-                        
-                        # Puissance maximale (prendre la plus haute parmi toutes les prises)
-                        puissance_nominale = properties.get('puissance_nominale', 0)
-                        if not puissance_nominale or puissance_nominale == 0:
-                            # Essayer d'autres champs
-                            puissance_nominale = properties.get('puissance_max', 0) or properties.get('power', 0) or 0
-                        
-                        # Si toujours 0, essayer de calculer depuis les prises
-                        if puissance_nominale == 0:
-                            prises = properties.get('prises', [])
-                            if isinstance(prises, list):
-                                for prise in prises:
-                                    pwr = prise.get('puissance_nominale', 0) if isinstance(prise, dict) else 0
-                                    if pwr > puissance_nominale:
-                                        puissance_nominale = pwr
-                        
-                        if puissance_nominale == 0:
-                            puissance_nominale = 22  # Valeur par défaut si non spécifiée
-                        
-                        # Statut
-                        etat = properties.get('etat', 'Disponible')
-                        if etat in ['Disponible', 'disponible', 'En service']:
-                            status = 'Dispo'
-                        elif etat in ['Occupé', 'occupé', 'En utilisation']:
-                            status = 'Occupée'
-                        else:
-                            status = 'Dispo'  # Par défaut
-                        
-                        # Adresse
-                        adresse_station = properties.get('adresse_station', '')
-                        commune = properties.get('commune', '')
-                        code_insee = properties.get('code_insee', '')
-                        address = f"{adresse_station}, {commune}".strip(', ')
-                        
-                        # Prix (si disponible)
-                        tarif = properties.get('tarif', '')
-                        price = tarif if tarif else None
-                        
-                        station = ChargingStation(
-                            name=nom_station,
-                            operator=nom_operateur,
-                            powerKw=float(puissance_nominale),
-                            price=price,
-                            status=status,
-                            latitude=lat,
-                            longitude=lon,
-                            address=address if address else commune
-                        )
-                        
-                        stations.append(station)
+                            
+                            # Utiliser latitude+longitude comme clé unique
+                            station_key = f"{address_info.get('Latitude')}_{address_info.get('Longitude')}"
+                            if station_key in all_stations_dict:
+                                continue  # Déjà ajoutée
+                            
+                            # Prendre la connexion avec la plus haute puissance
+                            max_power = 0
+                            for conn in connections:
+                                power_kw = conn.get('PowerKW', 0) or 0
+                                if power_kw > max_power:
+                                    max_power = power_kw
+                            
+                            if max_power == 0:
+                                max_power = 22  # Valeur par défaut
+                            
+                            # Statut
+                            status_type = poi.get('StatusType', {})
+                            status_id = status_type.get('ID', 0) if status_type else 0
+                            if status_id == 50:  # En service
+                                status = 'Dispo'
+                            elif status_id == 0:  # Inconnu
+                                status = 'Dispo'
+                            else:
+                                status = 'Hors service'
+                            
+                            # Nom de l'opérateur
+                            operator_info = poi.get('OperatorInfo', {})
+                            operator = operator_info.get('Title', 'Opérateur inconnu') if operator_info else 'Opérateur inconnu'
+                            
+                            # Nom de la station
+                            name = address_info.get('Title', 'Borne de recharge')
+                            
+                            # Adresse
+                            address_line = address_info.get('AddressLine1', '')
+                            town = address_info.get('Town', '')
+                            address = f"{address_line}, {town}".strip(', ')
+                            
+                            # Prix (si disponible)
+                            usage_info = poi.get('UsageType', {})
+                            price = None
+                            if usage_info and usage_info.get('IsPayAtLocation'):
+                                price = 'Tarif variable'
+                            
+                            station = ChargingStation(
+                                name=name,
+                                operator=operator,
+                                powerKw=float(max_power),
+                                price=price,
+                                status=status,
+                                latitude=address_info.get('Latitude'),
+                                longitude=address_info.get('Longitude'),
+                                address=address if address else town
+                            )
+                            
+                            all_stations_dict[station_key] = station
+                    
+                    # Petite pause entre les requêtes pour éviter de surcharger l'API
+                    time.sleep(0.5)
+                    
+                except Exception as e:
+                    logger.warning(f"Error fetching stations near ({lat}, {lon}): {e}")
+                    continue
             
-            logger.info(f"Successfully loaded {len(stations)} charging stations from IRVE")
+            stations = list(all_stations_dict.values())
+            logger.info(f"Successfully loaded {len(stations)} unique charging stations from Open Charge Map")
     
     except Exception as e:
-        logger.error(f"Error fetching charging stations from IRVE: {e}")
+        logger.error(f"Error fetching charging stations from Open Charge Map: {e}")
         import traceback
         logger.error(traceback.format_exc())
     
