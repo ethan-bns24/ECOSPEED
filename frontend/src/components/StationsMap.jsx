@@ -50,13 +50,13 @@ function MapView({ center, zoom, stations }) {
 // Custom icon for charging stations
 const createStationIcon = (status) => {
   const color = status === 'Dispo' ? '#4ade80' : status === 'Occupée' ? '#f59e0b' : '#ef4444';
+  // Utiliser encodeURIComponent au lieu de btoa pour éviter les problèmes avec les caractères spéciaux
+  const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10" fill="${color}" stroke="white" stroke-width="2"/>
+    <text x="12" y="17" font-size="14" font-weight="bold" text-anchor="middle" fill="white">+</text>
+  </svg>`;
   return new L.Icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" fill="${color}" stroke="white" stroke-width="2"/>
-        <text x="12" y="17" font-size="12" font-weight="bold" text-anchor="middle" fill="white">⚡</text>
-      </svg>
-    `),
+    iconUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString),
     iconSize: [24, 24],
     iconAnchor: [12, 12],
     popupAnchor: [0, -12],
