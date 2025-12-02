@@ -11,6 +11,7 @@ import StatsPage from './pages/StatsPage';
 import StationsPage from './pages/StationsPage';
 import SettingsPage from './pages/SettingsPage';
 import { getAppSettings, applyTheme } from './lib/settingsStorage';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   useEffect(() => {
@@ -20,24 +21,26 @@ function App() {
 
   return (
     <div className="App">
-      <BrowserRouter>
-        <Routes>
-          {/* Nouvelle interface tableau de bord */}
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/vehicles" element={<VehiclesPage />} />
-          <Route path="/badges" element={<BadgesPage />} />
-          <Route path="/history" element={<HistoryPage />} />
-          <Route path="/stats" element={<StatsPage />} />
-          <Route path="/stations" element={<StationsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+      <ErrorBoundary>
+        <BrowserRouter>
+          <Routes>
+            {/* Nouvelle interface tableau de bord */}
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/vehicles" element={<VehiclesPage />} />
+            <Route path="/badges" element={<BadgesPage />} />
+            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/stats" element={<StatsPage />} />
+            <Route path="/stations" element={<StationsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
 
-          {/* Page d'analyse existante conservée pour le flux « Nouveau trajet » */}
-          <Route path="/analysis" element={<AnalysisPage />} />
+            {/* Page d'analyse existante conservée pour le flux « Nouveau trajet » */}
+            <Route path="/analysis" element={<AnalysisPage />} />
 
-          {/* Ancienne page marketing (facultative) */}
-          <Route path="/landing" element={<HomePage />} />
-        </Routes>
-      </BrowserRouter>
+            {/* Ancienne page marketing (facultative) */}
+            <Route path="/landing" element={<HomePage />} />
+          </Routes>
+        </BrowserRouter>
+      </ErrorBoundary>
     </div>
   );
 }
