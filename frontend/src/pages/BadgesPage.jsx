@@ -4,19 +4,23 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import { getAllTrips } from '../lib/tripStorage';
 import { getAppSettings } from '../lib/settingsStorage';
 import { calculateBadges } from '../lib/badges';
+import { TRANSLATIONS } from '../lib/translations';
 
 const BadgesPage = () => {
   const [trips, setTrips] = useState([]);
   const [theme, setTheme] = useState('dark');
+  const [language, setLanguage] = useState('en');
 
   useEffect(() => {
     setTrips(getAllTrips());
-    const { theme: thm } = getAppSettings();
+    const { theme: thm, language: lang } = getAppSettings();
     setTheme(thm);
+    setLanguage(lang);
     
     const handler = (event) => {
       const detail = event.detail || {};
       if (detail.theme) setTheme(detail.theme);
+      if (detail.language) setLanguage(detail.language);
     };
     
     if (typeof window !== 'undefined') {
@@ -31,15 +35,16 @@ const BadgesPage = () => {
   }, []);
   
   const isDark = theme === 'dark';
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
   const badges = calculateBadges(trips);
   const unlockedCount = badges.filter(b => b.unlocked).length;
 
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-emerald-100' : ''}`}>Badges</h1>
+        <h1 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-emerald-100' : ''}`}>{t.badges.title}</h1>
         <p className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
-          Débloquez des récompenses en conduisant de manière écologique.
+          {t.badges.subtitle}
         </p>
       </div>
 
@@ -47,10 +52,10 @@ const BadgesPage = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className={`text-base md:text-lg font-semibold flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
             <Award className={`w-5 h-5 ${isDark ? 'text-amber-200' : 'text-amber-500'}`} />
-            Progression des badges
+            {t.badges.progress}
           </h2>
           <span className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
-            {unlockedCount} / {badges.length} badges débloqués
+            {unlockedCount} / {badges.length} {t.badges.unlocked}
           </span>
         </div>
 
@@ -86,7 +91,7 @@ const BadgesPage = () => {
                 </div>
                 <div className="mt-2">
                   <div className="flex items-center justify-between mb-1">
-                    <span className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Progression</span>
+                    <span className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>{t.badges.progression}</span>
                     <span className={`text-xs font-medium ${isDark ? 'text-emerald-100' : 'text-slate-600'}`}>
                       {Math.round(badge.progress)}%
                     </span>

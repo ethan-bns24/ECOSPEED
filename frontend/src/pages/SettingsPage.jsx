@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { getAppSettings, updateAppSettings, applyTheme } from '../lib/settingsStorage';
+import { TRANSLATIONS } from '../lib/translations';
 
 const SettingsPage = () => {
   // Initialiser avec des valeurs par défaut
@@ -26,20 +27,22 @@ const SettingsPage = () => {
     updateAppSettings({ theme: value });
   };
 
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
+
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className={`text-2xl font-semibold mb-1 ${theme === 'dark' ? 'text-emerald-100' : ''}`}>Paramètres</h1>
+        <h1 className={`text-2xl font-semibold mb-1 ${theme === 'dark' ? 'text-emerald-100' : ''}`}>{t.settings.title}</h1>
         <p className={`text-sm ${theme === 'dark' ? 'text-emerald-200' : 'text-slate-600'}`}>
-          Personnalisez votre expérience ECOSPEED.
+          {t.settings.subtitle}
         </p>
       </div>
 
       <div className={`rounded-3xl p-5 md:p-6 shadow-sm text-sm space-y-6 ${theme === 'dark' ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100 text-slate-700'}`}>
         <div>
-          <h2 className={`text-base font-semibold mb-2 ${theme === 'dark' ? 'text-white' : ''}`}>Langue</h2>
+          <h2 className={`text-base font-semibold mb-2 ${theme === 'dark' ? 'text-white' : ''}`}>{t.settings.language}</h2>
           <p className={`text-xs mb-2 ${theme === 'dark' ? 'text-emerald-50' : 'text-slate-500'}`}>
-            Choisissez la langue principale de l&apos;interface.
+            {t.settings.languageDesc}
           </p>
           <div className="flex gap-4">
             <label className={`flex items-center gap-2 text-sm ${theme === 'dark' ? 'text-white' : ''}`}>
@@ -66,9 +69,9 @@ const SettingsPage = () => {
         </div>
 
         <div className={`border-t pt-4 ${theme === 'dark' ? 'border-emerald-300/30' : 'border-slate-100'}`}>
-          <h2 className={`text-base font-semibold mb-2 ${theme === 'dark' ? 'text-white' : ''}`}>Thème</h2>
+          <h2 className={`text-base font-semibold mb-2 ${theme === 'dark' ? 'text-white' : ''}`}>{t.settings.theme}</h2>
           <p className={`text-xs mb-2 ${theme === 'dark' ? 'text-emerald-50' : 'text-slate-500'}`}>
-            Basculez entre le mode clair et le mode sombre.
+            {t.settings.themeDesc}
           </p>
           <div className="flex gap-4">
             <label className={`flex items-center gap-2 text-sm ${theme === 'dark' ? 'text-white' : ''}`}>
@@ -79,7 +82,7 @@ const SettingsPage = () => {
                 checked={theme === 'light'}
                 onChange={handleThemeChange}
               />
-              Mode clair
+              {t.settings.lightMode}
             </label>
             <label className={`flex items-center gap-2 text-sm ${theme === 'dark' ? 'text-white' : ''}`}>
               <input
@@ -89,13 +92,13 @@ const SettingsPage = () => {
                 checked={theme === 'dark'}
                 onChange={handleThemeChange}
               />
-              Mode sombre
+              {t.settings.darkMode}
             </label>
           </div>
         </div>
 
         <div className={`border-t pt-4 text-xs ${theme === 'dark' ? 'border-emerald-300/30 text-emerald-50' : 'border-slate-100 text-slate-500'}`}>
-          Les paramètres sont enregistrés dans ce navigateur uniquement.
+          {t.settings.savedInBrowser}
         </div>
       </div>
     </DashboardLayout>
