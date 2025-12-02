@@ -1,6 +1,17 @@
 // Traductions centralisées pour toute l'application
 export const TRANSLATIONS = {
   fr: {
+    // Menu
+    menu: {
+      home: 'Accueil',
+      newTrip: 'Nouveau trajet',
+      vehicles: 'Mes véhicules',
+      history: 'Historique',
+      stats: 'Statistiques',
+      badges: 'Badges',
+      stations: 'Bornes',
+      settings: 'Paramètres',
+    },
     // Dashboard
     dashboard: {
       greeting: 'Bonjour Ethan !',
