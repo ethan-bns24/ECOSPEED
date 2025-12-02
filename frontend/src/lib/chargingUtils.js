@@ -103,12 +103,20 @@ export function findChargingStationsOnRoute(segments, routeCoordinates, batteryK
       const nearestStation = findNearestStation(chargeLat, chargeLon, stations);
       
       if (nearestStation) {
+        // Calculer le temps de charge nécessaire (de 20% à 80% = 60% de capacité)
+        const energyToCharge = usableCapacity; // 60% de la capacité
+        const chargingPowerKw = nearestStation.powerKw || 50; // Puissance de la borne en kW (défaut 50 kW)
+        const chargingTimeHours = energyToCharge / chargingPowerKw; // Temps en heures
+        const chargingTimeMinutes = chargingTimeHours * 60; // Temps en minutes
+        
         chargingPoints.push({
           segmentIndex: i,
           lat: chargeLat,
           lon: chargeLon,
           station: nearestStation,
           batteryLevelAtCharge: 20, // On recharge quand on arrive à 20%
+          chargingTimeMinutes: chargingTimeMinutes,
+          energyToCharge: energyToCharge,
         });
         
         // Après recharge, on remonte à 80%

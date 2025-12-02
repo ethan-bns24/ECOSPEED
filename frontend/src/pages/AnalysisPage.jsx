@@ -869,8 +869,15 @@ const AnalysisPage = () => {
                     const totalLimitEnergy = routeData.segments.reduce((sum, s) => sum + s.limit_energy, 0);
                     const energySavedVsLimit = totalLimitEnergy - totalEcoEnergy;
                     const energySavedPercent = totalLimitEnergy > 0 ? (energySavedVsLimit / totalLimitEnergy) * 100 : 0;
-                    const totalEcoTime = routeData.segments.reduce((sum, s) => sum + s.eco_time, 0) / 60;
-                    const totalLimitTime = routeData.segments.reduce((sum, s) => sum + s.limit_time, 0) / 60;
+                    const baseEcoTime = routeData.segments.reduce((sum, s) => sum + s.eco_time, 0) / 60;
+                    const baseLimitTime = routeData.segments.reduce((sum, s) => sum + s.limit_time, 0) / 60;
+                    
+                    // Ajouter le temps de charge si des bornes sont utilisées
+                    const totalChargingTime = routeChargingStations.reduce((sum, cp) => 
+                      sum + (cp.chargingTimeMinutes || 0), 0
+                    );
+                    const totalEcoTime = baseEcoTime + (totalChargingTime / 60);
+                    const totalLimitTime = baseLimitTime + (totalChargingTime / 60);
                     const extraTime = totalEcoTime - totalLimitTime;
                     
                     // Calculer la batterie à l'arrivée en tenant compte des recharges
@@ -1021,12 +1028,19 @@ const AnalysisPage = () => {
                                               {language === 'fr' ? 'Distance du trajet' : 'Distance from route'}: {chargingPoint.distanceKm.toFixed(1)} km
                                             </div>
                                           )}
+                                          {chargingPoint.chargingTimeMinutes && (
+                                            <div className={`text-xs mt-1 font-medium ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
+                                              {language === 'fr' ? 'Temps de charge' : 'Charging time'}: {formatTime(chargingPoint.chargingTimeMinutes)}
+                                            </div>
+                                          )}
                                         </div>
-                                        {chargingPoint.station?.price && (
-                                          <div className={`text-sm font-medium ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
-                                            {chargingPoint.station.price}
-                                          </div>
-                                        )}
+                                        <div className="text-right">
+                                          {chargingPoint.station?.price && (
+                                            <div className={`text-sm font-medium ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
+                                              {chargingPoint.station.price}
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
                                   ))}
