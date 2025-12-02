@@ -103,13 +103,15 @@ export const TRANSLATIONS = {
     // Vehicles
     vehicles: {
       title: 'Mes véhicules',
-      subtitle: 'Gérez vos profils de véhicules électriques.',
+      subtitle: 'Gérez vos véhicules électriques utilisés pour les simulations ECOSPEED.',
       setDefault: 'Par défaut',
-      removeDefault: 'Retirer par défaut',
+      removeDefault: 'Ajouter par défaut',
       addVehicle: 'Ajouter un véhicule',
       battery: 'Batterie',
       mass: 'Masse',
       defaultVehicle: 'Véhicule par défaut',
+      tip: 'Conseil',
+      tipText: 'Le véhicule marqué Par défaut sera utilisé automatiquement dans le calcul de trajet. Si vous en marquez plusieurs au fil du temps, vous pourrez toujours les sélectionner dans l\'écran « Nouveau trajet ».',
     },
     // Stations
     stations: {
