@@ -483,6 +483,64 @@ const AnalysisPage = () => {
     ? "bg-[#0a2e1a]/80 backdrop-blur-md border-b border-emerald-800/30 sticky top-0 z-50"
     : "bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50";
   
+  // Si on est en navigation, afficher la carte en plein écran style Waze
+  if (isNavigating && routeData && routeData.segments[currentSegmentIndex]) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black">
+        {/* Interface GPS en haut */}
+        <GPSNavigation
+          currentSegment={routeData.segments[currentSegmentIndex]}
+          nextSegment={currentSegmentIndex < routeData.segments.length - 1 ? routeData.segments[currentSegmentIndex + 1] : null}
+          segments={routeData.segments}
+          currentSegmentIndex={currentSegmentIndex}
+          distanceToNextTurn={distanceToNextTurn}
+          currentPosition={currentPosition}
+        />
+        
+        {/* Carte en plein écran */}
+        <div className="absolute inset-0 pt-20 pb-48">
+          <RouteMap
+            segments={routeData.segments || []} 
+            currentSegmentIndex={currentSegmentIndex}
+            startLocation={routeData.start_location}
+            endLocation={routeData.end_location}
+            routeCoordinates={routeData.route_coordinates || []}
+            chargingStations={routeChargingStations}
+            currentPosition={currentPosition}
+          />
+        </div>
+        
+        {/* Vitesses en bas */}
+        <RealTimeNavigation
+          currentSegment={routeData.segments[currentSegmentIndex]}
+          isNavigating={isNavigating}
+          onSpeedChange={setCurrentSpeed}
+        />
+        
+        {/* Boutons de contrôle en overlay */}
+        <div className="fixed top-24 md:top-28 right-4 z-50 flex flex-col gap-2">
+          <Button
+            onClick={handlePauseNavigation}
+            size="sm"
+            className="bg-red-500/90 hover:bg-red-600 text-white backdrop-blur-sm"
+          >
+            <Pause className="w-4 h-4 mr-1" />
+            {t.navigation.pause}
+          </Button>
+          <Button
+            onClick={handleResetNavigation}
+            size="sm"
+            variant="outline"
+            className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border-white/20"
+          >
+            <RotateCcw className="w-4 h-4" />
+            {t.navigation.reset}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className={bgClass}>
       {/* Header */}
@@ -929,47 +987,6 @@ const AnalysisPage = () => {
               </Card>
             )}
 
-            {/* Navigation en temps réel style Waze */}
-            {isNavigating && routeData && routeData.segments[currentSegmentIndex] && (
-              <>
-                {/* Interface GPS en haut */}
-                <GPSNavigation
-                  currentSegment={routeData.segments[currentSegmentIndex]}
-                  nextSegment={currentSegmentIndex < routeData.segments.length - 1 ? routeData.segments[currentSegmentIndex + 1] : null}
-                  segments={routeData.segments}
-                  currentSegmentIndex={currentSegmentIndex}
-                  distanceToNextTurn={distanceToNextTurn}
-                  currentPosition={currentPosition}
-                />
-                
-                {/* Vitesses en bas */}
-                <RealTimeNavigation
-                  currentSegment={routeData.segments[currentSegmentIndex]}
-                  isNavigating={isNavigating}
-                  onSpeedChange={setCurrentSpeed}
-                />
-                
-                {/* Boutons de contrôle en overlay */}
-                <div className="fixed top-24 md:top-28 right-4 z-50 flex flex-col gap-2">
-                  <Button
-                    onClick={handlePauseNavigation}
-                    size="sm"
-                    className="bg-red-500/90 hover:bg-red-600 text-white backdrop-blur-sm"
-                  >
-                    <Pause className="w-4 h-4 mr-1" />
-                    Pause
-                  </Button>
-                  <Button
-                    onClick={handleResetNavigation}
-                    size="sm"
-                    variant="outline"
-                    className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border-white/20"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                  </Button>
-                </div>
-              </>
-            )}
 
             {/* Results Dashboard */}
             {showResults && routeData && (
