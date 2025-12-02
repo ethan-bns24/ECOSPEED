@@ -107,44 +107,50 @@ const DashboardPage = () => {
 
       {/* KPI cards row */}
       <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 mb-8">
-        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Trajets effectués</div>
-          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : ''}`}>{stats.trips}</div>
+        {/* Trajets effectués - Bleu clair en mode clair */}
+        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-blue-50 border border-blue-100'}`}>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-blue-600'}`}>Trajets effectués</div>
+          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-blue-900'}`}>{stats.trips}</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +12%
           </div>
         </div>
-        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Distance totale</div>
-          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : ''}`}>{stats.distanceKm} km</div>
+        {/* Distance totale - Rose clair en mode clair */}
+        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-pink-50 border border-pink-100'}`}>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-pink-600'}`}>Distance totale</div>
+          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-pink-900'}`}>{stats.distanceKm} km</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.distance}%
           </div>
         </div>
-        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Énergie économisée</div>
-          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : ''}`}>{stats.energySavedKwh.toFixed(1)} kWh</div>
+        {/* Énergie économisée - Vert clair en mode clair */}
+        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-emerald-50 border border-emerald-100'}`}>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>Énergie économisée</div>
+          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-emerald-900'}`}>{stats.energySavedKwh.toFixed(1)} kWh</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.energy}%
           </div>
         </div>
-        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>CO₂ évité</div>
-          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : ''}`}>{stats.co2SavedKg.toFixed(1)} kg</div>
+        {/* CO₂ évité - Vert clair en mode clair */}
+        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-emerald-50 border border-emerald-100'}`}>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>CO₂ évité</div>
+          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-emerald-900'}`}>{stats.co2SavedKg.toFixed(1)} kg</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +18%
           </div>
         </div>
-        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Score éco moyen</div>
-          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : ''}`}>{stats.ecoScore}/100</div>
+        {/* Score éco moyen - Beige/Ambre clair en mode clair */}
+        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-amber-50 border border-amber-100'}`}>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-amber-600'}`}>Score éco moyen</div>
+          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-amber-900'}`}>{stats.ecoScore}/100</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.score}%
           </div>
         </div>
-        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Points totaux</div>
-          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : ''}`}>{stats.points}</div>
+        {/* Points totaux - Rose clair en mode clair */}
+        <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-pink-50 border border-pink-100'}`}>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-pink-600'}`}>Points totaux</div>
+          <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-pink-900'}`}>{stats.points}</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.points}%
           </div>
