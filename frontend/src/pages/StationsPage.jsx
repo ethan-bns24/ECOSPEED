@@ -198,7 +198,7 @@ const StationsPage = () => {
               <div className={`absolute inset-0 flex items-center justify-center z-10 ${isDark ? 'bg-emerald-500/90' : 'bg-white/90'}`}>
                 <div className={`text-center ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto mb-4"></div>
-                  <p>{t.stations.loading}</p>
+                  <p>{t.stations.loadingMap}</p>
                 </div>
               </div>
             ) : (
