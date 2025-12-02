@@ -188,27 +188,29 @@ const StationsPage = () => {
       <div className="grid lg:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)] gap-6">
         <div className={`rounded-3xl p-4 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
           {/* Carte avec toutes les bornes */}
-          <div className="h-[600px] rounded-2xl overflow-hidden relative" style={{ minHeight: '600px' }}>
+          <div className="h-[600px] rounded-2xl overflow-hidden relative bg-gray-100" style={{ minHeight: '600px' }}>
             {loading ? (
-              <div className={`absolute inset-0 flex items-center justify-center ${isDark ? 'bg-emerald-500/50' : 'bg-white/50'}`}>
+              <div className={`absolute inset-0 flex items-center justify-center z-10 ${isDark ? 'bg-emerald-500/90' : 'bg-white/90'}`}>
                 <div className={`text-center ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto mb-4"></div>
                   <p>Chargement de la carte...</p>
                 </div>
               </div>
             ) : (
-              <StationsMap
-                stations={filteredStations}
-                selectedStation={selectedStation}
-                onStationClick={(station) => {
-                  setSelectedStation(station);
-                  // Mettre à jour le select
-                  const select = document.querySelector('select');
-                  if (select) {
-                    select.value = `${station.latitude}-${station.longitude}`;
-                  }
-                }}
-              />
+              <div style={{ height: '100%', width: '100%' }}>
+                <StationsMap
+                  stations={filteredStations}
+                  selectedStation={selectedStation}
+                  onStationClick={(station) => {
+                    setSelectedStation(station);
+                    // Mettre à jour le select
+                    const select = document.querySelector('select');
+                    if (select) {
+                      select.value = `${station.latitude}-${station.longitude}`;
+                    }
+                  }}
+                />
+              </div>
             )}
           </div>
           {selectedStation && (

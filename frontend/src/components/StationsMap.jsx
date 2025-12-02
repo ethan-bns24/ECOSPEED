@@ -83,17 +83,19 @@ const StationsMap = ({ stations = [], selectedStation = null, onStationClick }) 
     !isNaN(s.longitude)
   );
 
-  // Afficher toutes les bornes sur la carte
-  const stationsToDisplay = validStations;
+  // Afficher toutes les bornes sur la carte, mais limiter à 500 pour éviter les problèmes de performance
+  const stationsToDisplay = validStations.slice(0, 500);
 
-  return (
-    <MapContainer
-      center={defaultCenter}
-      zoom={defaultZoom}
-      style={{ height: '100%', width: '100%', borderRadius: '8px', zIndex: 0 }}
-      scrollWheelZoom={true}
-      key="stations-map"
-    >
+  // Gestion d'erreur si la carte ne peut pas se charger
+  try {
+    return (
+      <MapContainer
+        center={defaultCenter}
+        zoom={defaultZoom}
+        style={{ height: '100%', width: '100%', borderRadius: '8px', zIndex: 0 }}
+        scrollWheelZoom={true}
+        key="stations-map"
+      >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -168,8 +170,27 @@ const StationsMap = ({ stations = [], selectedStation = null, onStationClick }) 
             </Marker>
           );
         })}
-    </MapContainer>
-  );
+      </MapContainer>
+    );
+  } catch (error) {
+    console.error('Error rendering StationsMap:', error);
+    return (
+      <div style={{ 
+        height: '100%', 
+        width: '100%', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        backgroundColor: '#f0f0f0',
+        borderRadius: '8px'
+      }}>
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <p style={{ color: '#666', marginBottom: '10px' }}>Erreur lors du chargement de la carte</p>
+          <p style={{ color: '#999', fontSize: '12px' }}>{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default StationsMap;
