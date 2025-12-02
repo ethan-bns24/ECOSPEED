@@ -990,6 +990,49 @@ const AnalysisPage = () => {
                                 )}
                               </div>
                             </div>
+                            
+                            {/* Charging stations info */}
+                            {routeChargingStations && routeChargingStations.length > 0 && (
+                              <div className={`mt-6 pt-6 border-t ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
+                                <h4 className={`text-lg font-semibold mb-4 ${isDark ? 'text-emerald-100' : 'text-slate-900'}`}>
+                                  {language === 'fr' ? 'Bornes de recharge sur le trajet' : 'Charging Stations on Route'}
+                                </h4>
+                                <div className="space-y-3">
+                                  {routeChargingStations.map((chargingPoint, index) => (
+                                    <div
+                                      key={index}
+                                      className={`rounded-lg p-4 ${isDark ? 'bg-white/5 border border-emerald-400/30' : 'bg-slate-50 border border-slate-200'}`}
+                                    >
+                                      <div className="flex items-start justify-between gap-3">
+                                        <div className="flex-1">
+                                          <div className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                            {chargingPoint.station?.name || 'Borne de recharge'}
+                                          </div>
+                                          <div className={`text-sm mt-1 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                            {chargingPoint.station?.operator || 'Opérateur inconnu'} · {chargingPoint.station?.powerKw || 0} kW
+                                          </div>
+                                          {chargingPoint.station?.address && (
+                                            <div className={`text-xs mt-1 ${isDark ? 'text-emerald-300/80' : 'text-slate-500'}`}>
+                                              {chargingPoint.station.address}
+                                            </div>
+                                          )}
+                                          {chargingPoint.distanceKm && (
+                                            <div className={`text-xs mt-1 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                              {language === 'fr' ? 'Distance du trajet' : 'Distance from route'}: {chargingPoint.distanceKm.toFixed(1)} km
+                                            </div>
+                                          )}
+                                        </div>
+                                        {chargingPoint.station?.price && (
+                                          <div className={`text-sm font-medium ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
+                                            {chargingPoint.station.price}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
