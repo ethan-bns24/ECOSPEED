@@ -861,13 +861,13 @@ const AnalysisPage = () => {
                       
                       // Si on a besoin de recharges, recalculer la batterie finale
                       if (chargingStops > 0) {
-                        // Chaque recharge ajoute 80% de la capacité (de 20% à 100%)
-                        const energyPerCharge = batteryKwh * 0.8;
+                        // Chaque recharge sur autoroute se fait de 20% à 80% (60% de capacité ajoutée)
+                        const energyPerCharge = batteryKwh * 0.6; // 60% (de 20% à 80%)
                         const totalEnergyAdded = chargingStops * energyPerCharge;
                         
                         // Énergie finale = énergie au départ - énergie consommée + énergie rechargée
                         const finalEnergy = energyAtStart - totalEcoEnergy + totalEnergyAdded;
-                        batteryEndPct = Math.max(20, Math.min(100, (finalEnergy / batteryKwh) * 100));
+                        batteryEndPct = Math.max(20, Math.min(80, (finalEnergy / batteryKwh) * 100));
                       } else {
                         // Pas de recharges nécessaires, utiliser le calcul direct
                         batteryEndPct = batteryEndPctWithoutCharges;

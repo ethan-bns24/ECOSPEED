@@ -96,8 +96,8 @@ export function calculateChargingStops(energyKwh, batteryKwh, batteryStartPct, b
   if (netEnergyNeeded <= 0) return 0;
   
   // Capacité utilisable de la batterie (on recharge typiquement de 20% à 80% = 60% utilisable)
-  // Mais on peut aussi utiliser 100% si nécessaire
-  const usableBatteryCapacity = batteryKwh * 0.8; // 80% de la capacité totale
+  // Sur autoroute, on recharge jusqu'à 80% maximum pour optimiser le temps de charge
+  const usableBatteryCapacity = batteryKwh * 0.6; // 60% de la capacité totale (de 20% à 80%)
   
   // Nombre de recharges nécessaires (arrondi vers le haut)
   const chargingStops = Math.ceil(netEnergyNeeded / usableBatteryCapacity);
