@@ -168,6 +168,7 @@ const DashboardPage = () => {
               </h2>
               <button
                 type="button"
+                onClick={() => navigate('/history')}
                 className={`text-xs font-medium ${isDark ? 'text-emerald-50 hover:text-white' : 'text-emerald-700 hover:text-emerald-800'}`}
               >
                 Voir tout
