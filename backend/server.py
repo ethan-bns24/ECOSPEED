@@ -1083,6 +1083,17 @@ async def calculate_route(request: RouteRequest) -> RouteResponse:
         eco_time = (distance_m / (eco_speed / 3.6)) if eco_speed > 0 else 0
         real_time = (distance_m / (real_speed / 3.6)) if real_speed > 0 else 0
         
+        # Ensure all values are valid numbers (check for NaN and None)
+        import math
+        limit_time = max(0, limit_time) if limit_time is not None and not math.isnan(limit_time) else 0
+        eco_time = max(0, eco_time) if eco_time is not None and not math.isnan(eco_time) else 0
+        real_time = max(0, real_time) if real_time is not None and not math.isnan(real_time) else 0
+        
+        # Ensure energy values are valid
+        limit_energy = max(0, limit_energy) if limit_energy is not None and not math.isnan(limit_energy) else 0
+        eco_energy = max(0, eco_energy) if eco_energy is not None and not math.isnan(eco_energy) else 0
+        real_energy = max(0, real_energy) if real_energy is not None and not math.isnan(real_energy) else 0
+        
         segment = Segment(
             index=i,
             distance=distance_m,
