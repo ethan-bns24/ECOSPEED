@@ -5,7 +5,6 @@ import { getAllTrips, deleteTrip } from '../lib/tripStorage';
 import { getAppSettings } from '../lib/settingsStorage';
 import { toast } from 'sonner';
 import { TRANSLATIONS } from '../lib/translations';
-import { TRANSLATIONS } from '../lib/translations';
 
 const formatDateTime = (timestamp) => {
   if (!timestamp) return '';
@@ -22,7 +21,6 @@ const formatDateTime = (timestamp) => {
 const HistoryPage = () => {
   const [trips, setTrips] = useState([]);
   const [theme, setTheme] = useState('dark');
-  const [language, setLanguage] = useState('en');
   const [language, setLanguage] = useState('en');
 
   useEffect(() => {
@@ -49,7 +47,6 @@ const HistoryPage = () => {
   }, []);
   
   const isDark = theme === 'dark';
-  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
   const totalTrips = trips.length;
