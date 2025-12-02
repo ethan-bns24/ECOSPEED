@@ -241,6 +241,7 @@ const AnalysisPage = () => {
     
     setLoading(true);
     setShowResults(false);
+    setRouteChargingStations([]); // Réinitialiser les bornes de recharge au début du calcul
     
     try {
       const vehicle = getSelectedVehicleData();
