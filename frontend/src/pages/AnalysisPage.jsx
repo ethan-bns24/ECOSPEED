@@ -843,13 +843,14 @@ const AnalysisPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="rounded-lg overflow-hidden" style={{ height: '400px' }}>
-                  <RouteMap 
+                  <RouteMap
                     segments={routeData?.segments || []} 
                     currentSegmentIndex={currentSegmentIndex}
                     startLocation={routeData?.start_location}
                     endLocation={routeData?.end_location}
                     routeCoordinates={routeData?.route_coordinates || []}
                     chargingStations={routeChargingStations}
+                    currentPosition={currentPosition}
                   />
                 </div>
               </CardContent>
