@@ -235,6 +235,15 @@ export const TRANSLATIONS = {
       darkMode: 'Dark mode',
       savedInBrowser: 'Settings are saved in this browser only.',
     },
+    // Sidebar
+    sidebar: {
+      greenDrivingOptimizer: 'Green Driving Optimizer',
+    },
+    greeting: 'Hello Ethan!',
+    subtitle: 'Optimize your trips 🚗⚡',
+    footerTitle: 'Drive green',
+    footerText: 'Optimize your consumption to protect the planet.',
+    level: 'Level 1 · Eco driver',
     // History
     history: {
       title: 'History',
