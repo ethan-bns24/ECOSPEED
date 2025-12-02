@@ -18,6 +18,7 @@ import TimeChart from '../components/TimeChart';
 import KPICards from '../components/KPICards';
 import NavigationPanel from '../components/NavigationPanel';
 import RealTimeNavigation from '../components/RealTimeNavigation';
+import GPSNavigation from '../components/GPSNavigation';
 import { toast } from 'sonner';
 import { persistTripFromRoute, calculateChargingStops } from '../lib/tripStorage';
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
@@ -396,12 +397,14 @@ const AnalysisPage = () => {
     );
 
     // Simuler la progression dans le segment basée sur la vitesse
+    // Ralentir la progression pour un effet plus réaliste (diviser par 10 pour simuler une vitesse plus lente)
     const segmentDistance = currentSegment.distance || 0; // en mètres
     const speedMs = currentSpeed > 0 ? (currentSpeed / 3.6) : (currentSegment.eco_speed / 3.6); // convertir km/h en m/s
+    const simulationSpeed = speedMs / 10; // Ralentir la progression pour un effet plus réaliste
 
     let progressInSegment = 0;
     const progressInterval = setInterval(() => {
-      progressInSegment += speedMs * 0.1; // Mise à jour toutes les 100ms
+      progressInSegment += simulationSpeed * 0.1; // Mise à jour toutes les 100ms avec vitesse ralentie
       const progressRatio = Math.min(1, progressInSegment / segmentDistance);
 
       if (progressRatio >= 1) {
@@ -923,13 +926,33 @@ const AnalysisPage = () => {
             {/* Navigation en temps réel style Waze */}
             {isNavigating && routeData && routeData.segments[currentSegmentIndex] && (
               <>
+                {/* Interface GPS en haut */}
+                <GPSNavigation
+                  currentSegment={routeData.segments[currentSegmentIndex]}
+                  nextSegment={currentSegmentIndex < routeData.segments.length - 1 ? routeData.segments[currentSegmentIndex + 1] : null}
+                  segments={routeData.segments}
+                  currentSegmentIndex={currentSegmentIndex}
+                  distanceToNextTurn={(() => {
+                    const currentSeg = routeData.segments[currentSegmentIndex];
+                    if (currentSeg) {
+                      // Calculer la distance restante dans le segment actuel
+                      const segmentDistance = currentSeg.distance || 0;
+                      return segmentDistance / 1000; // en km
+                    }
+                    return 0;
+                  })()}
+                  currentPosition={currentPosition}
+                />
+                
+                {/* Vitesses en bas */}
                 <RealTimeNavigation
                   currentSegment={routeData.segments[currentSegmentIndex]}
                   isNavigating={isNavigating}
                   onSpeedChange={setCurrentSpeed}
                 />
+                
                 {/* Boutons de contrôle en overlay */}
-                <div className="fixed top-20 right-4 z-50 flex flex-col gap-2">
+                <div className="fixed top-24 md:top-28 right-4 z-50 flex flex-col gap-2">
                   <Button
                     onClick={handlePauseNavigation}
                     size="sm"
