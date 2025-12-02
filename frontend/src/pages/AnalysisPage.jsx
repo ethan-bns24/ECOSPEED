@@ -873,9 +873,11 @@ const AnalysisPage = () => {
                     const baseLimitTime = routeData.segments.reduce((sum, s) => sum + s.limit_time, 0) / 60;
                     
                     // Ajouter le temps de charge si des bornes sont utilisées
-                    const totalChargingTime = routeChargingStations.reduce((sum, cp) => 
-                      sum + (cp.chargingTimeMinutes || 0), 0
-                    );
+                    const totalChargingTime = (routeChargingStations && Array.isArray(routeChargingStations))
+                      ? routeChargingStations.reduce((sum, cp) => 
+                          sum + (cp?.chargingTimeMinutes || 0), 0
+                        )
+                      : 0;
                     const totalEcoTime = baseEcoTime + (totalChargingTime / 60);
                     const totalLimitTime = baseLimitTime + (totalChargingTime / 60);
                     const extraTime = totalEcoTime - totalLimitTime;
