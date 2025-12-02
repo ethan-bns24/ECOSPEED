@@ -49,7 +49,7 @@ const TRANSLATIONS = {
     selectedAuto: 'sélectionné automatiquement',
     loadPassengers: 'Charge et passagers',
     numPassengers: 'Nombre de passagers',
-    avgWeight: 'Poids moyen par personne (kg)',
+    avgWeight: 'Poids moyen/personne (kg)',
     climate: 'Climatisation',
     climateIntensity: 'Intensité climatisation (%)',
     batteryStart: 'Batterie au départ (%)',
@@ -597,9 +597,6 @@ const AnalysisPage = () => {
                         }}
                         className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                       />
-                      <p className={`text-xs mt-1 ${isDark ? 'text-emerald-300/70' : 'text-slate-500'}`}>
-                        {language === 'fr' ? 'Min : 1 personne, Max : 5 personnes (valeur par défaut : 1).' : 'Min: 1 person, Max: 5 people (default: 1).'}
-                      </p>
                     </div>
                     <div>
                       <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.avgWeight}</Label>
