@@ -6,6 +6,7 @@ import { getAllTrips } from '../lib/tripStorage';
 import { getAppSettings, getVehicleSettings } from '../lib/settingsStorage';
 import { calculateBadges } from '../lib/badges';
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
+import { TRANSLATIONS } from '../lib/translations';
 
 const formatDate = (timestamp) => {
   if (!timestamp) return '';
@@ -21,12 +22,14 @@ const DashboardPage = () => {
   const navigate = useNavigate();
   const [trips, setTrips] = useState([]);
   const [theme, setTheme] = useState('dark');
+  const [language, setLanguage] = useState('en');
   const [enabledVehicles, setEnabledVehicles] = useState([]);
 
   useEffect(() => {
     setTrips(getAllTrips());
-    const { theme: thm } = getAppSettings();
+    const { theme: thm, language: lang } = getAppSettings();
     setTheme(thm);
+    setLanguage(lang);
     
     // Récupérer les véhicules activés
     const { enabledVehicles: enabled } = getVehicleSettings();
@@ -43,6 +46,7 @@ const DashboardPage = () => {
     const handler = (event) => {
       const detail = event.detail || {};
       if (detail.theme) setTheme(detail.theme);
+      if (detail.language) setLanguage(detail.language);
       // Recharger les véhicules si les settings changent
       const { enabledVehicles: updated } = getVehicleSettings();
       if (updated && updated.length > 0) {
@@ -62,6 +66,7 @@ const DashboardPage = () => {
   }, []);
   
   const isDark = theme === 'dark';
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
   
   // Filtrer les véhicules activés
   const defaultVehicles = VEHICLE_PROFILES.filter(v => 
@@ -112,24 +117,23 @@ const DashboardPage = () => {
         <div className="rounded-3xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white px-6 py-6 md:px-8 md:py-7 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-lg shadow-emerald-500/20">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold mb-1">
-              Bonjour Ethan ! <span className="inline-block">👋</span>
+              {t.dashboard.greeting} <span className="inline-block">👋</span>
             </h1>
             <p className="text-sm md:text-base text-emerald-50 max-w-xl">
-              Optimisez vos trajets et économisez de l&apos;énergie avec notre optimiseur
-              de conduite écologique.
+              {t.dashboard.subtitle}
             </p>
           </div>
           <div className="flex items-center gap-4">
             <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-700/60 border border-emerald-300/30 text-sm">
               <Leaf className="w-4 h-4 text-emerald-100" />
-              <span>{totalCo2SavedKg.toFixed(1)} kg CO₂ évités</span>
+              <span>{totalCo2SavedKg.toFixed(1)} {t.dashboard.co2Avoided}</span>
             </div>
             <button
               type="button"
               onClick={() => navigate('/analysis')}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white text-emerald-700 font-semibold text-sm shadow-sm hover:bg-emerald-50 transition"
             >
-              + Nouveau trajet
+              + {t.dashboard.newTrip}
             </button>
           </div>
         </div>
@@ -139,7 +143,7 @@ const DashboardPage = () => {
       <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 mb-8">
         {/* Trajets effectués - Bleu en mode sombre, bleu clair en mode clair */}
         <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-blue-600 text-white border border-blue-500/30' : 'bg-blue-50 border border-blue-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-blue-50' : 'text-blue-600'}`}>Trajets effectués</div>
+          <div className={`text-xs mb-1 ${isDark ? 'text-blue-50' : 'text-blue-600'}`}>{t.dashboard.tripsCompleted}</div>
           <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-blue-900'}`}>{stats.trips}</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-blue-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +12%
@@ -147,7 +151,7 @@ const DashboardPage = () => {
         </div>
         {/* Distance totale - Bleu en mode sombre, rose clair en mode clair */}
         <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-blue-600 text-white border border-blue-500/30' : 'bg-pink-50 border border-pink-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-blue-50' : 'text-pink-600'}`}>Distance totale</div>
+          <div className={`text-xs mb-1 ${isDark ? 'text-blue-50' : 'text-pink-600'}`}>{t.dashboard.totalDistance}</div>
           <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-pink-900'}`}>{stats.distanceKm} km</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-blue-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.distance}%
@@ -155,7 +159,7 @@ const DashboardPage = () => {
         </div>
         {/* Énergie économisée - Vert en mode sombre, vert clair en mode clair */}
         <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-600 text-white border border-emerald-500/30' : 'bg-emerald-50 border border-emerald-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>Énergie économisée</div>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>{t.dashboard.energySaved}</div>
           <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-emerald-900'}`}>{stats.energySavedKwh.toFixed(1)} kWh</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.energy}%
@@ -163,7 +167,7 @@ const DashboardPage = () => {
         </div>
         {/* CO₂ évité - Vert en mode sombre, vert clair en mode clair */}
         <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-600 text-white border border-emerald-500/30' : 'bg-emerald-50 border border-emerald-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>CO₂ évité</div>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>{t.dashboard.co2AvoidedLabel}</div>
           <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-emerald-900'}`}>{stats.co2SavedKg.toFixed(1)} kg</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +18%
@@ -171,7 +175,7 @@ const DashboardPage = () => {
         </div>
         {/* Score éco moyen - Orange en mode sombre, beige/ambre clair en mode clair */}
         <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-orange-600 text-white border border-orange-500/30' : 'bg-amber-50 border border-amber-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-orange-50' : 'text-amber-600'}`}>Score éco moyen</div>
+          <div className={`text-xs mb-1 ${isDark ? 'text-orange-50' : 'text-amber-600'}`}>{t.dashboard.avgEcoScore}</div>
           <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-amber-900'}`}>{stats.ecoScore}/100</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-orange-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.score}%
@@ -179,7 +183,7 @@ const DashboardPage = () => {
         </div>
         {/* Points totaux - Orange en mode sombre, rose clair en mode clair */}
         <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-orange-600 text-white border border-orange-500/30' : 'bg-pink-50 border border-pink-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-orange-50' : 'text-pink-600'}`}>Points totaux</div>
+          <div className={`text-xs mb-1 ${isDark ? 'text-orange-50' : 'text-pink-600'}`}>{t.dashboard.totalPoints}</div>
           <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-pink-900'}`}>{stats.points}</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-orange-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.points}%
@@ -194,21 +198,20 @@ const DashboardPage = () => {
           <div className={`rounded-3xl p-5 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
             <div className="flex items-center justify-between mb-4">
               <h2 className={`text-base md:text-lg font-semibold ${isDark ? 'text-white' : ''}`}>
-                Trajets récents
+                {t.dashboard.recentTrips}
               </h2>
               <button
                 type="button"
                 onClick={() => navigate('/history')}
                 className={`text-xs font-medium ${isDark ? 'text-emerald-50 hover:text-white' : 'text-emerald-700 hover:text-emerald-800'}`}
               >
-                Voir tout
+                {t.dashboard.seeAll}
               </button>
             </div>
 
             {recentTrips.length === 0 ? (
               <div className={`text-sm ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
-                Aucun trajet pour le moment. Planifiez votre premier trajet pour
-                commencer.
+                {t.dashboard.noTrips} {t.dashboard.startTrip}
               </div>
             ) : (
               <div className="space-y-3">
@@ -237,19 +240,19 @@ const DashboardPage = () => {
                     </div>
                     <div className="flex items-center gap-4 md:text-right">
                       <div>
-                        <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Énergie économisée</div>
+                        <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>{t.dashboard.energySaved}</div>
                         <div className={`text-sm font-semibold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
                           -{(trip.energySavedKwh || 0).toFixed(1)} kWh
                         </div>
                       </div>
                       <div>
-                        <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Score</div>
+                        <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>{t.history.score}</div>
                         <div className={`text-sm font-semibold ${isDark ? 'text-amber-200' : 'text-amber-600'}`}>
                           {trip.ecoScore}/100
                         </div>
                       </div>
                       <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${isDark ? 'border-emerald-300/50 bg-emerald-400/30 text-emerald-50' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
-                        Terminé
+                        {t.history.completed}
                       </span>
                     </div>
                   </div>
@@ -261,9 +264,9 @@ const DashboardPage = () => {
           <div className={`rounded-3xl p-5 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
             <div className="flex items-center justify-between mb-4">
               <h2 className={`text-base md:text-lg font-semibold ${isDark ? 'text-white' : ''}`}>
-                Score Éco-conduite
+                {t.dashboard.ecoDrivingScore}
               </h2>
-              <span className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>Niveau 1</span>
+              <span className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>{t.dashboard.level}</span>
             </div>
             <div className="flex flex-col md:flex-row md:items-center gap-6">
               <div className="flex-1 flex flex-col items-center justify-center">
@@ -280,8 +283,7 @@ const DashboardPage = () => {
                   <span className={`font-semibold ${isDark ? 'text-white' : ''}`}>+23% d&apos;économie d&apos;énergie</span>
                 </div>
                 <p className={`text-xs md:text-sm ${isDark ? 'text-emerald-50' : 'text-slate-600'}`}>
-                  Continuez à suivre les recommandations de vitesse ECOSPEED pour
-                  améliorer votre score et débloquer de nouveaux badges.
+                  Continuez à suivre les recommandations de vitesse ECOSPEED pour {t.dashboard.improveScore}
                 </p>
               </div>
             </div>
