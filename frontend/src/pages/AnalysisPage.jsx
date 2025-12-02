@@ -237,6 +237,11 @@ const AnalysisPage = () => {
     try {
       const vehicle = getSelectedVehicleData();
       
+      // Calculer la batterie à l'arrivée estimée pour le calcul des recharges
+      // On utilise une estimation basée sur l'énergie typique consommée
+      // Le backend utilisera cette valeur pour calculer les recharges nécessaires
+      const estimatedBatteryEndPct = 20; // Valeur par défaut pour le calcul des recharges
+      
       const requestData = {
         start: startLocation,
         end: endLocation,
@@ -247,6 +252,7 @@ const AnalysisPage = () => {
         use_climate: useClimate,
         climate_intensity: climateIntensity,
         battery_start_pct: batteryStartPct,
+        battery_end_pct: estimatedBatteryEndPct, // Utilisé uniquement pour le calcul des recharges
         rho_air: rhoAir
       };
       
