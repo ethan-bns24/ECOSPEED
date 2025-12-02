@@ -115,10 +115,9 @@ const formatTime = (minutes) => {
 const AnalysisPage = () => {
   const navigate = useNavigate();
   
-  // Language and theme state - utiliser les valeurs par défaut depuis getAppSettings
-  const { language: defaultLang, theme: defaultTheme } = getAppSettings();
-  const [language, setLanguage] = useState(defaultLang);
-  const [theme, setTheme] = useState(defaultTheme);
+  // Language and theme state - initialiser avec des valeurs par défaut
+  const [language, setLanguage] = useState('en');
+  const [theme, setTheme] = useState('light');
   
   useEffect(() => {
     const { language: lang, theme: thm } = getAppSettings();
