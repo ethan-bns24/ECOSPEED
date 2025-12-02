@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Gauge, TrendingUp, TrendingDown, CheckCircle, AlertCircle } from 'lucide-react';
+import { getAppSettings } from '../lib/settingsStorage';
+import { TRANSLATIONS } from '../lib/translations';
 
 const RealTimeNavigation = ({ 
   currentSegment, 
