@@ -905,7 +905,7 @@ async def get_route_from_ors(start: str, end: str, user_max_speed: int = 130) ->
                 waytype_ranges = waytype_extra["values"]
         
         # Détecter si on est en zone urbaine
-        # Méthode 1: Analyser les types de routes (si >40% sont résidentielles/unclassified, on est en ville)
+        # Méthode 1: Analyser les types de routes (si >30% sont résidentielles/unclassified/service, on est probablement en ville)
         urban_indicators = {"residential", "unclassified", "service"}
         urban_segment_count = 0
         total_segment_length = 0
@@ -919,37 +919,64 @@ async def get_route_from_ors(start: str, end: str, user_max_speed: int = 130) ->
                 if waytype_name in urban_indicators:
                     urban_segment_count += segment_length
         
-        is_urban_by_road_type = total_segment_length > 0 and (urban_segment_count / total_segment_length) > 0.4
+        is_urban_by_road_type = total_segment_length > 0 and (urban_segment_count / total_segment_length) > 0.3
         
         # Méthode 2: Vérifier via géocodage inverse si départ/arrivée sont en zone urbaine
         is_urban_by_geocoding = False
+        urban_points_count = 0
+        total_points_checked = 0
+        
         try:
             if coords_list:
-                # Vérifier le point de départ
-                start_coord = coords_list[0]
-                lon_start, lat_start = start_coord[0], start_coord[1]
                 geolocator = Nominatim(user_agent="ecospeed", timeout=5)
-                location_start = geolocator.reverse(f"{lat_start}, {lon_start}", language='fr')
                 
-                if location_start:
-                    address_start = location_start.raw.get('address', {})
-                    # Vérifier si on est dans une ville
-                    place_types = ['city', 'town', 'village', 'suburb', 'municipality', 'hamlet']
-                    is_start_urban = any(address_start.get(pt) for pt in place_types)
+                # Vérifier plusieurs points le long de la route (départ, milieu, arrivée)
+                check_indices = [0]  # Toujours vérifier le départ
+                if len(coords_list) > 1:
+                    check_indices.append(len(coords_list) - 1)  # Arrivée
+                if len(coords_list) > 2:
+                    check_indices.append(len(coords_list) // 2)  # Milieu
+                
+                for idx in check_indices:
+                    coord = coords_list[idx]
+                    lon, lat = coord[0], coord[1]
                     
-                    # Vérifier aussi le point d'arrivée
-                    end_coord = coords_list[-1] if len(coords_list) > 1 else start_coord
-                    lon_end, lat_end = end_coord[0], end_coord[1]
-                    location_end = geolocator.reverse(f"{lat_end}, {lon_end}", language='fr')
-                    
-                    if location_end:
-                        address_end = location_end.raw.get('address', {})
-                        is_end_urban = any(address_end.get(pt) for pt in place_types)
+                    try:
+                        location = geolocator.reverse(f"{lat}, {lon}", language='fr', timeout=5)
+                        total_points_checked += 1
                         
-                        # Si départ ET arrivée sont en zone urbaine, considérer tout le trajet comme urbain
-                        if is_start_urban and is_end_urban:
-                            is_urban_by_geocoding = True
-                            logger.info(f"Detected urban route: start={address_start.get('city') or address_start.get('town')}, end={address_end.get('city') or address_end.get('town')}")
+                        if location:
+                            address = location.raw.get('address', {})
+                            # Vérifier si on est dans une ville (plusieurs indicateurs)
+                            place_types = ['city', 'town', 'village', 'suburb', 'municipality', 'hamlet']
+                            has_urban_place = any(address.get(pt) for pt in place_types)
+                            
+                            # Vérifier aussi le code postal français (commence par 2 chiffres)
+                            postal_code = address.get('postcode', '')
+                            is_french_urban = False
+                            if postal_code and len(postal_code) >= 2:
+                                # En France, les codes postaux commencent par 2 chiffres
+                                # Les grandes villes ont souvent des codes postaux spécifiques
+                                is_french_urban = postal_code[:2].isdigit()
+                            
+                            # Si on a un type de lieu urbain OU un code postal français, considérer comme urbain
+                            if has_urban_place or is_french_urban:
+                                urban_points_count += 1
+                                
+                    except Exception as e:
+                        logger.debug(f"Geocoding failed for point {idx}: {e}")
+                        continue
+                
+                # Si au moins 2 points sur 3 sont urbains, ou si départ ET arrivée sont urbains
+                if total_points_checked >= 2:
+                    if urban_points_count >= 2 or (urban_points_count >= 1 and total_points_checked == 2):
+                        is_urban_by_geocoding = True
+                        logger.info(f"Detected urban route: {urban_points_count}/{total_points_checked} points are in urban areas")
+                elif total_points_checked == 1 and urban_points_count == 1:
+                    # Si on n'a pu vérifier qu'un seul point et qu'il est urbain, considérer comme urbain
+                    is_urban_by_geocoding = True
+                    logger.info(f"Detected urban route: single checked point is urban")
+                    
         except Exception as e:
             logger.warning(f"Could not determine urban zone from geocoding: {e}")
         
