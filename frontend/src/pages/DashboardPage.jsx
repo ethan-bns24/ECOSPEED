@@ -341,7 +341,9 @@ const DashboardPage = () => {
                       <div
                         className={`h-full rounded-full ${
                           badge.unlocked
-                            ? 'bg-emerald-500'
+                            ? isDark
+                              ? 'bg-white'
+                              : 'bg-emerald-500'
                             : isDark
                               ? 'bg-emerald-400/50'
                               : 'bg-emerald-300'

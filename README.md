@@ -26,22 +26,27 @@ Energy consumption calculation based on:
 - **Aerodynamic drag**: air resistance
 - **Regenerative braking**: energy recovery on downhill (with efficiency losses)
 
-### 3. Three Driving Scenarios
+### 3. Driving Scenarios & Eco-Speed
 
-#### LIMIT (red) 🔴
-Theoretical high-speed scenario following legal speed limits.
+- **LIMIT (red) 🔴**: theoretical scenario following legal limits (reference for time and energy).
+- **ECO (green) 🟢**: optimized speed on each segment to minimize energy while keeping a reasonable travel time.
+- A **realistic “real” speed** is still computed in the backend for KPIs, but the UI now focuses on **LIMIT vs ECO** and on your **live speed** in the GPS interface.
 
-#### REAL (blue) 🔵
-Simulated actual driver behavior with variations.
+### 4. Real-Time Navigation (GPS Mode)
 
-#### ECO (green) 🟢
-Optimized profile to minimize energy consumption while keeping travel time reasonable.
-
-### 4. Real-time Simulated Navigation
-- Eco-speed recommendations segment by segment
-- Interactive map visualization
-- Progress bar and current segment details
-- Contextual messages for the driver
+- Full-screen **GPS-style interface** with:
+  - Turn‑by‑turn instructions (“turn right in 200 m”, …)
+  - Remaining distance + remaining time (hours + minutes)
+  - Map centered on the **driver’s real GPS position**
+- **Live speed bubble** at the bottom:
+  - Shows **current speed** in large, color‑coded text:
+    - Blue if below eco‑speed
+    - Green around eco‑speed
+    - Red if above eco‑speed
+  - Small red badge with the **speed limit** flashes when you exceed the limit.
+- **Two modes**:
+  - **Real GPS** (smartphone) – speed and position from `navigator.geolocation`.
+  - **Demo mode (desktop)** – position fixed, speed controlled with **Z/S keys** for presentations.
 
 ### 5. Results Dashboard
 **KPI Cards:**
@@ -51,7 +56,7 @@ Optimized profile to minimize energy consumption while keeping travel time reaso
 - CO₂ Avoided (kg)
 
 **Charts:**
-- Speed profile vs distance (3 curves)
+- Speed profile vs distance (**LIMIT vs ECO**)
 - Energy consumption by scenario (bars)
 - Travel time by scenario (bars)
 
@@ -334,11 +339,3 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
 - **Frontend**: Vercel (recommended) or Netlify
 - **Backend**: Railway or Render
 - **Database**: MongoDB Atlas (cloud) or local MongoDB
-
-## 📞 Support
-
-For any questions about the project, please consult the source code or integrated documentation.
-
----
-
-**Developed with ❤️ for an engineering school project**

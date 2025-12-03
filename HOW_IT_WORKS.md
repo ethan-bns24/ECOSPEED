@@ -135,7 +135,7 @@ Sur les descentes ou lors de décélérations, l'énergie est négative :
 # Avec 70% de régénération, on récupère de l'énergie
 ```
 
-## 3. Les Trois Scénarios de Conduite
+## 3. Les Scénarios de Conduite
 
 ### LIMIT (Scénario Rouge) 🔴
 
@@ -153,30 +153,7 @@ speed_limit = segment["speed_limit"]  # Utilise directement la limitation
 - **Consommation élevée** : beaucoup de traînée aérodynamique à haute vitesse
 - **Temps minimal** : le plus rapide possible légalement
 
-### REAL (Scénario Bleu) 🔵
-
-**Description :** Simulation du comportement réel d'un conducteur
-
-**Calcul :**
-```python
-def simulate_real_speed(speed_limit, eco_speed, segment_index):
-    # Base : légèrement en dessous de la limite
-    base_speed = speed_limit × 0.92
-    
-    # Variation aléatoire (-10% à +5%)
-    variation = random.uniform(-0.10, 0.05)
-    real_speed = base_speed × (1 + variation)
-    
-    # Clamp entre 50 km/h et 105% de la limite
-    return max(50, min(real_speed, speed_limit × 1.05))
-```
-
-**Caractéristiques :**
-- Variations de comportement humain
-- Parfois au-dessus, parfois en dessous de la limite
-- Plus de variations en zone urbaine
-- **Consommation réaliste** : base de référence pour comparaison
-- **Temps réaliste** : temps de référence
+> Remarque : un scénario **REAL (bleu)** est toujours calculé en interne pour les KPIs, mais il n'est plus affiché dans les graphiques. L'interface utilisateur se concentre sur la comparaison **LIMIT vs ECO** et sur la vitesse réelle du conducteur.
 
 ### ECO (Scénario Vert) 🟢
 
@@ -193,12 +170,12 @@ def calculate_eco_speed(distance, elevation_change, speed_limit, vehicle):
         eco_speed = max(60, speed_limit × 0.65)
         # P = F × v → en réduisant v, on réduit P exponentiellement
         
-    elif slope < -0.02:  # Descente significative
+    elif slope < -0.02:  # Descente significative (< -2 %)
         # Vitesse modérée pour maximiser la régénération
         eco_speed = min(speed_limit × 0.85, 110)
         # Balance entre sécurité et efficacité de régénération
         
-    else:  # Terrain plat
+    else:  # Terrain quasi plat
         # Légèrement sous la limite pour optimiser l'aérodynamique
         eco_speed = speed_limit × 0.88
         # F_aero ∝ v² → petite réduction = grosse économie
@@ -256,7 +233,49 @@ def get_eco_message(segment):
         return "Balance optimale entre énergie et temps"
 ```
 
-## 5. Calcul des KPIs
+## 5. Interface GPS Temps Réel
+
+### Vitesse réelle et codes couleur
+
+Pendant la navigation, l'application récupère en continu la position et la vitesse du téléphone via l'API navigateur :
+
+```javascript
+navigator.geolocation.watchPosition(
+  (pos) => {
+    const { latitude, longitude, speed } = pos.coords
+    // Position sur la carte
+    setCurrentPosition([latitude, longitude])
+    // Conversion de m/s en km/h
+    if (typeof speed === 'number' && speed >= 0) {
+      setCurrentSpeed(speed * 3.6)
+    }
+  }
+)
+```
+
+Cette vitesse réelle est comparée à la **vitesse ECO** du segment courant :
+
+- **Bleu** : vitesse < ECO − 1 km/h → possibilité d'accélérer pour rester optimal.
+- **Vert** : |vitesse − ECO| ≤ 1 km/h → zone optimale.
+- **Rouge** : vitesse > ECO + 1 km/h → recommandation de ralentir.
+
+En parallèle, la **limitation légale** est surveillée :
+
+- Si `vitesse > speed_limit + 1 km/h`, un badge rouge clignotant `50 km/h` (par exemple) apparaît dans la bulle de vitesse pour signaler le dépassement.
+
+### Mode démo
+
+Pour les présentations (sur PC en salle de projet), un **mode démo** permet de :
+
+- Geler la position sur la carte (pas besoin de GPS réel).
+- Contrôler manuellement la vitesse avec le clavier :
+  - `Z` : +1 km/h
+  - `S` : −1 km/h
+- Visualiser en direct les changements de couleur et les alertes de limitation.
+
+Ce mode ne change pas la logique de calcul : il se contente de remplacer la vitesse venant du GPS par une valeur manipulée par l'utilisateur.
+
+## 6. Calcul des KPIs
 
 ### Énergie Eco
 ```python
