@@ -646,6 +646,29 @@ const AnalysisPage = () => {
       setEndLocation(valueToUse);
     }
   };
+
+  // Permet de reconfigurer les adresses domicile / travail
+  const handleEditFavorites = () => {
+    if (typeof window === 'undefined') return;
+
+    const homeLabel =
+      language === 'fr' ? 'Adresse de votre domicile' : 'Your home address';
+    const workLabel =
+      language === 'fr'
+        ? 'Adresse de votre lieu de travail'
+        : 'Your work address';
+
+    const newHome = window.prompt(homeLabel, favoriteLocations.home || '');
+    const newWork = window.prompt(workLabel, favoriteLocations.work || '');
+
+    const next = {
+      home: newHome && newHome.trim() ? newHome.trim() : '',
+      work: newWork && newWork.trim() ? newWork.trim() : '',
+    };
+
+    setFavoriteLocations(next);
+    updateFavoriteLocations(next);
+  };
   
   // Si on est en navigation, afficher la carte en plein écran style Waze
   if (isNavigating && routeData && routeData.segments[currentSegmentIndex]) {
@@ -780,6 +803,19 @@ const AnalysisPage = () => {
                       }`}
                     >
                       {language === 'fr' ? 'Travail' : 'Work'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleEditFavorites}
+                      className={`ml-auto underline-offset-2 ${
+                        isDark
+                          ? 'text-emerald-200/80 hover:text-emerald-100'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      {language === 'fr'
+                        ? 'Modifier domicile / travail'
+                        : 'Edit home / work'}
                     </button>
                   </div>
                 </div>
