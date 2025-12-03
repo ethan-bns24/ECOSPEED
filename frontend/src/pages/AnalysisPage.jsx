@@ -195,6 +195,7 @@ const AnalysisPage = () => {
   const [userLocation, setUserLocation] = useState(null); // Position GPS réelle si disponible
   const [useRealGps, setUseRealGps] = useState(false); // Navigation basée sur GPS réel
   const gpsWatchIdRef = useRef(null);
+  const [demoMode, setDemoMode] = useState(false);
   
   // Vehicle profiles: filtrées par les préférences (véhicules actifs)
   const [availableProfiles, setAvailableProfiles] = useState(
@@ -258,6 +259,7 @@ const AnalysisPage = () => {
         gpsWatchIdRef.current = null;
       }
       setUseRealGps(false);
+      setDemoMode(false);
       return;
     }
 
@@ -293,6 +295,39 @@ const AnalysisPage = () => {
       }
     };
   }, [isNavigating]);
+
+  // Mode démo clavier (Z / S) pour ajuster la vitesse simulée autour de la vitesse éco
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleKeyDown = (event) => {
+      if (!isNavigating || useRealGps || !routeData || !routeData.segments) return;
+      const key = event.key.toLowerCase();
+      if (key !== 'z' && key !== 's') return;
+
+      const currentSegment = routeData.segments[currentSegmentIndex];
+      if (!currentSegment) return;
+
+      setDemoMode(true);
+
+      setCurrentSpeed((prev) => {
+        let base = prev;
+        if (!base || base <= 0) {
+          base = Math.max(0, (currentSegment.eco_speed || 0) - 2);
+        }
+        if (key === 'z') {
+          return base + 1;
+        } else {
+          return Math.max(0, base - 1);
+        }
+      });
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isNavigating, useRealGps, routeData, currentSegmentIndex]);
 
   // Tenter de récupérer la localisation de l'utilisateur une fois au chargement
   useEffect(() => {
@@ -651,7 +686,7 @@ const AnalysisPage = () => {
         <RealTimeNavigation
           currentSegment={routeData.segments[currentSegmentIndex]}
           isNavigating={isNavigating}
-          onSpeedChange={setCurrentSpeed}
+          currentSpeed={currentSpeed}
         />
         
         {/* Boutons de contrôle en overlay */}

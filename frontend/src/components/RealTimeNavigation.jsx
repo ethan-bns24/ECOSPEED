@@ -6,10 +6,8 @@ import { TRANSLATIONS } from '../lib/translations';
 const RealTimeNavigation = ({ 
   currentSegment, 
   isNavigating,
-  onSpeedChange 
+  currentSpeed = 0,
 }) => {
-  const [currentSpeed, setCurrentSpeed] = useState(0);
-  const [speedHistory, setSpeedHistory] = useState([]);
   const [language, setLanguage] = useState('en');
 
   useEffect(() => {
@@ -34,53 +32,6 @@ const RealTimeNavigation = ({
 
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
-  useEffect(() => {
-    if (!isNavigating || !currentSegment) {
-      setCurrentSpeed(0);
-      return;
-    }
-
-    // Simuler la vitesse actuelle basée sur la vitesse éco recommandée
-    // Ajouter une variation aléatoire pour simuler la conduite réelle
-    const targetSpeed = currentSegment.eco_speed || 0;
-    const speedVariation = (Math.random() - 0.5) * 10; // Variation de ±5 km/h
-    const simulatedSpeed = Math.max(0, Math.min(
-      currentSegment.speed_limit || 130,
-      targetSpeed + speedVariation
-    ));
-
-    // Animation progressive vers la vitesse cible
-    const interval = setInterval(() => {
-      setCurrentSpeed(prev => {
-        const diff = simulatedSpeed - prev;
-        const step = diff * 0.1; // Animation fluide
-        const newSpeed = prev + step;
-        return Math.round(newSpeed * 10) / 10;
-      });
-    }, 100);
-
-    // Mettre à jour la vitesse cible périodiquement
-    const updateInterval = setInterval(() => {
-      const newVariation = (Math.random() - 0.5) * 10;
-      const newTargetSpeed = Math.max(0, Math.min(
-        currentSegment.speed_limit || 130,
-        targetSpeed + newVariation
-      ));
-      setSpeedHistory(prev => [...prev.slice(-10), newTargetSpeed]);
-    }, 2000);
-
-    return () => {
-      clearInterval(interval);
-      clearInterval(updateInterval);
-    };
-  }, [isNavigating, currentSegment]);
-
-  useEffect(() => {
-    if (onSpeedChange) {
-      onSpeedChange(currentSpeed);
-    }
-  }, [currentSpeed, onSpeedChange]);
-
   if (!currentSegment) {
     return null;
   }
@@ -89,6 +40,15 @@ const RealTimeNavigation = ({
   const ecoSpeed = currentSegment.eco_speed || 0;
   const speedDiff = currentSpeed - ecoSpeed;
   const speedDiffPercent = ecoSpeed > 0 ? (speedDiff / ecoSpeed) * 100 : 0;
+
+  // Couleur principale de la vitesse en fonction de la vitesse éco
+  const isBelowEco = currentSpeed < ecoSpeed - 1;
+  const isAboveEco = currentSpeed > ecoSpeed + 1;
+  const speedColorClass = isBelowEco
+    ? 'text-blue-400'
+    : isAboveEco
+    ? 'text-red-400'
+    : 'text-emerald-300';
 
   // Déterminer le statut de la vitesse
   const getSpeedStatus = () => {
@@ -128,6 +88,7 @@ const RealTimeNavigation = ({
 
   const speedStatus = getSpeedStatus();
   const StatusIcon = speedStatus.icon;
+  const aboveLimit = currentSpeed > speedLimit + 1;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#0a2e1a] via-[#0a2e1a] to-transparent border-t border-emerald-800/30 z-50 px-3 py-2 md:p-6">
@@ -139,7 +100,7 @@ const RealTimeNavigation = ({
             <span>{language === 'fr' ? 'Vitesse actuelle' : 'Current speed'}</span>
           </div>
           <div className="flex items-baseline gap-3 mb-1">
-            <div className="text-4xl md:text-5xl font-bold text-white">
+            <div className={`text-4xl md:text-5xl font-bold ${speedColorClass}`}>
               {Math.round(currentSpeed)}
               <span className="text-xl md:text-2xl text-emerald-200/70 ml-1">km/h</span>
             </div>
@@ -157,10 +118,10 @@ const RealTimeNavigation = ({
         </div>
 
         {/* Limitation de vitesse */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-2xl px-3 py-2 md:p-4 border border-white/10">
+        <div className={`bg-white/5 backdrop-blur-sm rounded-2xl px-3 py-2 md:p-4 border ${aboveLimit ? 'border-red-500 animate-pulse' : 'border-white/10'}`}>
           <div className="text-xs text-emerald-200/70 mb-2">{language === 'fr' ? 'Limitation' : 'Speed limit'}</div>
-          <div className="flex items-center gap-3">
-            <div className="text-4xl md:text-5xl font-bold text-red-400">
+            <div className="flex items-center gap-3">
+            <div className={`text-4xl md:text-5xl font-bold ${aboveLimit ? 'text-red-500' : 'text-red-400'}`}>
               {speedLimit}
               <span className="text-xl md:text-2xl text-red-300/70 ml-1">km/h</span>
             </div>

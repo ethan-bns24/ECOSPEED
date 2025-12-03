@@ -8,7 +8,6 @@ const SpeedChart = ({ segments }) => {
     return {
       distance: distanceKm.toFixed(1),
       limit: segment.speed_limit,
-      real: segment.real_speed,
       eco: segment.eco_speed,
       segment: index + 1
     };
@@ -23,9 +22,6 @@ const SpeedChart = ({ segments }) => {
           <div className="space-y-1">
             <p className="text-sm text-red-400">
               LIMIT: {payload[0].payload.limit} km/h
-            </p>
-            <p className="text-sm text-blue-400">
-              REAL: {payload[0].payload.real} km/h
             </p>
             <p className="text-sm text-[#4ade80]">
               ECO: {payload[0].payload.eco} km/h
@@ -62,14 +58,6 @@ const SpeedChart = ({ segments }) => {
             stroke="#ef4444" 
             strokeWidth={2}
             name="LIMIT"
-            dot={false}
-          />
-          <Line 
-            type="monotone" 
-            dataKey="real" 
-            stroke="#3b82f6" 
-            strokeWidth={2}
-            name="REAL"
             dot={false}
           />
           <Line 
