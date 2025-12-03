@@ -261,7 +261,7 @@ const AnalysisPage = () => {
 
   // Pendant la navigation, suivre en continu la position GPS réelle de l'utilisateur
   useEffect(() => {
-    if (typeof window === 'undefined' || !('geolocation' in navigator) || !isMobileDevice || demoMode) {
+    if (typeof window === 'undefined' || !('geolocation' in navigator) || demoMode) {
       return;
     }
 
@@ -272,7 +272,6 @@ const AnalysisPage = () => {
         gpsWatchIdRef.current = null;
       }
       setUseRealGps(false);
-      setDemoMode(false);
       return;
     }
 
@@ -630,8 +629,10 @@ const AnalysisPage = () => {
       setIsNavigating(true);
       setShowResults(false);
       setCurrentSpeed(0);
-      // Initialiser la position au début du trajet
-      if (routeData.route_coordinates && routeData.route_coordinates.length > 0) {
+      // Initialiser la position à partir de la localisation réelle si disponible
+      if (userLocation) {
+        setCurrentPosition([userLocation.lat, userLocation.lon]);
+      } else if (routeData.route_coordinates && routeData.route_coordinates.length > 0) {
         setCurrentPosition(routeData.route_coordinates[0]);
       }
     }
@@ -704,7 +705,7 @@ const AnalysisPage = () => {
         />
         
         {/* Boutons de contrôle en overlay */}
-        <div className="fixed top-20 md:top-24 right-3 z-[80] flex flex-col gap-2">
+        <div className="fixed top-20 md:top-24 left-3 md:left-4 z-[80] flex flex-col gap-2">
           <Button
             onClick={handlePauseNavigation}
             size="sm"

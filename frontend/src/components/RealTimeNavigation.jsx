@@ -44,6 +44,7 @@ const RealTimeNavigation = ({
   // Couleur principale de la vitesse en fonction de la vitesse éco
   const isBelowEco = currentSpeed < ecoSpeed - 1;
   const isAboveEco = currentSpeed > ecoSpeed + 1;
+  const aboveLimit = currentSpeed > speedLimit + 1;
   const speedColorClass = isBelowEco
     ? 'text-blue-400'
     : isAboveEco
@@ -91,12 +92,21 @@ const RealTimeNavigation = ({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#0a2e1a] via-[#0a2e1a] to-transparent border-t border-emerald-800/30 z-50 px-3 py-2 md:p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto space-y-3">
         {/* Bulle Current speed uniquement */}
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl px-3 py-2 md:p-4 border border-white/10">
-          <div className="text-xs text-emerald-200/70 mb-2 flex items-center gap-2">
-            <Gauge className="w-4 h-4" />
-            <span>{language === 'fr' ? 'Vitesse actuelle' : 'Current speed'}</span>
+          <div className="text-xs text-emerald-200/70 mb-2 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Gauge className="w-4 h-4" />
+              <span>{language === 'fr' ? 'Vitesse actuelle' : 'Current speed'}</span>
+            </div>
+            {aboveLimit && (
+              <div className="flex items-center gap-1 animate-pulse">
+                <span className="text-[10px] md:text-xs bg-red-600 text-white px-2 py-0.5 rounded-full font-semibold shadow-sm">
+                  {speedLimit} km/h
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex items-baseline gap-3 mb-1">
             <div className={`text-4xl md:text-5xl font-bold ${speedColorClass}`}>
@@ -116,6 +126,13 @@ const RealTimeNavigation = ({
           </div>
         </div>
 
+        {aboveLimit && (
+          <div className="flex justify-center">
+            <div className="bg-red-600/90 text-white px-4 md:px-6 py-2 rounded-2xl font-semibold text-sm md:text-base animate-pulse shadow-lg border border-red-300">
+              {language === 'fr' ? 'Limitation dépassée' : 'Speed limit exceeded'} · {speedLimit} km/h
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
