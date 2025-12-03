@@ -247,16 +247,12 @@ const AnalysisPage = () => {
     }
   }, []);
 
-  // Détecter si on est sur mobile (pour activer GPS réel) ou sur desktop (mode démo)
+  // Détecter si on est sur mobile (pour quelques réglages d'UI)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const ua = navigator.userAgent || '';
     const mobile = /Android|iPhone|iPad|iPod/i.test(ua) || window.innerWidth < 768;
     setIsMobileDevice(mobile);
-    // Sur desktop, on active le mode démo par défaut (pas de mouvement auto sur la carte)
-    if (!mobile) {
-      setDemoMode(true);
-    }
   }, []);
 
   // Pendant la navigation, suivre en continu la position GPS réelle de l'utilisateur
@@ -265,7 +261,6 @@ const AnalysisPage = () => {
       return;
     }
 
-    // Quand on arrête la navigation, on coupe le watchPosition
     if (!isNavigating) {
       if (gpsWatchIdRef.current !== null) {
         navigator.geolocation.clearWatch(gpsWatchIdRef.current);
@@ -278,11 +273,9 @@ const AnalysisPage = () => {
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         const { latitude, longitude, speed } = pos.coords;
-        // Position actuelle pour la carte (lat, lon)
         setCurrentPosition([latitude, longitude]);
         setUseRealGps(true);
 
-        // Si la vitesse est disponible, on l'utilise comme vitesse réelle (m/s -> km/h)
         if (typeof speed === 'number' && !Number.isNaN(speed) && speed >= 0) {
           const kmh = speed * 3.6;
           setCurrentSpeed(kmh);
@@ -306,11 +299,11 @@ const AnalysisPage = () => {
         gpsWatchIdRef.current = null;
       }
     };
-  }, [isNavigating]);
+  }, [isNavigating, demoMode]);
 
-  // Mode démo clavier (Z / S) pour ajuster la vitesse manuellement (desktop uniquement)
+  // Mode démo clavier (Z / S) pour ajuster la vitesse manuellement (uniquement si mode démo activé)
   useEffect(() => {
-    if (typeof window === 'undefined' || isMobileDevice === true) return;
+    if (typeof window === 'undefined' || isMobileDevice === true || !demoMode) return;
 
     const handleKeyDown = (event) => {
       if (!isNavigating || useRealGps || !routeData || !routeData.segments) return;
@@ -339,7 +332,7 @@ const AnalysisPage = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isNavigating, useRealGps, routeData, currentSegmentIndex]);
+  }, [isNavigating, useRealGps, routeData, currentSegmentIndex, demoMode, isMobileDevice]);
 
   // Tenter de récupérer la localisation de l'utilisateur une fois au chargement
   useEffect(() => {
@@ -558,70 +551,7 @@ const AnalysisPage = () => {
     await performRouteCalculation(resolvedStart);
   };
   
-  // Navigation simulation avec mise à jour de position en temps réel
-  useEffect(() => {
-    // Si on utilise la position GPS réelle ou qu'on est en mode démo (desktop),
-    // on désactive la simulation de mouvement sur la carte
-    if (useRealGps || demoMode) {
-      return;
-    }
-
-    if (!isNavigating || !routeData || !routeData.route_coordinates || routeData.route_coordinates.length === 0) {
-      setCurrentPosition(null);
-      return;
-    }
-
-    const currentSegment = routeData.segments[currentSegmentIndex];
-    if (!currentSegment) return;
-
-    // Calculer les indices de coordonnées pour ce segment
-    const segmentStartIndex = Math.floor((currentSegmentIndex / routeData.segments.length) * routeData.route_coordinates.length);
-    const segmentEndIndex = Math.min(
-      Math.floor(((currentSegmentIndex + 1) / routeData.segments.length) * routeData.route_coordinates.length),
-      routeData.route_coordinates.length - 1
-    );
-
-    // Simuler la progression dans le segment basée sur la vitesse
-    // Ralentir la progression pour un effet plus réaliste (diviser par 10 pour simuler une vitesse plus lente)
-    const segmentDistance = currentSegment.distance || 0; // en mètres
-    const speedMs = currentSpeed > 0 ? (currentSpeed / 3.6) : (currentSegment.eco_speed / 3.6); // convertir km/h en m/s
-    const simulationSpeed = speedMs / 10; // Ralentir la progression pour un effet plus réaliste
-
-    let progressInSegment = 0;
-    const progressInterval = setInterval(() => {
-      progressInSegment += simulationSpeed * 0.1; // Mise à jour toutes les 100ms avec vitesse ralentie
-      const progressRatio = Math.min(1, progressInSegment / segmentDistance);
-
-      if (progressRatio >= 1) {
-        // Passer au segment suivant
-        if (currentSegmentIndex < routeData.segments.length - 1) {
-          setCurrentSegmentIndex(prev => prev + 1);
-          progressInSegment = 0;
-        } else {
-          // Navigation terminée
-          setIsNavigating(false);
-          setShowResults(true);
-          setCurrentPosition(null);
-          setCurrentSpeed(0);
-          toast.success('Navigation complete! View results below.');
-          clearInterval(progressInterval);
-          return;
-        }
-      } else {
-        // Calculer la position actuelle dans le segment
-        const coordIndex = Math.floor(segmentStartIndex + (segmentEndIndex - segmentStartIndex) * progressRatio);
-        if (coordIndex < routeData.route_coordinates.length) {
-          setCurrentPosition(routeData.route_coordinates[coordIndex]);
-          
-          // Calculer la distance restante jusqu'à la fin du segment (prochain virage)
-          const remainingDistance = segmentDistance - progressInSegment; // en mètres
-          setDistanceToNextTurn(remainingDistance / 1000); // convertir en km
-        }
-      }
-    }, 100); // Mise à jour toutes les 100ms pour une animation fluide
-
-    return () => clearInterval(progressInterval);
-  }, [isNavigating, currentSegmentIndex, routeData, currentSpeed]);
+  // Plus de simulation automatique : la carte reste sur la position GPS (ou initiale) ou en mode démo.
   
   const handleStartNavigation = () => {
     if (routeData) {

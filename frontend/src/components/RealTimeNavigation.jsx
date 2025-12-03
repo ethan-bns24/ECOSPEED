@@ -92,13 +92,25 @@ const RealTimeNavigation = ({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#0a2e1a] via-[#0a2e1a] to-transparent border-t border-emerald-800/30 z-50 px-3 py-2 md:p-6">
-      <div className="max-w-4xl mx-auto space-y-3">
+      <div className="max-w-4xl mx-auto">
         {/* Bulle Current speed uniquement */}
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl px-3 py-2 md:p-4 border border-white/10">
-          <div className="text-xs text-emerald-200/70 mb-2 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Gauge className="w-4 h-4" />
-              <span>{language === 'fr' ? 'Vitesse actuelle' : 'Current speed'}</span>
+          <div className="text-xs text-emerald-200/70 mb-2 flex items-center gap-2">
+            <Gauge className="w-4 h-4" />
+            <span>{language === 'fr' ? 'Vitesse actuelle' : 'Current speed'}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-baseline gap-3">
+              <div className={`text-4xl md:text-5xl font-bold ${speedColorClass}`}>
+                {Math.round(currentSpeed)}
+                <span className="text-xl md:text-2xl text-emerald-200/70 ml-1">km/h</span>
+              </div>
+              {/* Indicateur visuel simple (flèche) pour conduite */}
+              <div
+                className={`rounded-full px-2 py-1 flex items-center justify-center border ${speedStatus.bgColor} ${speedStatus.borderColor}`}
+              >
+                <StatusIcon className={`w-4 h-4 md:w-5 md:h-5 ${speedStatus.color}`} />
+              </div>
             </div>
             {aboveLimit && (
               <div className="flex items-center gap-1 animate-pulse">
@@ -108,31 +120,11 @@ const RealTimeNavigation = ({
               </div>
             )}
           </div>
-          <div className="flex items-baseline gap-3 mb-1">
-            <div className={`text-4xl md:text-5xl font-bold ${speedColorClass}`}>
-              {Math.round(currentSpeed)}
-              <span className="text-xl md:text-2xl text-emerald-200/70 ml-1">km/h</span>
-            </div>
-            {/* Indicateur visuel simple (flèche) pour conduite */}
-            <div
-              className={`rounded-full px-2 py-1 flex items-center justify-center border ${speedStatus.bgColor} ${speedStatus.borderColor}`}
-            >
-              <StatusIcon className={`w-4 h-4 md:w-5 md:h-5 ${speedStatus.color}`} />
-            </div>
-          </div>
           {/* Message détaillé (caché sur très petit écran pour gagner de la place) */}
-          <div className={`hidden sm:inline-flex text-xs md:text-sm items-center gap-1 ${speedStatus.color}`}>
+          <div className={`hidden sm:inline-flex text-xs md:text-sm items-center gap-1 ${speedStatus.color} mt-1`}>
             <span>{speedStatus.message}</span>
           </div>
         </div>
-
-        {aboveLimit && (
-          <div className="flex justify-center">
-            <div className="bg-red-600/90 text-white px-4 md:px-6 py-2 rounded-2xl font-semibold text-sm md:text-base animate-pulse shadow-lg border border-red-300">
-              {language === 'fr' ? 'Limitation dépassée' : 'Speed limit exceeded'} · {speedLimit} km/h
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
