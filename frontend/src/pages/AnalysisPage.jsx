@@ -584,7 +584,9 @@ const AnalysisPage = () => {
   };
   
   const handlePauseNavigation = () => {
+    // On quitte le mode plein écran GPS mais on ré-affiche le dashboard de résultats
     setIsNavigating(false);
+    setShowResults(true);
   };
   
   const handleResetNavigation = () => {
