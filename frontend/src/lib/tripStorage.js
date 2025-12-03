@@ -170,4 +170,10 @@ export function deleteTrip(tripId) {
   return filtered;
 }
 
+// Supprime tous les trajets
+export function deleteAllTrips() {
+  saveTrips([]);
+  return [];
+}
+
 

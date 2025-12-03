@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Activity, BarChart2, Leaf, Zap } from 'lucide-react';
+import { Activity, BarChart2, Leaf, Zap, Trash2 } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
-import { getAllTrips } from '../lib/tripStorage';
+import { getAllTrips, deleteTrip, deleteAllTrips } from '../lib/tripStorage';
 import { getAppSettings } from '../lib/settingsStorage';
 import { TRANSLATIONS } from '../lib/translations';
+import { toast } from 'sonner';
 
 const StatsPage = () => {
   const [trips, setTrips] = useState([]);
@@ -50,6 +51,22 @@ const StatsPage = () => {
         )
       : 0;
 
+  const handleDeleteTrip = (tripId) => {
+    if (window.confirm(t.history.confirmDelete)) {
+      deleteTrip(tripId);
+      setTrips(getAllTrips());
+      toast.success(language === 'fr' ? 'Trajet supprimé avec succès' : 'Trip deleted successfully');
+    }
+  };
+
+  const handleClearAll = () => {
+    if (window.confirm(t.history.confirmClearAll)) {
+      deleteAllTrips();
+      setTrips([]);
+      toast.success(language === 'fr' ? 'Historique effacé' : 'History cleared');
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="mb-6">
@@ -59,7 +76,7 @@ const StatsPage = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4">
         <div className="bg-emerald-600 text-white rounded-2xl px-4 py-4 shadow-sm">
           <div className="text-xs text-emerald-100 mb-1">{t.stats.energySavedLabel}</div>
           <div className="text-2xl font-semibold">
@@ -90,6 +107,20 @@ const StatsPage = () => {
             <Zap className={`w-4 h-4 ${isDark ? 'text-emerald-100' : 'text-emerald-600'}`} />
             {t.stats.energySavedPerTrip}
           </h2>
+          {trips.length > 0 && (
+            <button
+              type="button"
+              onClick={handleClearAll}
+              className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium border ${
+                isDark
+                  ? 'border-emerald-200/60 text-emerald-50 hover:bg-emerald-400/20'
+                  : 'border-red-200 text-red-600 hover:bg-red-50'
+              }`}
+            >
+              <Trash2 className="w-3 h-3" />
+              {t.history.clearAll}
+            </button>
+          )}
         </div>
         {trips.length === 0 ? (
           <div className={`text-sm ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
@@ -100,14 +131,24 @@ const StatsPage = () => {
             {trips.map((trip) => (
               <li
                 key={trip.id}
-                className={`flex items-center justify-between border-b last:border-0 py-2 ${isDark ? 'border-emerald-300/30' : 'border-slate-100'}`}
+                className={`flex items-center justify-between gap-3 border-b last:border-0 py-2 ${isDark ? 'border-emerald-300/30' : 'border-slate-100'}`}
               >
-                <span className={isDark ? 'text-emerald-50' : 'text-slate-600'}>
-                  {trip.startLocation} → {trip.endLocation}
-                </span>
-                <span className={`font-semibold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
-                  -{(trip.energySavedKwh || 0).toFixed(2)} kWh
-                </span>
+                <div className="flex-1 flex items-center justify-between gap-3">
+                  <span className={isDark ? 'text-emerald-50' : 'text-slate-600'}>
+                    {trip.startLocation} → {trip.endLocation}
+                  </span>
+                  <span className={`font-semibold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
+                    -{(trip.energySavedKwh || 0).toFixed(2)} kWh
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteTrip(trip.id)}
+                  className={`p-1.5 rounded-lg transition ${isDark ? 'hover:bg-emerald-400/20 text-emerald-100 hover:text-red-200' : 'hover:bg-red-50 text-slate-400 hover:text-red-600'}`}
+                  title={t.history.delete}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </li>
             ))}
           </ul>
