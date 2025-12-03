@@ -20,8 +20,9 @@ import NavigationPanel from '../components/NavigationPanel';
 import RealTimeNavigation from '../components/RealTimeNavigation';
 import GPSNavigation from '../components/GPSNavigation';
 import { toast } from 'sonner';
-import { persistTripFromRoute, calculateChargingStops } from '../lib/tripStorage';
+import { persistTripFromRoute, calculateChargingStops, getAllTrips } from '../lib/tripStorage';
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
+import { calculateBadges } from '../lib/badges';
 import { getVehicleSettings, updateVehicleSettings, getAppSettings, getCustomVehicles, getFavoriteLocations, updateFavoriteLocations } from '../lib/settingsStorage';
 import { findChargingStationsOnRoute } from '../lib/chargingUtils';
 import { TRANSLATIONS as APP_TRANSLATIONS } from '../lib/translations';
@@ -198,6 +199,9 @@ const AnalysisPage = () => {
   const [demoMode, setDemoMode] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const [favoriteLocations, setFavoriteLocations] = useState({ home: '', work: '' });
+  const [showEndScreen, setShowEndScreen] = useState(false);
+  const [endSummary, setEndSummary] = useState(null);
+  const [endBadges, setEndBadges] = useState([]);
   
   // Vehicle profiles: filtrées par les préférences (véhicules actifs)
   const [availableProfiles, setAvailableProfiles] = useState(
@@ -584,6 +588,34 @@ const AnalysisPage = () => {
   };
   
   const handleResetNavigation = () => {
+    // Construire un récap de fin de trajet (surtout utile sur mobile)
+    if (routeData && routeData.segments && routeData.segments.length > 0) {
+      try {
+        const totalEcoEnergy = routeData.segments.reduce((sum, s) => sum + (s.eco_energy || 0), 0);
+        const totalLimitEnergy = routeData.segments.reduce((sum, s) => sum + (s.limit_energy || 0), 0);
+        const energySaved = totalLimitEnergy - totalEcoEnergy;
+        const totalDistanceKm = (routeData.total_distance ?? routeData.segments.reduce((sum, s) => sum + (s.distance || 0), 0)) / 1000;
+        const ecoTimeMin = routeData.segments.reduce((sum, s) => sum + (s.eco_time || 0), 0) / 60;
+        const limitTimeMin = routeData.segments.reduce((sum, s) => sum + (s.limit_time || 0), 0) / 60;
+
+        const trips = getAllTrips();
+        const badges = calculateBadges(trips, language).filter((b) => b.unlocked);
+
+        setEndSummary({
+          distanceKm: totalDistanceKm,
+          ecoEnergyKwh: totalEcoEnergy,
+          limitEnergyKwh: totalLimitEnergy,
+          energySavedKwh: energySaved,
+          ecoTimeMin,
+          limitTimeMin,
+        });
+        setEndBadges(badges);
+        setShowEndScreen(true);
+      } catch (e) {
+        console.error('Failed to build end-of-trip summary', e);
+      }
+    }
+
     setCurrentSegmentIndex(0);
     setIsNavigating(false);
     setShowResults(false);
@@ -1536,6 +1568,81 @@ const AnalysisPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Écran de fin de trajet plein écran (surtout pensé pour mobile) */}
+      {showEndScreen && endSummary && (
+        <div className="fixed inset-0 z-[120] bg-[#020617]/95 text-emerald-50 flex items-center justify-center px-4">
+          <div className="w-full max-w-md rounded-3xl border border-emerald-500/40 bg-gradient-to-b from-[#022c22] to-[#020617] shadow-2xl p-5 space-y-5">
+            <div className="text-center space-y-1">
+              <h2 className="text-2xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                {language === 'fr' ? 'Trajet terminé 🎉' : 'Trip finished 🎉'}
+              </h2>
+              <p className="text-xs text-emerald-200/80">
+                {language === 'fr'
+                  ? 'Voici le récapitulatif rapide de vos gains.'
+                  : 'Here is a quick recap of your savings.'}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-2xl bg-black/40 border border-emerald-400/40 p-3">
+                <div className="text-[11px] text-emerald-200/80">
+                  {language === 'fr' ? 'Distance' : 'Distance'}
+                </div>
+                <div className="text-xl font-semibold">
+                  {endSummary.distanceKm.toFixed(1)} km
+                </div>
+              </div>
+              <div className="rounded-2xl bg-black/40 border border-emerald-400/40 p-3">
+                <div className="text-[11px] text-emerald-200/80">
+                  {language === 'fr' ? 'Énergie économisée' : 'Energy saved'}
+                </div>
+                <div className="text-xl font-semibold text-emerald-300">
+                  −{endSummary.energySavedKwh.toFixed(1)} kWh
+                </div>
+              </div>
+              <div className="rounded-2xl bg-black/40 border border-emerald-400/40 p-3 col-span-2">
+                <div className="flex items-center justify-between text-[11px] text-emerald-200/80 mb-1">
+                  <span>{language === 'fr' ? 'Temps limite' : 'Time at limit'}</span>
+                  <span>{language === 'fr' ? 'Temps éco' : 'Eco time'}</span>
+                </div>
+                <div className="flex items-center justify-between font-semibold">
+                  <span>{formatTime(endSummary.limitTimeMin)}</span>
+                  <span className="text-emerald-300">{formatTime(endSummary.ecoTimeMin)}</span>
+                </div>
+              </div>
+            </div>
+
+            {endBadges && endBadges.length > 0 && (
+              <div className="rounded-2xl bg-black/40 border border-emerald-400/30 p-3 max-h-40 overflow-y-auto">
+                <div className="text-[11px] text-emerald-200/80 mb-1">
+                  {language === 'fr'
+                    ? 'Badges actuellement débloqués'
+                    : 'Badges currently unlocked'}
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {endBadges.map((badge) => (
+                    <span
+                      key={badge.id}
+                      className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-300/40 text-[11px]"
+                    >
+                      {badge.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setShowEndScreen(false)}
+              className="w-full rounded-full bg-emerald-500 text-[#022c22] font-semibold text-sm py-2.5 shadow-lg hover:bg-emerald-400 transition"
+            >
+              {language === 'fr' ? 'Fermer le récap' : 'Close summary'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

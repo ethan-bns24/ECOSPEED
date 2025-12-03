@@ -130,114 +130,146 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
   });
 
   return (
-    <MapContainer
-      center={center}
-      zoom={isNavigating ? 15 : 9}
-      style={{ height: '100%', width: '100%', borderRadius: '8px' }}
-      ref={mapRef}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      
-      {/* Auto-adjust map bounds à l'affichage carte standard uniquement */}
-      {polylineCoords.length > 0 && !currentPosition && !isNavigating && <MapBounds coordinates={polylineCoords} />}
-      
-      {/* Suivre la position en temps réel pendant la navigation */}
-      {currentPosition && <FollowPosition position={currentPosition} zoomLevel={isNavigating ? 16 : 12} />}
-      
-      {/* Route polyline */}
-      {polylineCoords.length > 0 && (
-        <Polyline
-          positions={polylineCoords}
-          color="#4ade80"
-          weight={4}
-          opacity={0.7}
+    <div className="relative h-full w-full">
+      <MapContainer
+        center={center}
+        zoom={isNavigating ? 15 : 9}
+        style={{ height: '100%', width: '100%', borderRadius: '8px' }}
+        ref={mapRef}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-      )}
-      
-      {/* Start marker - on le masque pendant la navigation pour alléger la vue */}
-      {startMarker && !isNavigating && (
-        <Marker position={startMarker} icon={startIcon}>
-          <Popup>
-            <strong>Start:</strong> {startLocation || 'Start location'}
-          </Popup>
-        </Marker>
-      )}
-      
-      {/* End marker - visible en navigation pour voir la destination */}
-      {endMarker && (
-        <Marker position={endMarker} icon={endIcon}>
-          <Popup>
-            <strong>End:</strong> {endLocation || 'End location'}
-          </Popup>
-        </Marker>
-      )}
-      
-      {/* Current position marker - afficher si navigation active ou si on a dépassé le premier segment */}
-      {currentMarker && (currentPosition || currentSegmentIndex > 0) && (
-        <Marker position={currentMarker} icon={currentIcon}>
-          <Popup>
-            <strong>Current Position</strong><br />
-            Segment {currentSegmentIndex + 1} of {segments.length}
-          </Popup>
-        </Marker>
-      )}
-      
-      {/* Charging station markers */}
-      {chargingStations && chargingStations.length > 0 && chargingStations.map((chargingPoint, index) => {
-        if (!chargingPoint.station || !chargingPoint.station.latitude || !chargingPoint.station.longitude) {
-          return null;
-        }
         
-        return (
-          <Marker
-            key={`charging-${index}`}
-            position={[chargingPoint.station.latitude, chargingPoint.station.longitude]}
-            icon={chargingIcon}
-          >
+        {/* Auto-adjust map bounds à l'affichage carte standard uniquement */}
+        {polylineCoords.length > 0 && !currentPosition && !isNavigating && <MapBounds coordinates={polylineCoords} />}
+        
+        {/* Suivre la position en temps réel pendant la navigation */}
+        {currentPosition && <FollowPosition position={currentPosition} zoomLevel={isNavigating ? 16 : 12} />}
+        
+        {/* Route polyline */}
+        {polylineCoords.length > 0 && (
+          <Polyline
+            positions={polylineCoords}
+            color="#4ade80"
+            weight={4}
+            opacity={0.7}
+          />
+        )}
+        
+        {/* Start marker - on le masque pendant la navigation pour alléger la vue */}
+        {startMarker && !isNavigating && (
+          <Marker position={startMarker} icon={startIcon}>
             <Popup>
-              <div style={{ minWidth: '200px' }}>
-                <strong>{chargingPoint.station.name || 'Borne de recharge'}</strong>
-                <br />
-                <span style={{ fontSize: '12px', color: '#666' }}>
-                  {chargingPoint.station.operator || 'Opérateur inconnu'}
-                </span>
-                <br />
-                <span style={{ fontSize: '12px' }}>
-                  {chargingPoint.station.powerKw || 0} kW
-                </span>
-                {chargingPoint.station.address && (
-                  <>
-                    <br />
-                    <span style={{ fontSize: '11px', color: '#888' }}>
-                      {chargingPoint.station.address}
-                    </span>
-                  </>
-                )}
-                {chargingPoint.station.price && (
-                  <>
-                    <br />
-                    <span style={{ fontSize: '11px', color: '#4ade80', fontWeight: 'bold' }}>
-                      {chargingPoint.station.price}
-                    </span>
-                  </>
-                )}
-                {chargingPoint.distanceKm && (
-                  <>
-                    <br />
-                    <span style={{ fontSize: '11px', color: '#666' }}>
-                      Distance: {chargingPoint.distanceKm.toFixed(1)} km
-                    </span>
-                  </>
-                )}
-              </div>
+              <strong>Start:</strong> {startLocation || 'Start location'}
             </Popup>
           </Marker>
-        );
-      })}
-    </MapContainer>
+        )}
+        
+        {/* End marker - visible en navigation pour voir la destination */}
+        {endMarker && (
+          <Marker position={endMarker} icon={endIcon}>
+            <Popup>
+              <strong>End:</strong> {endLocation || 'End location'}
+            </Popup>
+          </Marker>
+        )}
+        
+        {/* Current position marker - afficher si navigation active ou si on a dépassé le premier segment */}
+        {currentMarker && (currentPosition || currentSegmentIndex > 0) && (
+          <Marker position={currentMarker} icon={currentIcon}>
+            <Popup>
+              <strong>Current Position</strong><br />
+              Segment {currentSegmentIndex + 1} of {segments.length}
+            </Popup>
+          </Marker>
+        )}
+        
+        {/* Charging station markers */}
+        {chargingStations && chargingStations.length > 0 && chargingStations.map((chargingPoint, index) => {
+          if (!chargingPoint.station || !chargingPoint.station.latitude || !chargingPoint.station.longitude) {
+            return null;
+          }
+          
+          return (
+            <Marker
+              key={`charging-${index}`}
+              position={[chargingPoint.station.latitude, chargingPoint.station.longitude]}
+              icon={chargingIcon}
+            >
+              <Popup>
+                <div style={{ minWidth: '200px' }}>
+                  <strong>{chargingPoint.station.name || 'Borne de recharge'}</strong>
+                  <br />
+                  <span style={{ fontSize: '12px', color: '#666' }}>
+                    {chargingPoint.station.operator || 'Opérateur inconnu'}
+                  </span>
+                  <br />
+                  <span style={{ fontSize: '12px' }}>
+                    {chargingPoint.station.powerKw || 0} kW
+                  </span>
+                  {chargingPoint.station.address && (
+                    <>
+                      <br />
+                      <span style={{ fontSize: '11px', color: '#888' }}>
+                        {chargingPoint.station.address}
+                      </span>
+                    </>
+                  )}
+                  {chargingPoint.station.price && (
+                    <>
+                      <br />
+                      <span style={{ fontSize: '11px', color: '#4ade80', fontWeight: 'bold' }}>
+                        {chargingPoint.station.price}
+                      </span>
+                    </>
+                  )}
+                  {chargingPoint.distanceKm && (
+                    <>
+                      <br />
+                      <span style={{ fontSize: '11px', color: '#666' }}>
+                        Distance: {chargingPoint.distanceKm.toFixed(1)} km
+                      </span>
+                    </>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
+      </MapContainer>
+
+      {/* Boutons de zoom + / - visibles en mode navigation GPS */}
+      {isNavigating && (
+        <div className="absolute right-3 bottom-28 md:bottom-32 z-[60] flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              const map = mapRef.current;
+              if (map && typeof map.zoomIn === 'function') {
+                map.zoomIn();
+              }
+            }}
+            className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/70 text-white text-xl font-semibold flex items-center justify-center shadow-lg border border-white/20"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const map = mapRef.current;
+              if (map && typeof map.zoomOut === 'function') {
+                map.zoomOut();
+              }
+            }}
+            className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/70 text-white text-xl font-semibold flex items-center justify-center shadow-lg border border-white/20"
+          >
+            −
+          </button>
+        </div>
+      )}
+    </div>
   );
 };
 
