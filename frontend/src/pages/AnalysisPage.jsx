@@ -635,7 +635,7 @@ const AnalysisPage = () => {
         />
         
         {/* Boutons de contrôle en overlay */}
-        <div className="fixed top-24 right-3 md:top-28 md:right-6 z-[200] pointer-events-auto flex flex-col gap-2 items-end">
+        <div className="fixed top-3 right-3 md:top-4 md:right-6 z-[200] pointer-events-auto flex flex-col gap-2 items-end">
           <Button
             onClick={handlePauseNavigation}
             size="sm"
