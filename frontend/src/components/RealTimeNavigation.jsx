@@ -130,11 +130,10 @@ const RealTimeNavigation = ({
   const StatusIcon = speedStatus.icon;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#0a2e1a] via-[#0a2e1a] to-transparent border-t border-emerald-800/30 z-50 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#0a2e1a] via-[#0a2e1a] to-transparent border-t border-emerald-800/30 z-50 px-3 py-2 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-2 md:space-y-0 md:grid md:grid-cols-3 md:gap-4">
           {/* Vitesse actuelle */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl px-3 py-2 md:p-4 border border-white/10">
             <div className="text-xs text-emerald-200/70 mb-2 flex items-center gap-2">
               <Gauge className="w-4 h-4" />
               <span>{language === 'fr' ? 'Vitesse actuelle' : 'Current speed'}</span>
@@ -151,14 +150,14 @@ const RealTimeNavigation = ({
                 <StatusIcon className={`w-4 h-4 md:w-5 md:h-5 ${speedStatus.color}`} />
               </div>
             </div>
-            {/* Message détaillé (optionnel), utile à l'arrêt mais pas indispensable en conduite */}
-            <div className={`text-xs md:text-sm inline-flex items-center gap-1 ${speedStatus.color}`}>
+            {/* Message détaillé (caché sur très petit écran pour gagner de la place) */}
+            <div className={`hidden sm:inline-flex text-xs md:text-sm items-center gap-1 ${speedStatus.color}`}>
               <span>{speedStatus.message}</span>
             </div>
           </div>
 
           {/* Limitation de vitesse */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl px-3 py-2 md:p-4 border border-white/10">
             <div className="text-xs text-emerald-200/70 mb-2">{language === 'fr' ? 'Limitation' : 'Speed limit'}</div>
             <div className="flex items-center gap-3">
               <div className="text-4xl md:text-5xl font-bold text-red-400">
@@ -177,7 +176,7 @@ const RealTimeNavigation = ({
           </div>
 
           {/* Vitesse éco conseillée */}
-          <div className="bg-emerald-500/20 backdrop-blur-sm rounded-2xl p-4 border border-emerald-400/30">
+          <div className="bg-emerald-500/20 backdrop-blur-sm rounded-2xl px-3 py-2 md:p-4 border border-emerald-400/30">
             <div className="text-xs text-emerald-200/70 mb-2 flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
               <span>{language === 'fr' ? 'Éco conseillée' : 'Eco recommended'}</span>
@@ -206,16 +205,7 @@ const RealTimeNavigation = ({
               )}
             </div>
           </div>
-        </div>
-
-        {/* Indicateur de progression du segment */}
-        {currentSegment && (
-          <div className="mt-4 text-center">
-            <div className="text-xs text-emerald-200/70">
-              {language === 'fr' ? 'Segment' : 'Segment'} {currentSegment.index + 1} • {currentSegment.distance ? (currentSegment.distance / 1000).toFixed(2) : '0.00'} km
-            </div>
-          </div>
-        )}
+      </div>
       </div>
     </div>
   );

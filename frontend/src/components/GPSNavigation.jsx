@@ -134,6 +134,20 @@ const GPSNavigation = ({
     }
   };
 
+  // Formater le temps restant en heures + minutes
+  const formatTime = (minutes, lang = 'fr') => {
+    const totalMinutes = Math.max(0, Math.round(minutes || 0));
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    if (hours <= 0) {
+      return lang === 'fr' ? `${mins} min` : `${mins} min`;
+    }
+    if (lang === 'fr') {
+      return `${hours} h ${mins.toString().padStart(2, '0')} min`;
+    }
+    return `${hours} h ${mins.toString().padStart(2, '0')} min`;
+  };
+
   // Infos globales restantes (distance + temps estimé)
   const remainingInfo = (() => {
     if (!segments || !Array.isArray(segments) || currentSegmentIndex >= segments.length) {
@@ -185,8 +199,8 @@ const GPSNavigation = ({
               </div>
               <div className="text-[10px] md:text-xs text-emerald-200/80">
                 {language === 'fr'
-                  ? `Temps restant ~ ${Math.round(remainingInfo.timeMin)} min`
-                  : `Remaining time ~ ${Math.round(remainingInfo.timeMin)} min`}
+                  ? `Temps restant ~ ${formatTime(remainingInfo.timeMin, 'fr')}`
+                  : `Remaining time ~ ${formatTime(remainingInfo.timeMin, 'en')}`}
               </div>
             </div>
           )}
