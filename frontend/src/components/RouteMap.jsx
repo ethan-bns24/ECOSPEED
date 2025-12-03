@@ -242,7 +242,7 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
 
       {/* Boutons de zoom + / - visibles en mode navigation GPS */}
       {isNavigating && (
-        <div className="absolute right-3 bottom-28 md:bottom-32 z-[60] flex flex-col gap-2">
+        <div className="absolute right-3 bottom-28 md:bottom-32 z-[60] flex flex-col gap-2 items-center">
           <button
             type="button"
             onClick={() => {
@@ -267,6 +267,33 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
           >
             −
           </button>
+          {currentPosition && Array.isArray(currentPosition) && (
+            <button
+              type="button"
+              onClick={() => {
+                const map = mapRef.current;
+                const [lat, lon] = currentPosition;
+                if (
+                  map &&
+                  typeof map.setView === 'function' &&
+                  typeof lat === 'number' &&
+                  typeof lon === 'number'
+                ) {
+                  const targetZoom =
+                    typeof map.getZoom === 'function'
+                      ? Math.max(15, map.getZoom())
+                      : 16;
+                  map.setView([lat, lon], targetZoom, {
+                    animate: true,
+                    duration: 0.3,
+                  });
+                }
+              }}
+              className="mt-1 w-9 h-9 md:w-10 md:h-10 rounded-full bg-emerald-500 text-[#022c22] text-sm font-semibold flex items-center justify-center shadow-lg border border-emerald-300/80"
+            >
+              ◎
+            </button>
+          )}
         </div>
       )}
     </div>
