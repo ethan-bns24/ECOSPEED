@@ -99,6 +99,44 @@ const VehiclesPage = () => {
 
   const isDefault = (name) => enabledVehicles.includes(name);
 
+  const isCustomVehicle = (name) => customVehicles.some((v) => v.name === name);
+
+  const handleDeleteVehicle = (name) => {
+    // Ne pas permettre la suppression des profils statiques
+    if (!isCustomVehicle(name)) {
+      return;
+    }
+
+    const updatedCustom = customVehicles.filter((v) => v.name !== name);
+    setCustomVehicles(updatedCustom);
+    saveCustomVehicles(updatedCustom);
+
+    // Retirer aussi des véhicules activés
+    const nextEnabled = enabledVehicles.filter((v) => v !== name);
+    let nextDefault = defaultVehicleName;
+    if (defaultVehicleName === name) {
+      nextDefault = nextEnabled.length > 0 ? nextEnabled[0] : null;
+    }
+    setEnabledVehicles(nextEnabled);
+    setDefaultVehicleName(nextDefault);
+    updateVehicleSettings({
+      enabledVehicles: nextEnabled,
+      defaultVehicleName: nextDefault,
+    });
+
+    // Si on était en train d'éditer ce véhicule, fermer le formulaire
+    if (editingVehicle && editingVehicle.name === name) {
+      setShowCustomForm(false);
+      setEditingVehicle(null);
+    }
+
+    toast.success(
+      language === 'fr'
+        ? 'Véhicule personnalisé supprimé'
+        : 'Custom vehicle deleted'
+    );
+  };
+
   const handleOpenCustomForm = (vehicle) => {
     setEditingVehicle(
       vehicle || {
@@ -180,38 +218,6 @@ const VehiclesPage = () => {
                 <Plus className="w-3 h-3" />
                 {t.vehicles.addVehicle}
               </button>
-            </div>
-
-            <div className="space-y-3 text-sm">
-              {allVehicles.map((vehicle) => (
-                <button
-                  key={vehicle.name}
-                  type="button"
-                  onClick={() => handleSetDefault(vehicle.name)}
-                  className={`w-full rounded-2xl border px-4 py-3 flex items-center justify-between gap-3 text-left transition ${isDark ? 'border-emerald-300/30 bg-emerald-400/20 hover:border-emerald-300/50 hover:bg-emerald-400/30' : 'border-slate-100 bg-slate-50/70 hover:border-emerald-400 hover:bg-emerald-50'}`}
-                >
-                  <div>
-                    <div className={`font-semibold ${isDark ? 'text-white' : ''}`}>{vehicle.name}</div>
-                    <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
-                      {vehicle.battery_kwh} kWh · {vehicle.empty_mass} kg
-                    </div>
-                  </div>
-                  <span
-                    className={`inline-flex items-center gap-1 text-[11px] px-3 py-1 rounded-full border ${
-                      isDefault(vehicle.name)
-                        ? isDark
-                          ? 'bg-emerald-400/40 text-emerald-50 border-emerald-300/50'
-                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : isDark
-                          ? 'bg-emerald-300/20 text-emerald-200 border-emerald-300/30'
-                          : 'bg-slate-100 text-slate-500 border-slate-200'
-                    }`}
-                  >
-                    <Star className={`w-3 h-3 ${isDefault(vehicle.name) ? 'fill-current' : ''}`} />
-                    {isDefault(vehicle.name) ? t.vehicles.setDefault : t.vehicles.removeDefault}
-                  </span>
-                </button>
-              ))}
             </div>
 
             {showCustomForm && editingVehicle && (
@@ -352,6 +358,55 @@ const VehiclesPage = () => {
                 </div>
               </div>
             )}
+
+            <div className="mt-4 space-y-3 text-sm">
+              {allVehicles.map((vehicle) => (
+                <div
+                  key={vehicle.name}
+                  className={`w-full rounded-2xl border px-4 py-3 flex items-center justify-between gap-3 text-left transition ${isDark ? 'border-emerald-300/30 bg-emerald-400/20 hover:border-emerald-300/50 hover:bg-emerald-400/30' : 'border-slate-100 bg-slate-50/70 hover:border-emerald-400 hover:bg-emerald-50'}`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSetDefault(vehicle.name)}
+                    className="flex-1 flex items-center justify-between gap-3 text-left"
+                  >
+                    <div>
+                      <div className={`font-semibold ${isDark ? 'text-white' : ''}`}>{vehicle.name}</div>
+                      <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
+                        {vehicle.battery_kwh} kWh · {vehicle.empty_mass} kg
+                      </div>
+                    </div>
+                    <span
+                      className={`inline-flex items-center gap-1 text-[11px] px-3 py-1 rounded-full border ${
+                        isDefault(vehicle.name)
+                          ? isDark
+                            ? 'bg-emerald-400/40 text-emerald-50 border-emerald-300/50'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : isDark
+                            ? 'bg-emerald-300/20 text-emerald-200 border-emerald-300/30'
+                            : 'bg-slate-100 text-slate-500 border-slate-200'
+                      }`}
+                    >
+                      <Star className={`w-3 h-3 ${isDefault(vehicle.name) ? 'fill-current' : ''}`} />
+                      {isDefault(vehicle.name) ? t.vehicles.setDefault : t.vehicles.removeDefault}
+                    </span>
+                  </button>
+                  {isCustomVehicle(vehicle.name) && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteVehicle(vehicle.name)}
+                      className={`text-[11px] px-2 py-1 rounded-full border ${
+                        isDark
+                          ? 'border-emerald-200/40 text-emerald-50 hover:bg-emerald-300/20'
+                          : 'border-red-200 text-red-500 hover:bg-red-50'
+                      }`}
+                    >
+                      {language === 'fr' ? 'Supprimer' : 'Delete'}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
