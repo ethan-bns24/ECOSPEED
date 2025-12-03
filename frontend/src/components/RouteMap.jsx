@@ -135,7 +135,11 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
         center={center}
         zoom={isNavigating ? 15 : 9}
         style={{ height: '100%', width: '100%', borderRadius: '8px' }}
-        ref={mapRef}
+        zoomControl={!isNavigating} // on masque les contrôles natifs en mode GPS
+        whenCreated={(mapInstance) => {
+          // Stocker la vraie instance Leaflet pour les boutons custom
+          mapRef.current = mapInstance;
+        }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -242,7 +246,7 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
 
       {/* Boutons de zoom + / - visibles en mode navigation GPS */}
       {isNavigating && (
-        <div className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 z-[80] flex flex-col gap-2 items-center">
+        <div className="absolute left-3 top-24 md:top-28 z-[80] flex flex-col gap-2 items-center pointer-events-auto">
           <button
             type="button"
             onClick={() => {
