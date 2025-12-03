@@ -45,6 +45,59 @@ function FollowPosition({ position, zoomLevel = 16 }) {
   return null;
 }
 
+// Boutons de contrôle personnalisés (zoom + recentrage) pour le mode GPS
+function GpsControls({ isNavigating, currentPosition }) {
+  const map = useMap();
+
+  if (!isNavigating) return null;
+
+  const handleZoomIn = () => {
+    if (!map) return;
+    map.zoomIn();
+  };
+
+  const handleZoomOut = () => {
+    if (!map) return;
+    map.zoomOut();
+  };
+
+  const handleRecenter = () => {
+    if (!map || !currentPosition || !Array.isArray(currentPosition)) return;
+    const [lat, lon] = currentPosition;
+    if (typeof lat !== 'number' || typeof lon !== 'number') return;
+    const targetZoom = Math.max(15, map.getZoom ? map.getZoom() : 15);
+    map.setView([lat, lon], targetZoom, { animate: true, duration: 0.3 });
+  };
+
+  return (
+    <div className="pointer-events-auto absolute left-3 top-24 md:top-28 z-[1000] flex flex-col gap-2 items-center">
+      <button
+        type="button"
+        onClick={handleZoomIn}
+        className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/70 text-white text-xl font-semibold flex items-center justify-center shadow-lg border border-white/20"
+      >
+        +
+      </button>
+      <button
+        type="button"
+        onClick={handleZoomOut}
+        className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/70 text-white text-xl font-semibold flex items-center justify-center shadow-lg border border-white/20"
+      >
+        −
+      </button>
+      {currentPosition && Array.isArray(currentPosition) && (
+        <button
+          type="button"
+          onClick={handleRecenter}
+          className="mt-1 w-9 h-9 md:w-10 md:h-10 rounded-full bg-emerald-500 text-[#022c22] text-sm font-semibold flex items-center justify-center shadow-lg border border-emerald-300/80"
+        >
+          ◎
+        </button>
+      )}
+    </div>
+  );
+}
+
 const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, routeCoordinates, chargingStations = [], currentPosition = null, isNavigating = false }) => {
   const mapRef = useRef(null);
 
@@ -136,10 +189,6 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
         zoom={isNavigating ? 15 : 9}
         style={{ height: '100%', width: '100%', borderRadius: '8px' }}
         zoomControl={!isNavigating} // on masque les contrôles natifs en mode GPS
-        whenCreated={(mapInstance) => {
-          // Stocker la vraie instance Leaflet pour les boutons custom
-          mapRef.current = mapInstance;
-        }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -242,64 +291,10 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
             </Marker>
           );
         })}
-      </MapContainer>
 
-      {/* Boutons de zoom + / - visibles en mode navigation GPS */}
-      {isNavigating && (
-        <div className="absolute left-3 top-24 md:top-28 z-[1000] flex flex-col gap-2 items-center pointer-events-auto">
-          <button
-            type="button"
-            onClick={() => {
-              const map = mapRef.current;
-              if (map && typeof map.zoomIn === 'function') {
-                map.zoomIn();
-              }
-            }}
-            className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/70 text-white text-xl font-semibold flex items-center justify-center shadow-lg border border-white/20"
-          >
-            +
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              const map = mapRef.current;
-              if (map && typeof map.zoomOut === 'function') {
-                map.zoomOut();
-              }
-            }}
-            className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/70 text-white text-xl font-semibold flex items-center justify-center shadow-lg border border-white/20"
-          >
-            −
-          </button>
-          {currentPosition && Array.isArray(currentPosition) && (
-            <button
-              type="button"
-              onClick={() => {
-                const map = mapRef.current;
-                const [lat, lon] = currentPosition;
-                if (
-                  map &&
-                  typeof map.setView === 'function' &&
-                  typeof lat === 'number' &&
-                  typeof lon === 'number'
-                ) {
-                  const targetZoom =
-                    typeof map.getZoom === 'function'
-                      ? Math.max(15, map.getZoom())
-                      : 16;
-                  map.setView([lat, lon], targetZoom, {
-                    animate: true,
-                    duration: 0.3,
-                  });
-                }
-              }}
-              className="mt-1 w-9 h-9 md:w-10 md:h-10 rounded-full bg-emerald-500 text-[#022c22] text-sm font-semibold flex items-center justify-center shadow-lg border border-emerald-300/80"
-            >
-              ◎
-            </button>
-          )}
-        </div>
-      )}
+      {/* Contrôles GPS (zoom + recentrer) par-dessus la carte en mode navigation */}
+      <GpsControls isNavigating={isNavigating} currentPosition={currentPosition} />
+      </MapContainer>
     </div>
   );
 };
