@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from '../components/ui/button';
@@ -193,6 +193,8 @@ const AnalysisPage = () => {
   const [currentPosition, setCurrentPosition] = useState(null);
   const [distanceToNextTurn, setDistanceToNextTurn] = useState(0);
   const [userLocation, setUserLocation] = useState(null); // Position GPS réelle si disponible
+  const [useRealGps, setUseRealGps] = useState(false); // Navigation basée sur GPS réel
+  const gpsWatchIdRef = useRef(null);
   
   // Vehicle profiles: filtrées par les préférences (véhicules actifs)
   const [availableProfiles, setAvailableProfiles] = useState(
@@ -242,6 +244,55 @@ const AnalysisPage = () => {
       console.error('Failed to load vehicle settings', e);
     }
   }, []);
+
+  // Pendant la navigation, suivre en continu la position GPS réelle de l'utilisateur
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('geolocation' in navigator)) {
+      return;
+    }
+
+    // Quand on arrête la navigation, on coupe le watchPosition
+    if (!isNavigating) {
+      if (gpsWatchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(gpsWatchIdRef.current);
+        gpsWatchIdRef.current = null;
+      }
+      setUseRealGps(false);
+      return;
+    }
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const { latitude, longitude, speed } = pos.coords;
+        // Position actuelle pour la carte (lat, lon)
+        setCurrentPosition([latitude, longitude]);
+        setUseRealGps(true);
+
+        // Si la vitesse est disponible, on l'utilise comme vitesse réelle (m/s -> km/h)
+        if (typeof speed === 'number' && !Number.isNaN(speed) && speed >= 0) {
+          const kmh = speed * 3.6;
+          setCurrentSpeed(kmh);
+        }
+      },
+      (err) => {
+        console.warn('Geolocation watch error:', err);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 3000,
+      }
+    );
+
+    gpsWatchIdRef.current = watchId;
+
+    return () => {
+      if (gpsWatchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(gpsWatchIdRef.current);
+        gpsWatchIdRef.current = null;
+      }
+    };
+  }, [isNavigating]);
 
   // Tenter de récupérer la localisation de l'utilisateur une fois au chargement
   useEffect(() => {
@@ -462,6 +513,11 @@ const AnalysisPage = () => {
   
   // Navigation simulation avec mise à jour de position en temps réel
   useEffect(() => {
+    // Si on utilise la position GPS réelle, on désactive la simulation
+    if (useRealGps) {
+      return;
+    }
+
     if (!isNavigating || !routeData || !routeData.route_coordinates || routeData.route_coordinates.length === 0) {
       setCurrentPosition(null);
       return;
@@ -587,6 +643,7 @@ const AnalysisPage = () => {
             routeCoordinates={routeData.route_coordinates || []}
             chargingStations={routeChargingStations}
             currentPosition={currentPosition}
+            isNavigating={true}
           />
         </div>
         
@@ -998,6 +1055,7 @@ const AnalysisPage = () => {
                     routeCoordinates={routeData?.route_coordinates || []}
                     chargingStations={routeChargingStations}
                     currentPosition={currentPosition}
+                    isNavigating={false}
                   />
                 </div>
               </CardContent>

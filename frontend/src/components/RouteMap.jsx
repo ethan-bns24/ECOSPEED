@@ -28,14 +28,16 @@ function MapBounds({ coordinates }) {
 }
 
 // Component to follow current position during navigation
-function FollowPosition({ position }) {
+function FollowPosition({ position, zoomLevel = 16 }) {
   const map = useMap();
   
   useEffect(() => {
     if (position && Array.isArray(position) && position.length === 2) {
       const [lat, lon] = position;
       if (typeof lat === 'number' && typeof lon === 'number' && !isNaN(lat) && !isNaN(lon)) {
-        map.setView([lat, lon], map.getZoom(), { animate: true, duration: 0.5 });
+        // Vue centrée sur la voiture avec un zoom élevé pour la conduite
+        const targetZoom = Math.max(14, zoomLevel);
+        map.setView([lat, lon], targetZoom, { animate: true, duration: 0.5 });
       }
     }
   }, [position, map]);
@@ -43,7 +45,7 @@ function FollowPosition({ position }) {
   return null;
 }
 
-const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, routeCoordinates, chargingStations = [], currentPosition = null }) => {
+const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, routeCoordinates, chargingStations = [], currentPosition = null, isNavigating = false }) => {
   const mapRef = useRef(null);
 
   // Use route_coordinates if available (full route path), otherwise fallback to segments
@@ -84,7 +86,7 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
 
   // Default center (France)
   const defaultCenter = [46.6034, 1.8883];
-  const center = startMarker || defaultCenter;
+  const center = currentPosition || startMarker || defaultCenter;
 
   // Custom icons - utiliser encodeURIComponent au lieu de btoa pour éviter les problèmes avec les caractères spéciaux
   const startIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
@@ -130,7 +132,7 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
   return (
     <MapContainer
       center={center}
-      zoom={9}
+      zoom={isNavigating ? 15 : 9}
       style={{ height: '100%', width: '100%', borderRadius: '8px' }}
       ref={mapRef}
     >
@@ -139,11 +141,11 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       
-      {/* Auto-adjust map bounds to fit route - seulement si pas de navigation active */}
-      {polylineCoords.length > 0 && !currentPosition && <MapBounds coordinates={polylineCoords} />}
+      {/* Auto-adjust map bounds à l'affichage carte standard uniquement */}
+      {polylineCoords.length > 0 && !currentPosition && !isNavigating && <MapBounds coordinates={polylineCoords} />}
       
       {/* Suivre la position en temps réel pendant la navigation */}
-      {currentPosition && <FollowPosition position={currentPosition} />}
+      {currentPosition && <FollowPosition position={currentPosition} zoomLevel={isNavigating ? 16 : 12} />}
       
       {/* Route polyline */}
       {polylineCoords.length > 0 && (
@@ -155,8 +157,8 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
         />
       )}
       
-      {/* Start marker */}
-      {startMarker && (
+      {/* Start marker - on le masque pendant la navigation pour alléger la vue */}
+      {startMarker && !isNavigating && (
         <Marker position={startMarker} icon={startIcon}>
           <Popup>
             <strong>Start:</strong> {startLocation || 'Start location'}
@@ -164,7 +166,7 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
         </Marker>
       )}
       
-      {/* End marker */}
+      {/* End marker - visible en navigation pour voir la destination */}
       {endMarker && (
         <Marker position={endMarker} icon={endIcon}>
           <Popup>
