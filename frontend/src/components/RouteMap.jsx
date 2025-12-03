@@ -242,7 +242,7 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
 
       {/* Boutons de zoom + / - visibles en mode navigation GPS */}
       {isNavigating && (
-        <div className="absolute right-3 bottom-28 md:bottom-32 z-[60] flex flex-col gap-2 items-center">
+        <div className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 z-[80] flex flex-col gap-2 items-center">
           <button
             type="button"
             onClick={() => {
