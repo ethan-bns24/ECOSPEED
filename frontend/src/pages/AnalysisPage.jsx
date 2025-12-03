@@ -704,7 +704,7 @@ const AnalysisPage = () => {
         />
         
         {/* Boutons de contrôle en overlay */}
-        <div className="fixed top-24 md:top-28 right-4 z-50 flex flex-col gap-2">
+        <div className="fixed top-20 md:top-24 right-3 z-[80] flex flex-col gap-2">
           <Button
             onClick={handlePauseNavigation}
             size="sm"
@@ -1114,8 +1114,27 @@ const AnalysisPage = () => {
             {routeData && !isNavigating && (
               <Card className="bg-white/5 backdrop-blur-sm border-white/10" data-testid="navigation-panel">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Navigation</CardTitle>
+                  <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-3">
+                      <CardTitle style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Navigation</CardTitle>
+                      <div className="flex items-center gap-2 text-xs text-emerald-200/80">
+                        <input
+                          id="demo-mode-toggle"
+                          type="checkbox"
+                          checked={demoMode}
+                          onChange={(e) => {
+                            setDemoMode(e.target.checked);
+                            if (e.target.checked) {
+                              setUseRealGps(false);
+                            }
+                          }}
+                          className="h-3 w-3 rounded border-emerald-400 bg-transparent"
+                        />
+                        <label htmlFor="demo-mode-toggle">
+                          {language === 'fr' ? 'Mode démo (Z/S)' : 'Demo mode (Z/S)'}
+                        </label>
+                      </div>
+                    </div>
                     <div className="flex gap-2">
                       {currentSegmentIndex === 0 && (
                         <Button

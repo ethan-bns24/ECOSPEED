@@ -92,7 +92,7 @@ const RealTimeNavigation = ({
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#0a2e1a] via-[#0a2e1a] to-transparent border-t border-emerald-800/30 z-50 px-3 py-2 md:p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Bulle \"Current speed\" uniquement */}
+        {/* Bulle Current speed uniquement */}
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl px-3 py-2 md:p-4 border border-white/10">
           <div className="text-xs text-emerald-200/70 mb-2 flex items-center gap-2">
             <Gauge className="w-4 h-4" />
