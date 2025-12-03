@@ -22,7 +22,7 @@ import GPSNavigation from '../components/GPSNavigation';
 import { toast } from 'sonner';
 import { persistTripFromRoute, calculateChargingStops } from '../lib/tripStorage';
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
-import { getVehicleSettings, updateVehicleSettings, getAppSettings, getCustomVehicles } from '../lib/settingsStorage';
+import { getVehicleSettings, updateVehicleSettings, getAppSettings, getCustomVehicles, getFavoriteLocations, updateFavoriteLocations } from '../lib/settingsStorage';
 import { findChargingStationsOnRoute } from '../lib/chargingUtils';
 import { TRANSLATIONS as APP_TRANSLATIONS } from '../lib/translations';
 
@@ -197,6 +197,7 @@ const AnalysisPage = () => {
   const gpsWatchIdRef = useRef(null);
   const [demoMode, setDemoMode] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [favoriteLocations, setFavoriteLocations] = useState({ home: '', work: '' });
   
   // Vehicle profiles: filtrées par les préférences (véhicules actifs)
   const [availableProfiles, setAvailableProfiles] = useState(
@@ -244,6 +245,16 @@ const AnalysisPage = () => {
       setSelectedProfile(preferredName);
     } catch (e) {
       console.error('Failed to load vehicle settings', e);
+    }
+  }, []);
+
+  // Charger les raccourcis domicile / travail
+  useEffect(() => {
+    try {
+      const fav = getFavoriteLocations();
+      setFavoriteLocations(fav);
+    } catch (e) {
+      console.error('Failed to load favorite locations', e);
     }
   }, []);
 
@@ -598,6 +609,43 @@ const AnalysisPage = () => {
   const headerClass = isDark
     ? "bg-[#0a2e1a]/80 backdrop-blur-md border-b border-emerald-800/30 sticky top-0 z-50"
     : "bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50";
+
+  // Gestion des bulles "Domicile" / "Travail" pour remplir rapidement les champs
+  const handleFavoriteClick = (target, kind) => {
+    const currentValue = favoriteLocations[kind] || '';
+    let valueToUse = currentValue;
+
+    // Si aucun lieu encore enregistré, on demande à l'utilisateur de le configurer
+    if (!valueToUse && typeof window !== 'undefined') {
+      const promptText =
+        language === 'fr'
+          ? kind === 'home'
+            ? 'Entrez l\'adresse de votre domicile'
+            : 'Entrez l\'adresse de votre lieu de travail'
+          : kind === 'home'
+          ? 'Enter your home address'
+          : 'Enter your work address';
+      const entered = window.prompt(promptText, '');
+      if (!entered || !entered.trim()) {
+        return;
+      }
+      valueToUse = entered.trim();
+      const next = {
+        ...favoriteLocations,
+        [kind]: valueToUse,
+      };
+      setFavoriteLocations(next);
+      updateFavoriteLocations(next);
+    }
+
+    if (!valueToUse) return;
+
+    if (target === 'start') {
+      setStartLocation(valueToUse);
+    } else if (target === 'end') {
+      setEndLocation(valueToUse);
+    }
+  };
   
   // Si on est en navigation, afficher la carte en plein écran style Waze
   if (isNavigating && routeData && routeData.segments[currentSegmentIndex]) {
@@ -707,6 +755,33 @@ const AnalysisPage = () => {
                     onChange={(e) => setStartLocation(e.target.value)}
                     className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 placeholder:text-emerald-300/60" : "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400"}
                   />
+                  <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
+                    <span className={isDark ? 'text-emerald-200/80' : 'text-slate-600'}>
+                      {language === 'fr' ? 'Raccourcis :' : 'Shortcuts:'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleFavoriteClick('start', 'home')}
+                      className={`px-2 py-1 rounded-full border text-xs ${
+                        isDark
+                          ? 'border-emerald-500/60 text-emerald-100 bg-emerald-500/10 hover:bg-emerald-500/20'
+                          : 'border-emerald-500 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
+                      }`}
+                    >
+                      {language === 'fr' ? 'Domicile' : 'Home'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFavoriteClick('start', 'work')}
+                      className={`px-2 py-1 rounded-full border text-xs ${
+                        isDark
+                          ? 'border-emerald-500/60 text-emerald-100 bg-emerald-500/10 hover:bg-emerald-500/20'
+                          : 'border-emerald-500 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
+                      }`}
+                    >
+                      {language === 'fr' ? 'Travail' : 'Work'}
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
@@ -719,6 +794,33 @@ const AnalysisPage = () => {
                     onChange={(e) => setEndLocation(e.target.value)}
                     className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 placeholder:text-emerald-300/60" : "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400"}
                   />
+                  <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
+                    <span className={isDark ? 'text-emerald-200/80' : 'text-slate-600'}>
+                      {language === 'fr' ? 'Raccourcis :' : 'Shortcuts:'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleFavoriteClick('end', 'home')}
+                      className={`px-2 py-1 rounded-full border text-xs ${
+                        isDark
+                          ? 'border-emerald-500/60 text-emerald-100 bg-emerald-500/10 hover:bg-emerald-500/20'
+                          : 'border-emerald-500 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
+                      }`}
+                    >
+                      {language === 'fr' ? 'Domicile' : 'Home'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFavoriteClick('end', 'work')}
+                      className={`px-2 py-1 rounded-full border text-xs ${
+                        isDark
+                          ? 'border-emerald-500/60 text-emerald-100 bg-emerald-500/10 hover:bg-emerald-500/20'
+                          : 'border-emerald-500 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
+                      }`}
+                    >
+                      {language === 'fr' ? 'Travail' : 'Work'}
+                    </button>
+                  </div>
                 </div>
                 
                 <Button

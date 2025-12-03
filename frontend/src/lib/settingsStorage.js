@@ -59,6 +59,36 @@ export function saveCustomVehicles(customVehicles) {
   return next.customVehicles;
 }
 
+// ================== Lieux favoris (domicile / travail) ==================
+
+export function getFavoriteLocations() {
+  const settings = loadSettings();
+  return {
+    home: settings.homeLocation || '',
+    work: settings.workLocation || '',
+  };
+}
+
+export function updateFavoriteLocations(partial) {
+  const current = loadSettings();
+  const next = {
+    ...current,
+    homeLocation:
+      typeof partial.home === 'string'
+        ? partial.home
+        : current.homeLocation || '',
+    workLocation:
+      typeof partial.work === 'string'
+        ? partial.work
+        : current.workLocation || '',
+  };
+  saveSettings(next);
+  return {
+    home: next.homeLocation || '',
+    work: next.workLocation || '',
+  };
+}
+
 // ================== App (langue / thème) ==================
 
 export function getAppSettings() {
