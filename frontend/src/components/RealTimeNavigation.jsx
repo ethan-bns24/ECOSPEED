@@ -88,12 +88,11 @@ const RealTimeNavigation = ({
 
   const speedStatus = getSpeedStatus();
   const StatusIcon = speedStatus.icon;
-  const aboveLimit = currentSpeed > speedLimit + 1;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#0a2e1a] via-[#0a2e1a] to-transparent border-t border-emerald-800/30 z-50 px-3 py-2 md:p-6">
-      <div className="max-w-7xl mx-auto space-y-2 md:space-y-0 md:grid md:grid-cols-3 md:gap-4">
-        {/* Vitesse actuelle */}
+      <div className="max-w-4xl mx-auto">
+        {/* Bulle \"Current speed\" uniquement */}
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl px-3 py-2 md:p-4 border border-white/10">
           <div className="text-xs text-emerald-200/70 mb-2 flex items-center gap-2">
             <Gauge className="w-4 h-4" />
@@ -117,55 +116,6 @@ const RealTimeNavigation = ({
           </div>
         </div>
 
-        {/* Limitation de vitesse */}
-        <div className={`bg-white/5 backdrop-blur-sm rounded-2xl px-3 py-2 md:p-4 border ${aboveLimit ? 'border-red-500 animate-pulse' : 'border-white/10'}`}>
-          <div className="text-xs text-emerald-200/70 mb-2">{language === 'fr' ? 'Limitation' : 'Speed limit'}</div>
-            <div className="flex items-center gap-3">
-            <div className={`text-4xl md:text-5xl font-bold ${aboveLimit ? 'text-red-500' : 'text-red-400'}`}>
-              {speedLimit}
-              <span className="text-xl md:text-2xl text-red-300/70 ml-1">km/h</span>
-            </div>
-            <div className="flex-1">
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-red-400 transition-all duration-300"
-                  style={{ width: `${Math.min(100, (speedLimit / 130) * 100)}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Vitesse éco conseillée */}
-        <div className="bg-emerald-500/20 backdrop-blur-sm rounded-2xl px-3 py-2 md:p-4 border border-emerald-400/30">
-          <div className="text-xs text-emerald-200/70 mb-2 flex items-center gap-2">
-            <CheckCircle className="w-4 h-4" />
-            <span>{language === 'fr' ? 'Éco conseillée' : 'Eco recommended'}</span>
-          </div>
-          <div className="text-4xl md:text-5xl font-bold text-emerald-400 mb-1">
-            {Math.round(ecoSpeed)}
-            <span className="text-xl md:text-2xl text-emerald-300/70 ml-1">km/h</span>
-          </div>
-          <div className="text-xs text-emerald-200/70">
-            {speedDiffPercent > 0 ? (
-              <span className="text-amber-400">
-                {language === 'fr' 
-                  ? `Ralentissez de ${Math.round(speedDiff)} km/h pour économiser`
-                  : `Slow down by ${Math.round(speedDiff)} km/h to save energy`}
-              </span>
-            ) : speedDiffPercent < 0 ? (
-              <span className="text-blue-400">
-                {language === 'fr'
-                  ? `Accélérez de ${Math.round(Math.abs(speedDiff))} km/h pour optimiser`
-                  : `Speed up by ${Math.round(Math.abs(speedDiff))} km/h to optimize`}
-              </span>
-            ) : (
-              <span className="text-emerald-400">
-                {language === 'fr' ? 'Vitesse optimale !' : 'Optimal speed!'}
-              </span>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );

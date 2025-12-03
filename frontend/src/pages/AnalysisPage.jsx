@@ -196,6 +196,7 @@ const AnalysisPage = () => {
   const [useRealGps, setUseRealGps] = useState(false); // Navigation basée sur GPS réel
   const gpsWatchIdRef = useRef(null);
   const [demoMode, setDemoMode] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
   
   // Vehicle profiles: filtrées par les préférences (véhicules actifs)
   const [availableProfiles, setAvailableProfiles] = useState(
@@ -246,9 +247,21 @@ const AnalysisPage = () => {
     }
   }, []);
 
+  // Détecter si on est sur mobile (pour activer GPS réel) ou sur desktop (mode démo)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const ua = navigator.userAgent || '';
+    const mobile = /Android|iPhone|iPad|iPod/i.test(ua) || window.innerWidth < 768;
+    setIsMobileDevice(mobile);
+    // Sur desktop, on active le mode démo par défaut (pas de mouvement auto sur la carte)
+    if (!mobile) {
+      setDemoMode(true);
+    }
+  }, []);
+
   // Pendant la navigation, suivre en continu la position GPS réelle de l'utilisateur
   useEffect(() => {
-    if (typeof window === 'undefined' || !('geolocation' in navigator)) {
+    if (typeof window === 'undefined' || !('geolocation' in navigator) || !isMobileDevice || demoMode) {
       return;
     }
 
@@ -296,9 +309,9 @@ const AnalysisPage = () => {
     };
   }, [isNavigating]);
 
-  // Mode démo clavier (Z / S) pour ajuster la vitesse simulée autour de la vitesse éco
+  // Mode démo clavier (Z / S) pour ajuster la vitesse manuellement (desktop uniquement)
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || isMobileDevice === true) return;
 
     const handleKeyDown = (event) => {
       if (!isNavigating || useRealGps || !routeData || !routeData.segments) return;
@@ -548,8 +561,9 @@ const AnalysisPage = () => {
   
   // Navigation simulation avec mise à jour de position en temps réel
   useEffect(() => {
-    // Si on utilise la position GPS réelle, on désactive la simulation
-    if (useRealGps) {
+    // Si on utilise la position GPS réelle ou qu'on est en mode démo (desktop),
+    // on désactive la simulation de mouvement sur la carte
+    if (useRealGps || demoMode) {
       return;
     }
 
