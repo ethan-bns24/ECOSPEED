@@ -192,6 +192,7 @@ const AnalysisPage = () => {
   const [currentSpeed, setCurrentSpeed] = useState(0);
   const [currentPosition, setCurrentPosition] = useState(null);
   const [distanceToNextTurn, setDistanceToNextTurn] = useState(0);
+  const [userLocation, setUserLocation] = useState(null); // Position GPS réelle si disponible
   
   // Vehicle profiles: filtrées par les préférences (véhicules actifs)
   const [availableProfiles, setAvailableProfiles] = useState(
@@ -242,6 +243,27 @@ const AnalysisPage = () => {
     }
   }, []);
 
+  // Tenter de récupérer la localisation de l'utilisateur une fois au chargement
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('geolocation' in navigator)) {
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setUserLocation({ lat: latitude, lon: longitude });
+      },
+      (err) => {
+        console.warn('Geolocation error:', err);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 30000,
+      }
+    );
+  }, []);
+
   const getSelectedVehicleData = () => {
     if (selectedProfile === 'Custom') {
       return customVehicle;
@@ -259,7 +281,15 @@ const AnalysisPage = () => {
   };
   
   const handleCalculateRoute = async () => {
-    if (!startLocation || !endLocation) {
+    // Si on a la localisation GPS et que le champ départ est vide,
+    // on utilise la position actuelle comme point de départ (lat,lon)
+    let resolvedStart = startLocation;
+    if ((!resolvedStart || resolvedStart.trim() === '') && userLocation) {
+      resolvedStart = `${userLocation.lat},${userLocation.lon}`;
+      // Ne pas forcément surcharger l'UI, on peut garder le champ visuel vide
+    }
+
+    if (!resolvedStart || !endLocation) {
       toast.error('Please enter both start and end locations');
       return;
     }
@@ -278,7 +308,7 @@ const AnalysisPage = () => {
       const estimatedBatteryEndPct = 20; // Valeur par défaut pour le calcul des recharges
       
       const requestData = {
-        start: startLocation,
+        start: resolvedStart,
         end: endLocation,
         vehicle_profile: vehicle,
         user_max_speed: 130,
