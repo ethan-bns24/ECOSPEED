@@ -134,6 +134,26 @@ const GPSNavigation = ({
     }
   };
 
+  // Infos globales restantes (distance + temps estimé)
+  const remainingInfo = (() => {
+    if (!segments || !Array.isArray(segments) || currentSegmentIndex >= segments.length) {
+      return { distanceKm: 0, timeMin: 0 };
+    }
+    const remainingSegments = segments.slice(currentSegmentIndex);
+    const totalRemainingDistanceM = remainingSegments.reduce(
+      (sum, seg) => sum + (seg.distance || 0),
+      0
+    );
+    const totalRemainingTimeSec = remainingSegments.reduce(
+      (sum, seg) => sum + (seg.eco_time || seg.real_time || 0),
+      0
+    );
+    return {
+      distanceKm: totalRemainingDistanceM / 1000,
+      timeMin: totalRemainingTimeSec / 60,
+    };
+  })();
+
   return (
     <div className="fixed top-0 left-0 right-0 bg-gradient-to-b from-[#0a2e1a] via-[#0a2e1a]/95 to-transparent border-b border-emerald-800/30 z-40 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
@@ -171,18 +191,19 @@ const GPSNavigation = ({
             </div>
           </div>
 
-          {/* Distance totale restante */}
+          {/* Distance et temps restants */}
           {segments && currentSegmentIndex < segments.length && (
             <div className="text-right">
               <div className="text-xs text-emerald-200/70 mb-1">
                 {t.distanceRemaining || 'Distance remaining'}
               </div>
               <div className="text-xl md:text-2xl font-bold text-emerald-400">
-                {(() => {
-                  const remainingSegments = segments.slice(currentSegmentIndex);
-                  const totalRemaining = remainingSegments.reduce((sum, seg) => sum + (seg.distance || 0), 0);
-                  return formatDistance(totalRemaining / 1000);
-                })()}
+                {formatDistance(remainingInfo.distanceKm)}
+              </div>
+              <div className="text-xs md:text-sm text-emerald-200/80 mt-1">
+                {language === 'fr'
+                  ? `Temps restant ~ ${Math.round(remainingInfo.timeMin)} min`
+                  : `Remaining time ~ ${Math.round(remainingInfo.timeMin)} min`}
               </div>
             </div>
           )}
