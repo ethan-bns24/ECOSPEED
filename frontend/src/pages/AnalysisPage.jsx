@@ -635,11 +635,11 @@ const AnalysisPage = () => {
         />
         
         {/* Boutons de contrôle en overlay */}
-        <div className="fixed top-20 md:top-24 left-3 md:left-4 z-[80] flex flex-col gap-2">
+        <div className="fixed top-24 right-3 md:top-28 md:right-6 z-[200] pointer-events-auto flex flex-col gap-2 items-end">
           <Button
             onClick={handlePauseNavigation}
             size="sm"
-            className="bg-red-500/90 hover:bg-red-600 text-white backdrop-blur-sm"
+            className="bg-red-500/90 hover:bg-red-600 text-white backdrop-blur-sm shadow-lg"
           >
             <Pause className="w-4 h-4 mr-1" />
             {t.navigation.pause}
@@ -648,7 +648,7 @@ const AnalysisPage = () => {
             onClick={handleResetNavigation}
             size="sm"
             variant="outline"
-            className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border-white/20"
+            className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border-white/20 shadow-lg"
           >
             <RotateCcw className="w-4 h-4" />
             {t.navigation.reset}
