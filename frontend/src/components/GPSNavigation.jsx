@@ -155,37 +155,20 @@ const GPSNavigation = ({
   })();
 
   return (
-    <div className="fixed top-0 left-0 right-0 bg-gradient-to-b from-[#0a2e1a] via-[#0a2e1a]/95 to-transparent border-b border-emerald-800/30 z-40 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between">
+    <div className="fixed top-0 left-0 right-0 z-50">
+      {/* Bande principale type GPS */}
+      <div className="bg-[#facc15] text-black border-b border-black/20 px-4 md:px-8 py-3 md:py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           {/* Instruction de navigation */}
-          <div className="flex items-center gap-4">
-            <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center ${
-              instruction?.type === 'straight' ? 'bg-emerald-500/30' :
-              instruction?.type === 'slight-right' || instruction?.type === 'slight-left' ? 'bg-blue-500/30' :
-              instruction?.type === 'right' || instruction?.type === 'left' ? 'bg-amber-500/30' :
-              'bg-red-500/30'
-            } border-2 border-white/20`}>
-              <InstructionIcon className={`w-8 h-8 md:w-10 md:h-10 ${
-                instruction?.type === 'straight' ? 'text-emerald-400' :
-                instruction?.type === 'slight-right' || instruction?.type === 'slight-left' ? 'text-blue-400' :
-                instruction?.type === 'right' || instruction?.type === 'left' ? 'text-amber-400' :
-                'text-red-400'
-              }`} 
-              style={{
-                transform: instruction?.type === 'right' || instruction?.type === 'slight-right' 
-                  ? 'rotate(0deg)' 
-                  : instruction?.type === 'left' || instruction?.type === 'slight-left'
-                  ? 'scaleX(-1)'
-                  : 'none'
-              }}
-              />
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-black/80 flex items-center justify-center">
+              <InstructionIcon className="w-7 h-7 md:w-8 md:h-8 text-[#facc15]" />
             </div>
-            <div>
-              <div className="text-sm md:text-base text-emerald-200/70 mb-1">
+            <div className="min-w-0">
+              <div className="text-xs md:text-sm text-black/80">
                 {t.in || 'In'} {formatDistance(distanceToTurn)}
               </div>
-              <div className="text-lg md:text-2xl font-bold text-white">
+              <div className="text-base md:text-2xl font-bold truncate">
                 {instruction?.text || t.continueStraight || 'Continue straight'}
               </div>
             </div>
@@ -193,14 +176,14 @@ const GPSNavigation = ({
 
           {/* Distance et temps restants */}
           {segments && currentSegmentIndex < segments.length && (
-            <div className="text-right">
-              <div className="text-xs text-emerald-200/70 mb-1">
+            <div className="text-right shrink-0">
+              <div className="text-xs md:text-sm text-black/80">
                 {t.distanceRemaining || 'Distance remaining'}
               </div>
-              <div className="text-xl md:text-2xl font-bold text-emerald-400">
+              <div className="text-lg md:text-2xl font-extrabold">
                 {formatDistance(remainingInfo.distanceKm)}
               </div>
-              <div className="text-xs md:text-sm text-emerald-200/80 mt-1">
+              <div className="text-[11px] md:text-xs text-black/80">
                 {language === 'fr'
                   ? `Temps restant ~ ${Math.round(remainingInfo.timeMin)} min`
                   : `Remaining time ~ ${Math.round(remainingInfo.timeMin)} min`}
