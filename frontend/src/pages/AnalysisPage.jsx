@@ -22,7 +22,7 @@ import GPSNavigation from '../components/GPSNavigation';
 import { toast } from 'sonner';
 import { persistTripFromRoute, calculateChargingStops } from '../lib/tripStorage';
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
-import { getVehicleSettings, updateVehicleSettings, getAppSettings } from '../lib/settingsStorage';
+import { getVehicleSettings, updateVehicleSettings, getAppSettings, getCustomVehicles } from '../lib/settingsStorage';
 import { findChargingStationsOnRoute } from '../lib/chargingUtils';
 import { TRANSLATIONS as APP_TRANSLATIONS } from '../lib/translations';
 
@@ -202,23 +202,28 @@ const AnalysisPage = () => {
     // Charger les préférences véhicules
     try {
       const { enabledVehicles, defaultVehicleName } = getVehicleSettings() || {};
+      const storedCustom = getCustomVehicles() || [];
+      const allProfiles = [
+        ...VEHICLE_PROFILES,
+        ...storedCustom,
+      ];
       let profiles = [];
 
       // Seuls les véhicules marqués comme "par défaut" (dans enabledVehicles) apparaissent
       if (enabledVehicles && enabledVehicles.length > 0) {
-        profiles = VEHICLE_PROFILES.filter((p) => enabledVehicles.includes(p.name));
+        profiles = allProfiles.filter((p) => enabledVehicles.includes(p.name));
       } else {
         // Si aucune préférence encore enregistrée, on choisit la première voiture
-        const first = VEHICLE_PROFILES[0]?.name;
+        const first = allProfiles[0]?.name;
         if (first) {
-          profiles = VEHICLE_PROFILES.filter((p) => p.name === first);
+          profiles = allProfiles.filter((p) => p.name === first);
           updateVehicleSettings({
             enabledVehicles: [first],
             defaultVehicleName: first,
           });
         } else {
           // Fallback : tous les véhicules si aucune préférence
-          profiles = VEHICLE_PROFILES;
+          profiles = allProfiles;
         }
       }
 
@@ -241,8 +246,14 @@ const AnalysisPage = () => {
     if (selectedProfile === 'Custom') {
       return customVehicle;
     }
+    // D'abord, essayer dans la liste de profils disponibles (inclut les véhicules personnalisés)
+    if (availableProfiles && availableProfiles.length > 0) {
+      const found = availableProfiles.find((p) => p.name === selectedProfile);
+      if (found) return found;
+    }
+    // Fallback sur les profils statiques
     if (!VEHICLE_PROFILES || VEHICLE_PROFILES.length === 0) {
-      return customVehicle; // Fallback sur Custom si pas de profils
+      return customVehicle;
     }
     return VEHICLE_PROFILES.find(p => p.name === selectedProfile) || (VEHICLE_PROFILES[0] || customVehicle);
   };
@@ -989,6 +1000,7 @@ const AnalysisPage = () => {
                       currentSegment={routeData.segments[currentSegmentIndex]}
                       totalSegments={routeData.segments.length}
                       totalDistance={routeData.total_distance}
+                      allSegments={routeData.segments}
                     />
                   </div>
                 </CardContent>

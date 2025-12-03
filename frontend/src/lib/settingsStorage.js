@@ -41,6 +41,24 @@ export function updateVehicleSettings(partial) {
   return next;
 }
 
+// Profils de véhicules personnalisés (stockés dans le localStorage)
+export function getCustomVehicles() {
+  const settings = loadSettings();
+  const list = settings.customVehicles;
+  if (!Array.isArray(list)) return [];
+  return list;
+}
+
+export function saveCustomVehicles(customVehicles) {
+  const current = loadSettings();
+  const next = {
+    ...current,
+    customVehicles: Array.isArray(customVehicles) ? customVehicles : [],
+  };
+  saveSettings(next);
+  return next.customVehicles;
+}
+
 // ================== App (langue / thème) ==================
 
 export function getAppSettings() {

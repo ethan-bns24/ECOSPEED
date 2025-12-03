@@ -1,7 +1,7 @@
 import React from 'react';
 import { Gauge, Navigation, Clock, Battery } from 'lucide-react';
 
-const NavigationPanel = ({ currentSegment, totalSegments, totalDistance }) => {
+const NavigationPanel = ({ currentSegment, totalSegments, totalDistance, allSegments }) => {
   if (!currentSegment) {
     return (
       <div className="text-center text-gray-400 py-8">
@@ -10,7 +10,20 @@ const NavigationPanel = ({ currentSegment, totalSegments, totalDistance }) => {
     );
   }
 
-  const distanceCovered = currentSegment.index * (totalDistance / totalSegments);
+  // Calculer la distance réelle couverte en additionnant les distances des segments précédents
+  let distanceCovered = 0;
+  if (allSegments && Array.isArray(allSegments)) {
+    for (let i = 0; i < currentSegment.index; i++) {
+      if (allSegments[i] && allSegments[i].distance != null) {
+        distanceCovered += allSegments[i].distance / 1000; // Convertir mètres en km
+      }
+    }
+  } else {
+    // Fallback si allSegments n'est pas fourni
+    distanceCovered = currentSegment.index * (totalDistance / totalSegments);
+  }
+  
+  // Calculer la distance restante
   const distanceRemaining = totalDistance - distanceCovered;
   
   const getEcoMessage = () => {
