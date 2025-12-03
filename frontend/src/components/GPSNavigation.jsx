@@ -172,7 +172,8 @@ const GPSNavigation = ({
     <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
       {/* Barre GPS principale, adaptée mobile + thème Ecospeed */}
       <div className="pointer-events-auto bg-[#0a2e1a]/95 backdrop-blur-md border-b border-emerald-900/60 px-3 py-2 md:px-6 md:py-3">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-3 md:gap-6">
+        {/* On ajoute du padding à droite pour laisser la place aux boutons Pause / Réinitialiser */}
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-3 md:gap-6 pr-28 md:pr-40">
           {/* Instruction de navigation */}
           <div className="flex items-center gap-3 md:gap-4 min-w-0">
             <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/60 flex items-center justify-center">
