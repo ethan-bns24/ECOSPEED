@@ -26,10 +26,13 @@
 - Rate limiting respect (1s delay between requests)
 
 #### 5. Proper Uphill/Downhill Energy Calculation
+- **Elementary segment calculation**: Each segment between two consecutive GPS points is calculated individually with its own slope
+- **No slope averaging**: Slopes are never averaged between uphill and downhill portions
 - Correctly separates uphill and downhill segments
-- Accounts for motor efficiency losses (consumption)
-- Accounts for regen efficiency losses (recovery)
-- Even with net slope = 0, energy is consumed due to efficiency losses
+- Accounts for motor efficiency losses (consumption ~90-95%)
+- Accounts for regen efficiency losses (recovery ~65-85%)
+- Even with net elevation change = 0, energy is consumed due to efficiency losses
+- Energies are summed (including negative regeneration values) when grouping segments by speed limit
 
 #### 6. Complete English Translation
 - All UI text translated to English

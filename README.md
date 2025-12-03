@@ -21,10 +21,12 @@ Web application developed for an engineering school project, demonstrating:
 
 ### 2. EV Physics Model
 Energy consumption calculation based on:
-- **Gravitational force**: uphill/downhill segments (properly separated)
+- **Gravitational force**: calculated for each elementary segment between consecutive GPS points (slope computed individually, never averaged)
 - **Rolling resistance**: tire friction
 - **Aerodynamic drag**: air resistance
 - **Regenerative braking**: energy recovery on downhill (with efficiency losses)
+
+**Important**: Each elementary segment between two GPS points is calculated individually with its own slope. Uphill and downhill portions are never averaged together, ensuring accurate energy balance (consumption vs regeneration with their respective efficiency losses).
 
 ### 3. Driving Scenarios & Eco-Speed
 
@@ -219,10 +221,14 @@ Where F_total = F_gravity + F_rolling + F_aero
 
 **Gravitational force (slope):**
 ```
+# Calculé pour chaque segment élémentaire entre deux points GPS
+slope = elevation_change / distance  # Pente individuelle (pas de moyenne)
 F_gravity = m × g × slope
 ```
-- Positive uphill (resists motion)
-- Negative downhill (aids motion)
+- Positive uphill (resists motion) → energy consumption with motor efficiency losses (~90-95%)
+- Negative downhill (aids motion) → energy recovery with regen efficiency losses (~65-85%)
+
+**Important**: Even if net elevation change is zero (equal uphill/downhill), energy is still consumed because motor efficiency < 100% and regen efficiency < 100%. Each segment's slope is calculated individually, and energies are summed (not averaged).
 
 **Rolling resistance:**
 ```

@@ -44,11 +44,13 @@ Crée une présentation professionnelle et moderne sur ECOSPEED, un optimiseur d
 **Titre**: Comment on déduit la vitesse économe  
 **Contenu**:  
 - Calcul des forces: gravité (pente), résistance au roulement, traînée aérodynamique, freinage régénératif  
-- Énergie d’un segment: \(E = (F_\text{total} \times distance) / \eta_\text{moteur}\)  
-- Stratégie ECO:  
-  - Montée: réduire fortement la vitesse pour limiter la puissance demandée  
-  - Plat: rouler à ~85–90% de la limite pour réduire fortement la traînée  
-  - Descente: vitesse modérée pour maximiser la récupération sans dépasser la limite  
+- **Calcul par segment élémentaire**: Chaque segment entre deux points GPS consécutifs est calculé individuellement avec sa propre pente (pas de moyenne)  
+- Énergie d'un segment: \(E = (F_\text{total} \times distance) / \eta_\text{moteur}\) (montée) ou \(E = (F_\text{total} \times distance) \times \eta_\text{regen}\) (descente)  
+- Stratégie ECO (basée sur la pente individuelle de chaque segment):  
+  - Montée (>2%): réduire fortement la vitesse pour limiter la puissance demandée  
+  - Plat (|pente| ≤ 2%): rouler à ~88% de la limite pour réduire fortement la traînée  
+  - Descente (<-2%): vitesse modérée pour maximiser la récupération sans dépasser la limite  
+- **Important**: Même avec pente moyenne = 0, on consomme de l'énergie car les pertes d'efficacité font qu'on consomme plus en montée qu'on ne récupère en descente  
 - La vitesse ECO affichée au conducteur est **arrondie au km/h** pour rester lisible en conduite  
 **Visuel**: Schéma des forces sur une voiture + petit tableau vitesses limite vs vitesses ECO  
 

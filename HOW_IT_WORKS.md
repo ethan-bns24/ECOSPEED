@@ -14,18 +14,30 @@ Ecospeed récupère les informations suivantes pour un itinéraire :
 - **Distance** : longueur de chaque segment en mètres
 
 ### Segmentation
-L'itinéraire est divisé en segments de taille variable (typiquement 5-10 km) pour permettre une analyse détaillée :
+
+**IMPORTANT** : L'itinéraire est traité en deux niveaux :
+
+1. **Segments élémentaires** : Chaque paire de points GPS consécutifs forme un segment élémentaire. Le calcul physique (pente, énergie) est effectué pour chaque segment élémentaire individuellement.
+
+2. **Segments regroupés** : Les segments élémentaires sont ensuite regroupés par vitesse limite pour l'affichage, mais les énergies sont additionnées (pas moyennées).
+
 ```python
-# Exemple de segment
+# Exemple de segment élémentaire entre deux points GPS
 {
-    "distance": 5000,          # 5 km
-    "elevation_start": 50,     # 50m d'altitude au départ
-    "elevation_end": 120,      # 120m d'altitude à l'arrivée
+    "distance": 150,           # Distance entre deux points GPS (typiquement 50-200m)
+    "elevation_start": 50,     # 50m d'altitude au point GPS i
+    "elevation_end": 52,       # 52m d'altitude au point GPS i+1
     "speed_limit": 130,        # 130 km/h autorisés
     "lat_start": 49.4944,
     "lon_start": 0.1079
 }
 ```
+
+**Pourquoi cette approche ?**
+- Chaque segment élémentaire a sa propre pente calculée individuellement
+- On ne fait **jamais** de moyenne de pente entre montée et descente
+- Les segments montants et descendants sont traités séparément avec leurs efficacités respectives
+- Même si la pente moyenne est proche de zéro, la consommation réelle est importante car on consomme plus en montée qu'on ne récupère en descente (pertes d'efficacité)
 
 ## 2. Modèle Physique de Consommation d'Énergie
 
@@ -50,21 +62,33 @@ vehicle = {
 Pour chaque segment, nous calculons les forces suivantes :
 
 #### 1. Force gravitationnelle (pente)
+
+**IMPORTANT** : La pente est calculée pour **chaque segment élémentaire individuellement**, pas pour des segments regroupés.
+
 ```python
-# Calcul de la pente
-slope = (elevation_end - elevation_start) / distance
+# Pour chaque segment élémentaire entre deux points GPS consécutifs :
+# Calcul de la pente pour CE segment spécifique
+elevation_change = elevation_end - elevation_start  # Différence d'altitude
+slope = elevation_change / distance
 
 # Force gravitationnelle
 F_gravity = total_mass × 9.81 × slope
 
-# Positif en montée (résiste au mouvement)
-# Négatif en descente (aide au mouvement)
+# Positif en montée (résiste au mouvement) → consommation d'énergie
+# Négatif en descente (aide au mouvement) → récupération d'énergie (régénération)
 ```
 
 **Exemple :**
 - Véhicule de 1761 kg
-- Pente de 2% (montée de 100m sur 5km)
-- F_gravity = 1761 × 9.81 × 0.02 = 345 N
+- Segment élémentaire : montée de 2m sur 100m
+- `slope = 2/100 = 0.02` (2% de pente)
+- `F_gravity = 1761 × 9.81 × 0.02 = 345 N` (force résistante)
+
+**Pourquoi ne pas faire de moyenne ?**
+Si on a un segment qui monte de 10m puis descend de 10m :
+- Segment 1 : `slope = +0.10` (10%) → consommation avec pertes moteur (~90-95%)
+- Segment 2 : `slope = -0.10` (-10%) → récupération avec pertes régénération (~65-85%)
+- Pente moyenne = 0%, mais consommation nette > 0 car les pertes d'efficacité font qu'on consomme plus qu'on ne récupère
 
 #### 2. Résistance au roulement
 ```python
@@ -103,7 +127,11 @@ F_total = F_gravity + F_rolling + F_aero
 
 ### Calcul de l'énergie
 
+**IMPORTANT** : Le calcul est effectué pour **chaque segment élémentaire individuellement**, puis les énergies sont additionnées (y compris les valeurs négatives de régénération).
+
 ```python
+# Pour chaque segment élémentaire entre deux points GPS :
+
 # Puissance requise (Watts)
 power = F_total × speed_m/s
 
@@ -117,10 +145,19 @@ energy_j = power × time
 energy_kwh = energy_j / (3600 × 1000)
 
 # Application du rendement moteur
-if energy_kwh > 0:  # Consommation
-    energy_kwh = energy_kwh / motor_efficiency
-else:  # Régénération
-    energy_kwh = energy_kwh × regen_efficiency
+if energy_kwh > 0:  # Consommation (montée/plat)
+    energy_kwh = energy_kwh / motor_efficiency  # Pertes moteur (~90-95%)
+else:  # Régénération (descente)
+    energy_kwh = energy_kwh × regen_efficiency  # Pertes régénération (~65-85%)
+
+# Résultat : énergie positive (consommation) ou négative (récupération)
+```
+
+**Regroupement des segments :**
+Lorsque plusieurs segments élémentaires sont regroupés par vitesse limite, on **additionne** les énergies (pas de moyenne) :
+```python
+total_energy = sum(segment.energy for segment in segment_group)
+# Les valeurs négatives (régénération) sont correctement soustraites
 ```
 
 ### Freinage régénératif
@@ -163,6 +200,8 @@ speed_limit = segment["speed_limit"]  # Utilise directement la limitation
 
 ```python
 def calculate_eco_speed(distance, elevation_change, speed_limit, vehicle):
+    # Calcul de la pente pour CE segment élémentaire spécifique
+    # (pas de moyenne avec d'autres segments)
     slope = elevation_change / distance
     
     if slope > 0.02:  # Montée significative (>2%)
@@ -182,6 +221,8 @@ def calculate_eco_speed(distance, elevation_change, speed_limit, vehicle):
     
     return eco_speed
 ```
+
+**Note** : Cette fonction est appelée pour **chaque segment élémentaire individuellement**, en utilisant sa propre `elevation_change` et `distance`. La vitesse éco est donc adaptée à la pente spécifique de chaque segment.
 
 **Principes physiques :**
 

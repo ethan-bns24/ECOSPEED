@@ -99,35 +99,46 @@ A set of three dashboard screenshots can be inserted as follows (the \texttt{[H]
 
 \subsection{Forces modelled}
 
-For each route segment, the backend knows:
+The route is first split into \textbf{homogeneous speed segments} (grouped by speed limit), but the physical calculations are performed for each \textbf{elementary segment between two consecutive GPS points}. This ensures that elevation changes are accurately captured at the finest granularity.
+
+For each elementary segment between two GPS points, the backend knows:
 \begin{itemize}
   \item the segment distance $d$ (in m),
   \item the start and end altitudes ($h_\mathrm{start}$, $h_\mathrm{end}$),
-  \item the speed limit $v_\mathrm{lim}$ (in km/h),
+  \item the speed limit $v_\mathrm{lim}$ (in km/h) of the speed segment containing this elementary segment,
   \item the vehicle parameters: mass $m$ (vehicle + load), aerodynamic drag coefficient $C_dA$, rolling resistance coefficient $C_\mathrm{rr}$, motor and regeneration efficiencies.
 \end{itemize}
 
-We first compute the mean slope:
+\textbf{Important:} We do \emph{not} compute a mean slope that would average positive and negative elevation changes. Instead, we calculate the slope for each elementary segment:
 \[
   \mathrm{slope} = \frac{h_\mathrm{end} - h_\mathrm{start}}{d}
 \]
 
-The main forces are then:
+This separation is crucial because:
+\begin{itemize}
+  \item \textbf{Uphill segments} ($\mathrm{slope} > 0$): Energy consumption is high due to gravitational resistance, and motor efficiency losses (typically 90--95\%).
+  \item \textbf{Downhill segments} ($\mathrm{slope} < 0$): Energy can be recovered through regeneration, but with significant losses (typically 65--85\% efficiency).
+\end{itemize}
+
+Averaging would be misleading: a route with equal uphill and downhill portions would show a mean slope near zero, but the actual consumption would be substantial because we consume more energy going up than we recover going down (due to efficiency losses).
+
+The main forces are then computed for each elementary segment:
 \begin{itemize}
   \item \textbf{Gravitational force} (slope):
   \[
     F_\mathrm{grav} = m g \times \mathrm{slope}
   \]
+  Positive for uphill (resisting motion), negative for downhill (assisting motion).
   \item \textbf{Rolling resistance}:
   \[
     F_\mathrm{roll} = C_\mathrm{rr} \, m g \cos(\theta)
   \]
-  where $\theta$ is the slope angle.
+  where $\theta$ is the slope angle. Always positive (resisting motion).
   \item \textbf{Aerodynamic drag}:
   \[
     F_\mathrm{aero} = \frac{1}{2} \rho \, C_dA \, v^2
   \]
-  with $\rho$ the air density and $v$ the speed in m/s.
+  with $\rho$ the air density and $v$ the speed in m/s. Always positive (resisting motion).
 \end{itemize}
 
 The total force is:
@@ -135,30 +146,40 @@ The total force is:
   F_\mathrm{tot} = F_\mathrm{grav} + F_\mathrm{roll} + F_\mathrm{aero}
 \]
 
-From this we derive power and energy:
+From this we derive power and energy for each elementary segment:
 \[
   P = F_\mathrm{tot} \times v, \qquad
   t = \frac{d}{v}, \qquad
   E_\mathrm{brut} = P \times t
 \]
 
+The sign of $E_\mathrm{brut}$ depends on the slope:
+\begin{itemize}
+  \item \textbf{Uphill or flat} ($F_\mathrm{grav} \geq 0$): $E_\mathrm{brut} > 0$ (energy consumed).
+  \item \textbf{Downhill} ($F_\mathrm{grav} < 0$): $E_\mathrm{brut}$ may be negative if gravitational assistance exceeds other resistances (energy potentially recovered).
+\end{itemize}
+
 In kWh, taking efficiencies into account:
 \[
   E_\mathrm{kWh} =
   \begin{cases}
-    \dfrac{E_\mathrm{brut}}{\eta_\mathrm{moteur}} & \text{si } E_\mathrm{brut} > 0 \quad (\text{consommation}) \\
-    E_\mathrm{brut} \times \eta_\mathrm{regen} & \text{si } E_\mathrm{brut} < 0 \quad (\text{régénération})
+    \dfrac{E_\mathrm{brut}}{\eta_\mathrm{moteur}} & \text{if } E_\mathrm{brut} > 0 \quad (\text{consumption, motor losses}) \\
+    E_\mathrm{brut} \times \eta_\mathrm{regen} & \text{if } E_\mathrm{brut} < 0 \quad (\text{regeneration, recovery losses})
   \end{cases}
 \]
 
+The total energy for a speed segment is the sum of all elementary segments within it. This approach ensures that uphill and downhill portions are never averaged: each contributes its actual consumption or recovery, properly accounting for efficiency losses.
+
 \subsection{Determining the ECO speed}
 
-The general idea is to choose, for each segment, a speed $v_\mathrm{eco}$ that:
+The general idea is to choose, for each \textbf{elementary segment between two GPS points}, a speed $v_\mathrm{eco}$ that:
 \begin{itemize}
   \item significantly reduces the aerodynamic component (which grows as $v^2$),
-  \item takes the slope into account (uphill or downhill),
+  \item takes the slope into account (uphill or downhill) of that specific segment,
   \item stays close to the legal limit in order not to explode total travel time.
 \end{itemize}
+
+Note that the ECO speed is computed for each elementary segment individually, based on its own slope. This ensures that uphill and downhill portions are treated separately, not averaged together.
 
 The implemented strategy is the following (simplified pseudo-code):
 %
@@ -189,7 +210,7 @@ We drive slightly below the legal limit:
 \]
 This 10–15\% reduction already significantly reduces $F_\mathrm{aero}$ (and thus consumption), while keeping a travel time very close to the LIMIT scenario.
 
-The full ECO scenario is built by concatenating the speeds $v_\mathrm{eco}$ of all segments and recomputing the associated energies and times.
+The full ECO scenario is built by computing $v_\mathrm{eco}$ for each elementary segment (based on its individual slope), then aggregating the energies and times. This ensures that uphill and downhill segments are never averaged together, preserving the accurate energy balance.
 
 \section{Real-time navigation and visualization}
 

@@ -148,15 +148,23 @@ def calculate_energy_consumption(
     rho_air: float = 1.225,
 ) -> float:
     """
-    Calculate energy consumption for a segment using physics-based model.
+    Calculate energy consumption for a SINGLE elementary segment between two GPS points.
+    
+    IMPORTANT: This function is called for each segment individually. We do NOT average
+    slopes between multiple segments. Each segment's slope is calculated as:
+    slope = elevation_change_m / distance_m
+    
+    This ensures that uphill and downhill portions are treated separately:
+    - Uphill segments (slope > 0): consume energy with motor efficiency losses
+    - Downhill segments (slope < 0): can recover energy with regen efficiency losses
     
     Forces considered:
-    1. Gravity force (uphill/downhill)
+    1. Gravity force (uphill/downhill) - depends on individual segment slope
     2. Rolling resistance
     3. Aerodynamic drag
     4. Inertia (simplified)
     
-    Returns energy in kWh.
+    Returns energy in kWh (positive for consumption, negative for regeneration).
     """
     if speed_kmh <= 0:
         return 0.0
@@ -246,21 +254,28 @@ def calculate_eco_speed(
     min_speed_kmh: float = 30.0
 ) -> float:
     """
-    Calculate optimized eco-speed for a segment, taking into account ALL vehicle parameters:
+    Calculate optimized eco-speed for a SINGLE elementary segment between two GPS points.
+    
+    IMPORTANT: This function is called for each segment individually, using its own
+    elevation_change_m. We do NOT average slopes between segments. The slope is calculated
+    as: slope = elevation_change_m / distance_m for THIS specific segment.
+    
+    Takes into account ALL vehicle parameters:
     - Mass (affects gravity and rolling resistance)
     - Rolling resistance coefficient (Crr)
     - Aerodynamic drag (CdA)
     - Motor and regen efficiency
     
-    Strategy:
-    - Uphill: reduce speed to minimize power demand (more reduction if heavier/higher drag)
-    - Downhill: moderate speed to maximize regen benefits (but never exceed speed limit)
-    - Flat: slightly below speed limit for optimal efficiency (considering drag and rolling resistance)
+    Strategy (based on individual segment slope):
+    - Uphill (slope > 2%): reduce speed to minimize power demand (more reduction if heavier/higher drag)
+    - Downhill (slope < -2%): moderate speed to maximize regen benefits (but never exceed speed limit)
+    - Flat (|slope| <= 2%): slightly below speed limit for optimal efficiency
     
     IMPORTANT: eco_speed must NEVER exceed speed_limit_kmh (legal requirement)
     
     Returns speed in km/h.
     """
+    # Calculate slope for THIS specific segment (not averaged with others)
     slope = elevation_change_m / distance_m if distance_m > 0 else 0
     
     # Calculate total mass (use provided or vehicle default)
@@ -357,6 +372,12 @@ def calculate_eco_speed(
 def _merge_segments(segment_group: List[Segment], index: int) -> Segment:
     """
     Merge a group of consecutive segments with the same speed limit into a single segment.
+    
+    IMPORTANT: This function ADDS energies (including negative values for regeneration),
+    it does NOT average slopes. Each elementary segment was already calculated individually
+    with its own slope, and we simply sum the results. This preserves the accurate energy
+    balance: uphill segments (positive energy) and downhill segments (negative energy)
+    are never averaged together.
     """
     if not segment_group:
         raise ValueError("Cannot merge empty segment group")
@@ -388,11 +409,13 @@ def _merge_segments(segment_group: List[Segment], index: int) -> Segment:
     first_seg = segment_group[0]
     last_seg = segment_group[-1]
     
-    # Sum all values
+    # Sum all values (including negative energies from regeneration)
+    # Each elementary segment was calculated individually with its own slope,
+    # so we simply add the results without averaging
     total_distance = sum(s.distance for s in segment_group)
-    total_limit_energy = sum(s.limit_energy for s in segment_group)
-    total_eco_energy = sum(s.eco_energy for s in segment_group)
-    total_real_energy = sum(s.real_energy for s in segment_group)
+    total_limit_energy = sum(s.limit_energy for s in segment_group)  # Can be negative
+    total_eco_energy = sum(s.eco_energy for s in segment_group)  # Can be negative
+    total_real_energy = sum(s.real_energy for s in segment_group)  # Can be negative
     total_limit_time = sum(s.limit_time for s in segment_group)
     total_eco_time = sum(s.eco_time for s in segment_group)
     total_real_time = sum(s.real_time for s in segment_group)
@@ -409,9 +432,9 @@ def _merge_segments(segment_group: List[Segment], index: int) -> Segment:
         speed_limit=first_seg.speed_limit,  # Same for all in group
         eco_speed=round(total_eco_speed, 1),
         real_speed=round(total_real_speed, 1),
-        limit_energy=total_limit_energy,
-        eco_energy=total_eco_energy,
-        real_energy=total_real_energy,
+        limit_energy=total_limit_energy,  # Sum of all energies (positive + negative)
+        eco_energy=total_eco_energy,  # Sum of all energies (positive + negative)
+        real_energy=total_real_energy,  # Sum of all energies (positive + negative)
         limit_time=total_limit_time,
         eco_time=total_eco_time,
         real_time=total_real_time,
@@ -1057,26 +1080,33 @@ async def calculate_route(request: RouteRequest) -> RouteResponse:
     
     adjusted_aux_power_kw = request.vehicle_profile.aux_power_kw + climate_power_adjustment
     
-    # First, create all individual segments
+    # First, create all individual segments between consecutive GPS points
+    # IMPORTANT: Each elementary segment is calculated individually with its own slope.
+    # We do NOT average slopes between uphill and downhill portions, as this would be misleading:
+    # - Uphill segments consume energy (with motor efficiency losses ~90-95%)
+    # - Downhill segments can recover energy (with regen efficiency losses ~65-85%)
+    # Even if net elevation change is zero, we still consume energy due to efficiency losses.
     individual_segments = []
     
     for i in range(len(route_points) - 1):
         p1 = route_points[i]
         p2 = route_points[i + 1]
         
-        # Calculate segment distance
+        # Calculate segment distance between two consecutive GPS points
         distance_m = calculate_segment_distance(
             p1["lat"], p1["lon"],
             p2["lat"], p2["lon"]
         )
         
+        # Calculate elevation change for THIS specific segment (not averaged)
+        # Positive = uphill, Negative = downhill
         elevation_change = p2["elevation"] - p1["elevation"]
         speed_limit = p2["speed_limit"]
         
-        # Calculate eco speed (taking into account total mass)
+        # Calculate eco speed for this segment based on its individual slope
         eco_speed = calculate_eco_speed(
             distance_m,
-            elevation_change,
+            elevation_change,  # Individual slope for this segment
             speed_limit,
             request.vehicle_profile,
             total_mass_kg=total_mass_kg
@@ -1086,6 +1116,7 @@ async def calculate_route(request: RouteRequest) -> RouteResponse:
         real_speed = simulate_real_speed(speed_limit, eco_speed, i)
         
         # Calculate energy for each scenario with new parameters
+        # NOTE: Energy can be negative for downhill segments (regeneration)
         limit_energy = calculate_energy_consumption(
             speed_limit, distance_m, elevation_change, request.vehicle_profile,
             total_mass_kg=total_mass_kg,
@@ -1116,10 +1147,11 @@ async def calculate_route(request: RouteRequest) -> RouteResponse:
         eco_time = max(0, eco_time) if eco_time is not None and not math.isnan(eco_time) else 0
         real_time = max(0, real_time) if real_time is not None and not math.isnan(real_time) else 0
         
-        # Ensure energy values are valid
-        limit_energy = max(0, limit_energy) if limit_energy is not None and not math.isnan(limit_energy) else 0
-        eco_energy = max(0, eco_energy) if eco_energy is not None and not math.isnan(eco_energy) else 0
-        real_energy = max(0, real_energy) if real_energy is not None and not math.isnan(real_energy) else 0
+        # Ensure energy values are valid numbers (but allow negative values for regeneration)
+        # Negative energy means energy recovered through regeneration
+        limit_energy = limit_energy if limit_energy is not None and not math.isnan(limit_energy) else 0
+        eco_energy = eco_energy if eco_energy is not None and not math.isnan(eco_energy) else 0
+        real_energy = real_energy if real_energy is not None and not math.isnan(real_energy) else 0
         
         segment = Segment(
             index=i,
