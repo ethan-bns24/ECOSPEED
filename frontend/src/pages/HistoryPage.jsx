@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Clock, MapPin, Zap, Star, Trash2 } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
-import { getAllTrips, deleteTrip } from '../lib/tripStorage';
+import { getAllTrips, deleteTrip, deleteAllTrips } from '../lib/tripStorage';
 import { getAppSettings } from '../lib/settingsStorage';
 import { toast } from 'sonner';
 import { TRANSLATIONS } from '../lib/translations';
@@ -70,13 +70,37 @@ const HistoryPage = () => {
     }
   };
 
+  const handleClearAll = () => {
+    if (window.confirm(t.history.confirmClearAll)) {
+      deleteAllTrips();
+      setTrips([]);
+      toast.success(language === 'fr' ? 'Historique effacé' : 'History cleared');
+    }
+  };
+
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-emerald-100' : ''}`}>{t.history.title}</h1>
-        <p className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
-          {t.history.subtitle}
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-emerald-100' : ''}`}>{t.history.title}</h1>
+          <p className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+            {t.history.subtitle}
+          </p>
+        </div>
+        {trips.length > 0 && (
+          <button
+            type="button"
+            onClick={handleClearAll}
+            className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium border ${
+              isDark
+                ? 'border-emerald-200/70 text-emerald-50 hover:bg-emerald-400/20'
+                : 'border-red-200 text-red-600 hover:bg-red-50'
+            }`}
+          >
+            <Trash2 className="w-3 h-3" />
+            {t.history.clearAll}
+          </button>
+        )}
       </div>
 
       {/* Résumé */}

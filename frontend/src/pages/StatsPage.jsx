@@ -69,11 +69,27 @@ const StatsPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-emerald-100' : ''}`}>{t.stats.title}</h1>
-        <p className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
-          {t.stats.subtitle}
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className={`text-2xl font-semibold mb-1 ${isDark ? 'text-emerald-100' : ''}`}>{t.stats.title}</h1>
+          <p className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+            {t.stats.subtitle}
+          </p>
+        </div>
+        {trips.length > 0 && (
+          <button
+            type="button"
+            onClick={handleClearAll}
+            className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium border ${
+              isDark
+                ? 'border-emerald-200/70 text-emerald-50 hover:bg-emerald-400/20'
+                : 'border-red-200 text-red-600 hover:bg-red-50'
+            }`}
+          >
+            <Trash2 className="w-3 h-3" />
+            {t.history.clearAll}
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4">
@@ -107,20 +123,6 @@ const StatsPage = () => {
             <Zap className={`w-4 h-4 ${isDark ? 'text-emerald-100' : 'text-emerald-600'}`} />
             {t.stats.energySavedPerTrip}
           </h2>
-          {trips.length > 0 && (
-            <button
-              type="button"
-              onClick={handleClearAll}
-              className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium border ${
-                isDark
-                  ? 'border-emerald-200/60 text-emerald-50 hover:bg-emerald-400/20'
-                  : 'border-red-200 text-red-600 hover:bg-red-50'
-              }`}
-            >
-              <Trash2 className="w-3 h-3" />
-              {t.history.clearAll}
-            </button>
-          )}
         </div>
         {trips.length === 0 ? (
           <div className={`text-sm ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
