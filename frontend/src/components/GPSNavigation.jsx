@@ -155,20 +155,20 @@ const GPSNavigation = ({
   })();
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50">
-      {/* Bande principale type GPS */}
-      <div className="bg-[#facc15] text-black border-b border-black/20 px-4 md:px-8 py-3 md:py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+    <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
+      {/* Barre GPS principale, adaptée mobile + thème Ecospeed */}
+      <div className="pointer-events-auto bg-[#0a2e1a]/95 backdrop-blur-md border-b border-emerald-900/60 px-3 py-2 md:px-6 md:py-3">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-3 md:gap-6">
           {/* Instruction de navigation */}
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-black/80 flex items-center justify-center">
-              <InstructionIcon className="w-7 h-7 md:w-8 md:h-8 text-[#facc15]" />
+          <div className="flex items-center gap-3 md:gap-4 min-w-0">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/60 flex items-center justify-center">
+              <InstructionIcon className="w-6 h-6 md:w-7 md:h-7 text-emerald-300" />
             </div>
             <div className="min-w-0">
-              <div className="text-xs md:text-sm text-black/80">
+              <div className="text-[11px] md:text-xs text-emerald-200/80">
                 {t.in || 'In'} {formatDistance(distanceToTurn)}
               </div>
-              <div className="text-base md:text-2xl font-bold truncate">
+              <div className="text-sm md:text-xl font-semibold text-emerald-50 truncate">
                 {instruction?.text || t.continueStraight || 'Continue straight'}
               </div>
             </div>
@@ -177,13 +177,13 @@ const GPSNavigation = ({
           {/* Distance et temps restants */}
           {segments && currentSegmentIndex < segments.length && (
             <div className="text-right shrink-0">
-              <div className="text-xs md:text-sm text-black/80">
+              <div className="text-[11px] md:text-xs text-emerald-200/80">
                 {t.distanceRemaining || 'Distance remaining'}
               </div>
-              <div className="text-lg md:text-2xl font-extrabold">
+              <div className="text-lg md:text-2xl font-bold text-emerald-300">
                 {formatDistance(remainingInfo.distanceKm)}
               </div>
-              <div className="text-[11px] md:text-xs text-black/80">
+              <div className="text-[10px] md:text-xs text-emerald-200/80">
                 {language === 'fr'
                   ? `Temps restant ~ ${Math.round(remainingInfo.timeMin)} min`
                   : `Remaining time ~ ${Math.round(remainingInfo.timeMin)} min`}

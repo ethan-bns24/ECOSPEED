@@ -139,13 +139,21 @@ const RealTimeNavigation = ({
               <Gauge className="w-4 h-4" />
               <span>{language === 'fr' ? 'Vitesse actuelle' : 'Current speed'}</span>
             </div>
-            <div className="text-4xl md:text-5xl font-bold text-white mb-1">
-              {Math.round(currentSpeed)}
-              <span className="text-xl md:text-2xl text-emerald-200/70 ml-1">km/h</span>
+            <div className="flex items-baseline gap-3 mb-1">
+              <div className="text-4xl md:text-5xl font-bold text-white">
+                {Math.round(currentSpeed)}
+                <span className="text-xl md:text-2xl text-emerald-200/70 ml-1">km/h</span>
+              </div>
+              {/* Indicateur visuel simple (flèche) pour conduite */}
+              <div
+                className={`rounded-full px-2 py-1 flex items-center justify-center border ${speedStatus.bgColor} ${speedStatus.borderColor}`}
+              >
+                <StatusIcon className={`w-4 h-4 md:w-5 md:h-5 ${speedStatus.color}`} />
+              </div>
             </div>
-            <div className={`text-xs px-2 py-1 rounded-full inline-flex items-center gap-1 ${speedStatus.bgColor} ${speedStatus.borderColor} border`}>
-              <StatusIcon className={`w-3 h-3 ${speedStatus.color}`} />
-              <span className={speedStatus.color}>{speedStatus.message}</span>
+            {/* Message détaillé (optionnel), utile à l'arrêt mais pas indispensable en conduite */}
+            <div className={`text-xs md:text-sm inline-flex items-center gap-1 ${speedStatus.color}`}>
+              <span>{speedStatus.message}</span>
             </div>
           </div>
 
