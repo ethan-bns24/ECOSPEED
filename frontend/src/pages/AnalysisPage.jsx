@@ -279,21 +279,11 @@ const AnalysisPage = () => {
     }
     return VEHICLE_PROFILES.find(p => p.name === selectedProfile) || (VEHICLE_PROFILES[0] || customVehicle);
   };
-  
-  const handleCalculateRoute = async () => {
-    // Si on a la localisation GPS et que le champ départ est vide,
-    // on utilise la position actuelle comme point de départ (lat,lon)
-    let resolvedStart = startLocation;
-    if ((!resolvedStart || resolvedStart.trim() === '') && userLocation) {
-      resolvedStart = `${userLocation.lat},${userLocation.lon}`;
-      // Ne pas forcément surcharger l'UI, on peut garder le champ visuel vide
-    }
 
-    if (!resolvedStart || !endLocation) {
-      toast.error('Please enter both start and end locations');
-      return;
-    }
-    
+  // Fonction interne qui effectue réellement l'appel au backend avec un point de départ résolu
+  const performRouteCalculation = async (startValue) => {
+    const resolvedStart = startValue;
+
     setLoading(true);
     setShowResults(false);
     setRouteChargingStations([]); // Réinitialiser les bornes de recharge au début du calcul
@@ -344,6 +334,47 @@ const AnalysisPage = () => {
           timeout: 60000,
         });
         const allStations = stationsResponse.data || [];
+  const handleCalculateRoute = async () => {
+    // Si on a la localisation GPS et que le champ départ est vide,
+    // on utilise la position actuelle comme point de départ (lat,lon)
+    let resolvedStart = startLocation;
+    if ((!resolvedStart || resolvedStart.trim() === '') && userLocation) {
+      resolvedStart = `${userLocation.lat},${userLocation.lon}`;
+    }
+
+    // Si on n'a toujours pas de départ mais que la géolocalisation est dispo,
+    // on tente une requête immédiate au GPS, puis on relance le calcul.
+    if ((!resolvedStart || resolvedStart.trim() === '') && typeof window !== 'undefined' && 'geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude, longitude } = pos.coords;
+          const autoStart = `${latitude},${longitude}`;
+          setUserLocation({ lat: latitude, lon: longitude });
+          if (!endLocation) {
+            toast.error('Please enter an end location');
+            return;
+          }
+          await performRouteCalculation(autoStart);
+        },
+        (err) => {
+          console.warn('Geolocation error (on calculate):', err);
+          toast.error('Unable to detect your location. Please enter a start location.');
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 30000,
+        }
+      );
+      return;
+    }
+
+    if (!resolvedStart || !endLocation) {
+      toast.error('Please enter both start and end locations');
+      return;
+    }
+
+    await performRouteCalculation(resolvedStart);
         
         // Trouver les bornes sur le trajet pour les deux modes
         const vehicle = getSelectedVehicleData();
