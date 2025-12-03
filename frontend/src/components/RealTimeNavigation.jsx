@@ -109,8 +109,8 @@ const RealTimeNavigation = ({
           borderColor: 'border-amber-400/50',
           icon: TrendingUp,
           message: language === 'fr' 
-            ? `+${speedDiff.toFixed(1)} km/h au-dessus`
-            : `+${speedDiff.toFixed(1)} km/h above`
+            ? `+${Math.round(speedDiff)} km/h au-dessus`
+            : `+${Math.round(speedDiff)} km/h above`
         };
     } else {
         return { 
@@ -120,8 +120,8 @@ const RealTimeNavigation = ({
           borderColor: 'border-blue-400/50',
           icon: TrendingDown,
           message: language === 'fr'
-            ? `${Math.abs(speedDiff).toFixed(1)} km/h en-dessous`
-            : `${Math.abs(speedDiff).toFixed(1)} km/h below`
+            ? `${Math.round(Math.abs(speedDiff))} km/h en-dessous`
+            : `${Math.round(Math.abs(speedDiff))} km/h below`
         };
     }
   };
@@ -190,14 +190,14 @@ const RealTimeNavigation = ({
               {speedDiffPercent > 0 ? (
                 <span className="text-amber-400">
                   {language === 'fr' 
-                    ? `Ralentissez de ${speedDiff.toFixed(1)} km/h pour économiser`
-                    : `Slow down by ${speedDiff.toFixed(1)} km/h to save energy`}
+                    ? `Ralentissez de ${Math.round(speedDiff)} km/h pour économiser`
+                    : `Slow down by ${Math.round(speedDiff)} km/h to save energy`}
                 </span>
               ) : speedDiffPercent < 0 ? (
                 <span className="text-blue-400">
                   {language === 'fr'
-                    ? `Accélérez de ${Math.abs(speedDiff).toFixed(1)} km/h pour optimiser`
-                    : `Speed up by ${Math.abs(speedDiff).toFixed(1)} km/h to optimize`}
+                    ? `Accélérez de ${Math.round(Math.abs(speedDiff))} km/h pour optimiser`
+                    : `Speed up by ${Math.round(Math.abs(speedDiff))} km/h to optimize`}
                 </span>
               ) : (
                 <span className="text-emerald-400">

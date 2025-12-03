@@ -113,8 +113,12 @@ const DashboardLayout = ({ children }) => {
       {/* Sidebar Desktop */}
       <aside className={sidebarClass}>
         <div className="px-6 py-6 border-b border-white/10 flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-[#22c55e] flex items-center justify-center text-[#0b3b27] font-bold">
-            E
+          <div className="h-9 w-9 rounded-xl bg-[#022c22] flex items-center justify-center overflow-hidden">
+            <img
+              src="/logo-ecospeed.svg"
+              alt="Ecospeed logo"
+              className="h-8 w-8"
+            />
           </div>
           <div>
             <div className="text-lg font-semibold leading-tight">Ecospeed</div>
@@ -142,8 +146,12 @@ const DashboardLayout = ({ children }) => {
       >
         <div className="px-6 py-6 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-[#22c55e] flex items-center justify-center text-[#0b3b27] font-bold">
-              E
+            <div className="h-9 w-9 rounded-xl bg-[#022c22] flex items-center justify-center overflow-hidden">
+              <img
+                src="/logo-ecospeed.svg"
+                alt="Ecospeed logo"
+                className="h-8 w-8"
+              />
             </div>
             <div>
               <div className="text-lg font-semibold leading-tight">Ecospeed</div>

@@ -109,44 +109,6 @@ const NavigationPanel = ({ currentSegment, totalSegments, totalDistance, allSegm
         </div>
       </div>
 
-      {/* Segment Details */}
-      <div className="bg-white/5 rounded-lg p-4 space-y-3">
-        <h4 className="font-semibold text-sm text-gray-300">Segment Details</h4>
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <span className="text-gray-400">Distance:</span>
-            <span className="ml-2 text-white font-medium">
-              {currentSegment.distance != null && !isNaN(currentSegment.distance) 
-                ? (currentSegment.distance / 1000).toFixed(2) 
-                : '0.00'} km
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-400">Elevation Δ:</span>
-            <span className="ml-2 text-white font-medium">
-              {currentSegment.elevation_start != null && currentSegment.elevation_end != null
-                ? (currentSegment.elevation_end - currentSegment.elevation_start).toFixed(0)
-                : '0'} m
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-400">Eco Energy:</span>
-            <span className="ml-2 text-[#4ade80] font-medium">
-              {currentSegment.eco_energy != null && !isNaN(currentSegment.eco_energy)
-                ? currentSegment.eco_energy.toFixed(3)
-                : '0.000'} kWh
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-400">Eco Time:</span>
-            <span className="ml-2 text-white font-medium">
-              {currentSegment.eco_time != null && !isNaN(currentSegment.eco_time)
-                ? (currentSegment.eco_time / 60).toFixed(1)
-                : '0.0'} min
-            </span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
