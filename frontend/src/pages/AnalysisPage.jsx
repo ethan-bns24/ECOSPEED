@@ -642,7 +642,7 @@ const AnalysisPage = () => {
             className="bg-red-500/90 hover:bg-red-600 text-white backdrop-blur-sm shadow-lg"
           >
             <Pause className="w-4 h-4 mr-1" />
-            {t.navigation.pause}
+            <span className="hidden sm:inline">{t.navigation.pause}</span>
           </Button>
           <Button
             onClick={handleResetNavigation}
@@ -650,8 +650,8 @@ const AnalysisPage = () => {
             variant="outline"
             className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border-white/20 shadow-lg"
           >
-            <RotateCcw className="w-4 h-4" />
-            {t.navigation.reset}
+            <RotateCcw className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">{t.navigation.reset}</span>
           </Button>
         </div>
       </div>
