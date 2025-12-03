@@ -79,6 +79,9 @@ export const TRANSLATIONS = {
       'regular': 'Habitué',
       'frequent': 'Régulier',
       'dedicated': 'Dévoué',
+      'marathoner': 'Marathonien',
+      'energy-hero': 'Héros de l\'énergie',
+      'legend': 'Légende',
     },
     badgeDescriptions: {
       'first-trip': 'Premier trajet optimisé',
@@ -90,6 +93,9 @@ export const TRANSLATIONS = {
       'regular': '5 trajets',
       'frequent': '20 trajets',
       'dedicated': '1000 km parcourus',
+      'marathoner': '5000 km parcourus avec ECOSPEED',
+      'energy-hero': '200 kWh économisés au total',
+      'legend': '100 trajets optimisés',
     },
     // Settings
     settings: {
@@ -282,6 +288,9 @@ export const TRANSLATIONS = {
       'regular': 'Regular',
       'frequent': 'Frequent',
       'dedicated': 'Dedicated',
+      'marathoner': 'Marathoner',
+      'energy-hero': 'Energy hero',
+      'legend': 'Legend',
     },
     badgeDescriptions: {
       'first-trip': 'First optimized trip',
@@ -293,6 +302,9 @@ export const TRANSLATIONS = {
       'regular': '5 trips',
       'frequent': '20 trips',
       'dedicated': '1000 km traveled',
+      'marathoner': '5000 km traveled with ECOSPEED',
+      'energy-hero': '200 kWh saved in total',
+      'legend': '100 optimized trips',
     },
     // Settings
     settings: {

@@ -121,6 +121,36 @@ export function calculateBadges(trips, language = 'en') {
       threshold: 1000,
       current: Math.round(totalDistanceKm),
     },
+    {
+      id: 'marathoner',
+      name: t.badgeNames['marathoner'],
+      description: t.badgeDescriptions['marathoner'],
+      icon: Route,
+      progress: Math.min(100, (totalDistanceKm / 5000) * 100),
+      unlocked: totalDistanceKm >= 5000,
+      threshold: 5000,
+      current: Math.round(totalDistanceKm),
+    },
+    {
+      id: 'energy-hero',
+      name: t.badgeNames['energy-hero'],
+      description: t.badgeDescriptions['energy-hero'],
+      icon: Battery,
+      progress: Math.min(100, (totalEnergySavedKwh / 200) * 100),
+      unlocked: totalEnergySavedKwh >= 200,
+      threshold: 200,
+      current: Math.round(totalEnergySavedKwh * 10) / 10,
+    },
+    {
+      id: 'legend',
+      name: t.badgeNames['legend'],
+      description: t.badgeDescriptions['legend'],
+      icon: Crown,
+      progress: Math.min(100, (totalTrips / 100) * 100),
+      unlocked: totalTrips >= 100,
+      threshold: 100,
+      current: totalTrips,
+    },
   ];
 
   return badges;
