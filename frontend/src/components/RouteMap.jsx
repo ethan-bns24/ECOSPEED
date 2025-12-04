@@ -201,14 +201,24 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
         {/* Suivre la position en temps réel pendant la navigation */}
         {currentPosition && <FollowPosition position={currentPosition} zoomLevel={isNavigating ? 16 : 12} />}
         
-        {/* Route polyline */}
+        {/* Route polyline – double tracé pour plus de visibilité (contour sombre + centre vert) */}
         {polylineCoords.length > 0 && (
-          <Polyline
-            positions={polylineCoords}
-            color="#4ade80"
-            weight={4}
-            opacity={0.7}
-          />
+          <>
+            {/* Contour large sombre */}
+            <Polyline
+              positions={polylineCoords}
+              color="#022c22"
+              weight={10}
+              opacity={0.9}
+            />
+            {/* Tracé principal vert vif */}
+            <Polyline
+              positions={polylineCoords}
+              color="#4ade80"
+              weight={6}
+              opacity={0.95}
+            />
+          </>
         )}
         
         {/* Start marker - on le masque pendant la navigation pour alléger la vue */}
