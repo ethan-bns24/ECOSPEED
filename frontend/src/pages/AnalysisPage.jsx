@@ -370,6 +370,45 @@ const AnalysisPage = () => {
     );
   }, []);
 
+  // Détection de sortie de trajet en mode GPS réel : si on est trop loin de la trace, on recalcule un itinéraire
+  useEffect(() => {
+    if (
+      !isNavigating ||
+      !useRealGps ||
+      !routeData ||
+      !Array.isArray(routeData.route_coordinates) ||
+      routeData.route_coordinates.length === 0 ||
+      !currentPosition ||
+      !endLocation
+    ) {
+      return;
+    }
+
+    const [lat, lon] = currentPosition;
+
+    let minDistKm = Infinity;
+    for (const coord of routeData.route_coordinates) {
+      if (!Array.isArray(coord) || coord.length < 2) continue;
+      const d = haversineDistanceKm(lat, lon, coord[0], coord[1]);
+      if (d < minDistKm) {
+        minDistKm = d;
+      }
+    }
+
+    // Seuil : si on est à plus de 50 m de la trace, on considère qu'on a quitté l'itinéraire
+    // (0.05 km) pour un recalcul plus réactif en ville
+    if (minDistKm > 0.05 && Number.isFinite(minDistKm)) {
+      toast.info(
+        language === 'fr'
+          ? 'Vous avez quitté le trajet, recalcul de l’itinéraire...'
+          : 'You left the route, recalculating...'
+      );
+      const newStart = `${lat},${lon}`;
+      setStartLocation(newStart);
+      performRouteCalculation(newStart);
+    }
+  }, [currentPosition, isNavigating, useRealGps, routeData, endLocation, language]);
+
   const getSelectedVehicleData = () => {
     if (selectedProfile === 'Custom') {
       return customVehicle;
@@ -384,6 +423,28 @@ const AnalysisPage = () => {
       return customVehicle;
     }
     return VEHICLE_PROFILES.find(p => p.name === selectedProfile) || (VEHICLE_PROFILES[0] || customVehicle);
+  };
+
+  // Petite fonction utilitaire pour calculer une distance approximative (Haversine) en kilomètres
+  const haversineDistanceKm = (lat1, lon1, lat2, lon2) => {
+    if (
+      typeof lat1 !== 'number' ||
+      typeof lon1 !== 'number' ||
+      typeof lat2 !== 'number' ||
+      typeof lon2 !== 'number'
+    ) {
+      return Infinity;
+    }
+    const toRad = (v) => (v * Math.PI) / 180;
+    const R = 6371; // Rayon moyen de la Terre en km
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
   };
 
   // Fonction interne qui effectue réellement l'appel au backend avec un point de départ résolu
