@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -28,10 +28,11 @@ function MapBounds({ coordinates }) {
 }
 
 // Component to follow current position during navigation
-function FollowPosition({ position, zoomLevel = 16 }) {
+function FollowPosition({ position, zoomLevel = 16, enabled = true }) {
   const map = useMap();
   
   useEffect(() => {
+    if (!enabled) return;
     if (position && Array.isArray(position) && position.length === 2) {
       const [lat, lon] = position;
       if (typeof lat === 'number' && typeof lon === 'number' && !isNaN(lat) && !isNaN(lon)) {
@@ -46,7 +47,7 @@ function FollowPosition({ position, zoomLevel = 16 }) {
 }
 
 // Boutons de contrôle personnalisés (zoom + recentrage) pour le mode GPS
-function GpsControls({ isNavigating, currentPosition }) {
+function GpsControls({ isNavigating, currentPosition, onRecenter }) {
   const map = useMap();
 
   if (!isNavigating) return null;
@@ -66,6 +67,9 @@ function GpsControls({ isNavigating, currentPosition }) {
     const [lat, lon] = currentPosition;
     if (typeof lat !== 'number' || typeof lon !== 'number') return;
     const targetZoom = Math.max(15, map.getZoom ? map.getZoom() : 15);
+    if (onRecenter) {
+      onRecenter();
+    }
     map.setView([lat, lon], targetZoom, { animate: true, duration: 0.3 });
   };
 
@@ -100,6 +104,14 @@ function GpsControls({ isNavigating, currentPosition }) {
 
 const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, routeCoordinates, chargingStations = [], currentPosition = null, isNavigating = false }) => {
   const mapRef = useRef(null);
+  const [followEnabled, setFollowEnabled] = useState(true);
+
+  // À chaque lancement d'une navigation, on réactive le suivi automatique
+  useEffect(() => {
+    if (isNavigating) {
+      setFollowEnabled(true);
+    }
+  }, [isNavigating]);
 
   // Use route_coordinates if available (full route path), otherwise fallback to segments
   const polylineCoords = routeCoordinates && routeCoordinates.length > 0
@@ -189,6 +201,11 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
         zoom={isNavigating ? 15 : 9}
         style={{ height: '100%', width: '100%', borderRadius: '8px' }}
         zoomControl={!isNavigating} // on masque les contrôles natifs en mode GPS
+        whenCreated={(mapInstance) => {
+          mapRef.current = mapInstance;
+          mapInstance.on('dragstart', () => setFollowEnabled(false));
+          mapInstance.on('zoomstart', () => setFollowEnabled(false));
+        }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -199,7 +216,13 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
         {polylineCoords.length > 0 && !currentPosition && !isNavigating && <MapBounds coordinates={polylineCoords} />}
         
         {/* Suivre la position en temps réel pendant la navigation */}
-        {currentPosition && <FollowPosition position={currentPosition} zoomLevel={isNavigating ? 16 : 12} />}
+        {currentPosition && (
+          <FollowPosition
+            position={currentPosition}
+            zoomLevel={isNavigating ? 16 : 12}
+            enabled={followEnabled}
+          />
+        )}
         
         {/* Route polyline – double tracé pour plus de visibilité (contour sombre + centre vert) */}
         {polylineCoords.length > 0 && (
@@ -303,7 +326,11 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
         })}
 
       {/* Contrôles GPS (zoom + recentrer) par-dessus la carte en mode navigation */}
-      <GpsControls isNavigating={isNavigating} currentPosition={currentPosition} />
+      <GpsControls
+        isNavigating={isNavigating}
+        currentPosition={currentPosition}
+        onRecenter={() => setFollowEnabled(true)}
+      />
       </MapContainer>
     </div>
   );
