@@ -859,19 +859,19 @@ const AnalysisPage = () => {
             {/* Route Configuration Card */}
             <Card className={isDark ? "bg-white/5 backdrop-blur-sm border-emerald-700/30" : "bg-white border-slate-200 shadow-sm"} data-testid="route-config-card">
               <CardHeader>
-                <CardTitle className={`text-xl ${isDark ? 'text-emerald-100' : 'text-slate-900'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{t.routeConfig}</CardTitle>
+                <CardTitle className={`text-xl ${isDark ? 'text-emerald-100' : 'text-black'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{t.routeConfig}</CardTitle>
                 <CardDescription className={isDark ? "text-emerald-200/80" : "text-black"}>{t.routeConfigDesc}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="start-location" className={isDark ? "text-emerald-100" : "text-slate-700"}>{t.startLocation}</Label>
+                  <Label htmlFor="start-location" className={isDark ? "text-emerald-100" : "text-black"}>{t.startLocation}</Label>
                   <Input
                     id="start-location"
                     data-testid="start-location-input"
                     placeholder={t.startPlaceholder}
                     value={startLocation}
                     onChange={(e) => setStartLocation(e.target.value)}
-                    className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 placeholder:text-emerald-300/60" : "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400"}
+                    className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 placeholder:text-emerald-300/60" : "bg-white border-slate-300 text-black placeholder:text-slate-600"}
                   />
                   <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
                     <span className={isDark ? 'text-emerald-200/80' : 'text-black'}>
@@ -916,14 +916,14 @@ const AnalysisPage = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="end-location" className={isDark ? "text-emerald-100" : "text-slate-700"}>{t.endLocation}</Label>
+                  <Label htmlFor="end-location" className={isDark ? "text-emerald-100" : "text-black"}>{t.endLocation}</Label>
                   <Input
                     id="end-location"
                     data-testid="end-location-input"
                     placeholder={t.endPlaceholder}
                     value={endLocation}
                     onChange={(e) => setEndLocation(e.target.value)}
-                    className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 placeholder:text-emerald-300/60" : "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400"}
+                    className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 placeholder:text-emerald-300/60" : "bg-white border-slate-300 text-black placeholder:text-slate-600"}
                   />
                   <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
                     <span className={isDark ? 'text-emerald-200/80' : 'text-black'}>
@@ -968,14 +968,14 @@ const AnalysisPage = () => {
             {/* Vehicle Configuration Card */}
             <Card className={isDark ? "bg-white/5 backdrop-blur-sm border-emerald-700/30" : "bg-white border-slate-200 shadow-sm"} data-testid="vehicle-config-card">
               <CardHeader>
-                <CardTitle className={`text-xl ${isDark ? 'text-emerald-100' : 'text-slate-900'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{t.vehicleParams}</CardTitle>
+                <CardTitle className={`text-xl ${isDark ? 'text-emerald-100' : 'text-black'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{t.vehicleParams}</CardTitle>
                 <CardDescription className={isDark ? "text-emerald-200/80" : "text-black"}>
                   {t.vehicleParamsDesc}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className={isDark ? "text-emerald-100" : "text-slate-700"}>{t.vehicleProfile}</Label>
+                  <Label className={isDark ? "text-emerald-100" : "text-black"}>{t.vehicleProfile}</Label>
                   {availableProfiles && availableProfiles.length === 1 ? (
                     <div className={`text-sm ${isDark ? 'text-emerald-200' : 'text-black'}`}>
                       <span className="font-semibold">{availableProfiles[0]?.name || 'N/A'}</span>{' '}
@@ -989,7 +989,7 @@ const AnalysisPage = () => {
                       >
                         <SelectValue placeholder={t.vehicleProfile} />
                       </SelectTrigger>
-                      <SelectContent className={isDark ? "bg-[#1a4d2e] border-emerald-700/30 text-emerald-100" : "bg-white border-slate-200 text-slate-900"}>
+                      <SelectContent className={isDark ? "bg-[#1a4d2e] border-emerald-700/30 text-emerald-100" : "bg-white border-slate-200 text-black"}>
                         {availableProfiles && availableProfiles.length > 0 ? (
                           availableProfiles.map((profile) => (
                             <SelectItem key={profile.name} value={profile.name}>
@@ -1017,7 +1017,7 @@ const AnalysisPage = () => {
                           type="number"
                           value={customVehicle.empty_mass}
                           onChange={(e) => setCustomVehicle({...customVehicle, empty_mass: parseFloat(e.target.value)})}
-                          className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                    className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-black text-sm"}
                         />
                       </div>
                       <div>
@@ -1128,7 +1128,7 @@ const AnalysisPage = () => {
                 
                 {/* Load and passengers */}
                 <div className="space-y-3">
-                  <Label className={isDark ? "text-white" : "text-slate-700"}>👥 {t.loadPassengers}</Label>
+                  <Label className={isDark ? "text-white" : "text-black"}>👥 {t.loadPassengers}</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.numPassengers}</Label>
@@ -1146,7 +1146,7 @@ const AnalysisPage = () => {
                           const clamped = Math.max(1, Math.min(5, raw));
                           setNumPassengers(clamped);
                         }}
-                        className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                        className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-black text-sm"}
                       />
                     </div>
                     <div>
@@ -1175,7 +1175,7 @@ const AnalysisPage = () => {
                 
                 {/* Driving conditions */}
                 <div className="space-y-3">
-                  <Label className={isDark ? "text-emerald-100" : "text-slate-700"}>🌡️ {language === 'fr' ? 'Conditions de conduite' : 'Driving conditions'}</Label>
+                  <Label className={isDark ? "text-emerald-100" : "text-black"}>🌡️ {language === 'fr' ? 'Conditions de conduite' : 'Driving conditions'}</Label>
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
@@ -1184,7 +1184,7 @@ const AnalysisPage = () => {
                       onChange={(e) => setUseClimate(e.target.checked)}
                       className="w-4 h-4"
                     />
-                    <Label htmlFor="use-climate" className={`cursor-pointer ${isDark ? 'text-emerald-100' : 'text-slate-700'}`}>{t.climate}</Label>
+                    <Label htmlFor="use-climate" className={`cursor-pointer ${isDark ? 'text-emerald-100' : 'text-black'}`}>{t.climate}</Label>
                   </div>
                   {useClimate && (
                     <div>
@@ -1205,7 +1205,7 @@ const AnalysisPage = () => {
                             setClimateIntensity(0);
                           }
                         }}
-                        className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                        className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-black text-sm"}
                       />
                     </div>
                   )}
@@ -1215,7 +1215,7 @@ const AnalysisPage = () => {
                 
                 {/* Battery state */}
                 <div className="space-y-3">
-                  <Label className={isDark ? "text-emerald-100" : "text-slate-700"}>🔋 {language === 'fr' ? 'État de la batterie' : 'Battery state'}</Label>
+                  <Label className={isDark ? "text-emerald-100" : "text-black"}>🔋 {language === 'fr' ? 'État de la batterie' : 'Battery state'}</Label>
                   <div>
                     <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.batteryStart}</Label>
                     <Input
@@ -1224,7 +1224,7 @@ const AnalysisPage = () => {
                       max="100"
                       value={batteryStartPct}
                       onChange={(e) => setBatteryStartPct(parseFloat(e.target.value) || 100)}
-                      className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                    className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-black text-sm"}
                     />
                   </div>
                 </div>
@@ -1233,7 +1233,7 @@ const AnalysisPage = () => {
                 
                 {/* Advanced options */}
                 <div className="space-y-3">
-                  <Label className={isDark ? "text-emerald-100" : "text-slate-700"}>{language === 'fr' ? 'Options avancées' : 'Advanced options'}</Label>
+                  <Label className={isDark ? "text-emerald-100" : "text-black"}>{language === 'fr' ? 'Options avancées' : 'Advanced options'}</Label>
                   <div>
                     <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.airDensity}</Label>
                     <Input
@@ -1437,7 +1437,7 @@ const AnalysisPage = () => {
                       <Card className={`${isDark ? 'bg-white/5 backdrop-blur-sm border-emerald-700/30' : 'bg-white border-slate-200'} mt-6`} data-testid="final-summary">
                         <CardContent className="p-6">
                           <div className="text-center">
-                            <h3 className={`text-2xl font-bold mb-4 ${isDark ? 'text-emerald-100' : 'text-slate-900'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                            <h3 className={`text-2xl font-bold mb-4 ${isDark ? 'text-emerald-100' : 'text-black'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                               {language === 'fr' ? 'Résumé du trajet' : 'Trip Summary'}
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1445,7 +1445,7 @@ const AnalysisPage = () => {
                                 <div className={`text-sm mb-2 ${isDark ? 'text-emerald-200' : 'text-black'}`}>
                                   {language === 'fr' ? 'Énergie à la limite' : 'Energy at Speed Limit'}
                                 </div>
-                                <div className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                <div className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>
                                   {totalLimitEnergy.toFixed(2)} <span className={`text-lg ${isDark ? 'text-emerald-200' : 'text-black'}`}>kWh</span>
                                 </div>
                               </div>
@@ -1475,7 +1475,7 @@ const AnalysisPage = () => {
                                   <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-black'}`}>
                                     {language === 'fr' ? 'Temps à la limite' : 'Time at Speed Limit'}
                                   </div>
-                                  <div className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                  <div className={`text-xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>
                                     {formatTime(totalLimitTime)}
                                   </div>
                                 </div>
@@ -1523,7 +1523,7 @@ const AnalysisPage = () => {
                             {/* Charging stations info */}
                             {routeChargingStations && routeChargingStations.length > 0 && (
                               <div className={`mt-6 pt-6 border-t ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
-                                <h4 className={`text-lg font-semibold mb-4 ${isDark ? 'text-emerald-100' : 'text-slate-900'}`}>
+                                <h4 className={`text-lg font-semibold mb-4 ${isDark ? 'text-emerald-100' : 'text-black'}`}>
                                   {language === 'fr' ? 'Bornes de recharge sur le trajet' : 'Charging Stations on Route'}
                                 </h4>
                                 <div className="space-y-3">
@@ -1534,10 +1534,10 @@ const AnalysisPage = () => {
                                     >
                                       <div className="flex items-start justify-between gap-3">
                                         <div className="flex-1">
-                                          <div className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                          <div className={`font-semibold ${isDark ? 'text-white' : 'text-black'}`}>
                                             {chargingPoint.station?.name || 'Borne de recharge'}
                                           </div>
-                                          <div className={`text-sm mt-1 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                          <div className={`text-sm mt-1 ${isDark ? 'text-emerald-200' : 'text-black'}`}>
                                             {chargingPoint.station?.operator || 'Opérateur inconnu'} · {chargingPoint.station?.powerKw || 0} kW
                                           </div>
                                           {chargingPoint.station?.address && (
@@ -1546,7 +1546,7 @@ const AnalysisPage = () => {
                                             </div>
                                           )}
                                           {chargingPoint.distanceKm && (
-                                            <div className={`text-xs mt-1 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                            <div className={`text-xs mt-1 ${isDark ? 'text-emerald-200' : 'text-black'}`}>
                                               {language === 'fr' ? 'Distance du trajet' : 'Distance from route'}: {chargingPoint.distanceKm.toFixed(1)} km
                                             </div>
                                           )}
