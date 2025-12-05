@@ -860,7 +860,7 @@ const AnalysisPage = () => {
             <Card className={isDark ? "bg-white/5 backdrop-blur-sm border-emerald-700/30" : "bg-white border-slate-200 shadow-sm"} data-testid="route-config-card">
               <CardHeader>
                 <CardTitle className={`text-xl ${isDark ? 'text-emerald-100' : 'text-slate-900'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{t.routeConfig}</CardTitle>
-                <CardDescription className={isDark ? "text-emerald-200/80" : "text-slate-600"}>{t.routeConfigDesc}</CardDescription>
+                <CardDescription className={isDark ? "text-emerald-200/80" : "text-slate-700"}>{t.routeConfigDesc}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -874,7 +874,7 @@ const AnalysisPage = () => {
                     className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 placeholder:text-emerald-300/60" : "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400"}
                   />
                   <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
-                    <span className={isDark ? 'text-emerald-200/80' : 'text-slate-600'}>
+                    <span className={isDark ? 'text-emerald-200/80' : 'text-slate-700'}>
                       {language === 'fr' ? 'Raccourcis :' : 'Shortcuts:'}
                     </span>
                     <button
@@ -905,7 +905,7 @@ const AnalysisPage = () => {
                       className={`ml-auto underline-offset-2 ${
                         isDark
                           ? 'text-emerald-200/80 hover:text-emerald-100'
-                          : 'text-slate-500 hover:text-slate-700'
+                          : 'text-slate-600 hover:text-slate-800'
                       }`}
                     >
                       {language === 'fr'
@@ -926,7 +926,7 @@ const AnalysisPage = () => {
                     className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 placeholder:text-emerald-300/60" : "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400"}
                   />
                   <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
-                    <span className={isDark ? 'text-emerald-200/80' : 'text-slate-600'}>
+                    <span className={isDark ? 'text-emerald-200/80' : 'text-slate-700'}>
                       {language === 'fr' ? 'Raccourcis :' : 'Shortcuts:'}
                     </span>
                     <button
@@ -969,7 +969,7 @@ const AnalysisPage = () => {
             <Card className={isDark ? "bg-white/5 backdrop-blur-sm border-emerald-700/30" : "bg-white border-slate-200 shadow-sm"} data-testid="vehicle-config-card">
               <CardHeader>
                 <CardTitle className={`text-xl ${isDark ? 'text-emerald-100' : 'text-slate-900'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{t.vehicleParams}</CardTitle>
-                <CardDescription className={isDark ? "text-emerald-200/80" : "text-slate-600"}>
+                <CardDescription className={isDark ? "text-emerald-200/80" : "text-slate-700"}>
                   {t.vehicleParamsDesc}
                 </CardDescription>
               </CardHeader>
@@ -977,7 +977,7 @@ const AnalysisPage = () => {
                 <div className="space-y-2">
                   <Label className={isDark ? "text-emerald-100" : "text-slate-700"}>{t.vehicleProfile}</Label>
                   {availableProfiles && availableProfiles.length === 1 ? (
-                    <div className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                    <div className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-800'}`}>
                       <span className="font-semibold">{availableProfiles[0]?.name || 'N/A'}</span>{' '}
                       ({t.selectedAuto})
                     </div>
@@ -1002,7 +1002,7 @@ const AnalysisPage = () => {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <div className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                    <div className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-800'}`}>
                       {t.vehicleProfile}: Custom
                     </div>
                   )}
@@ -1012,7 +1012,7 @@ const AnalysisPage = () => {
                   <div className="space-y-3 pt-2">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.emptyMass}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-700'}`}>{t.emptyMass}</Label>
                         <Input
                           type="number"
                           value={customVehicle.empty_mass}
@@ -1021,7 +1021,7 @@ const AnalysisPage = () => {
                         />
                       </div>
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.extraLoad}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-700'}`}>{t.extraLoad}</Label>
                         <Input
                           type="number"
                           value={customVehicle.extra_load}
@@ -1030,7 +1030,7 @@ const AnalysisPage = () => {
                         />
                       </div>
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.dragCoeff}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-700'}`}>{t.dragCoeff}</Label>
                         <Input
                           type="number"
                           step="0.01"
