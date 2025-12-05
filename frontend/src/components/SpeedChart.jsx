@@ -37,19 +37,19 @@ const SpeedChart = ({ segments }) => {
     <div className="w-full" style={{ height: '400px' }} data-testid="speed-chart">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis 
             dataKey="distance" 
-            stroke="#9ca3af"
-            label={{ value: 'Distance (km)', position: 'insideBottom', offset: -5, fill: '#9ca3af' }}
+            stroke="#0f172a"
+            label={{ value: 'Distance (km)', position: 'insideBottom', offset: -5, fill: '#0f172a' }}
           />
           <YAxis 
-            stroke="#9ca3af"
-            label={{ value: 'Speed (km/h)', angle: -90, position: 'insideLeft', fill: '#9ca3af' }}
+            stroke="#0f172a"
+            label={{ value: 'Speed (km/h)', angle: -90, position: 'insideLeft', fill: '#0f172a' }}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend 
-            wrapperStyle={{ paddingTop: '20px' }}
+            wrapperStyle={{ paddingTop: '20px', color: '#0f172a' }}
             iconType="line"
           />
           <Line 

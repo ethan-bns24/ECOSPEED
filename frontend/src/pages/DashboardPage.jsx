@@ -143,7 +143,7 @@ const DashboardPage = () => {
       <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 mb-8">
         {/* Trajets effectués - Bleu en mode sombre, bleu clair en mode clair */}
         <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-blue-600 text-white border border-blue-500/30' : 'bg-blue-50 border border-blue-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-blue-50' : 'text-blue-600'}`}>{t.dashboard.tripsCompleted}</div>
+          <div className={`text-xs mb-1 ${isDark ? 'text-blue-50' : 'text-black'}`}>{t.dashboard.tripsCompleted}</div>
           <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-blue-900'}`}>{stats.trips}</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-blue-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +12%
@@ -151,7 +151,7 @@ const DashboardPage = () => {
         </div>
         {/* Distance totale - Bleu en mode sombre, rose clair en mode clair */}
         <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-blue-600 text-white border border-blue-500/30' : 'bg-pink-50 border border-pink-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-blue-50' : 'text-pink-600'}`}>{t.dashboard.totalDistance}</div>
+          <div className={`text-xs mb-1 ${isDark ? 'text-blue-50' : 'text-black'}`}>{t.dashboard.totalDistance}</div>
           <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-pink-900'}`}>{stats.distanceKm} km</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-blue-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.distance}%
@@ -159,7 +159,7 @@ const DashboardPage = () => {
         </div>
         {/* Énergie économisée - Vert en mode sombre, vert clair en mode clair */}
         <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-600 text-white border border-emerald-500/30' : 'bg-emerald-50 border border-emerald-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>{t.dashboard.energySaved}</div>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-black'}`}>{t.dashboard.energySaved}</div>
           <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-emerald-900'}`}>{stats.energySavedKwh.toFixed(1)} kWh</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.energy}%
@@ -167,7 +167,7 @@ const DashboardPage = () => {
         </div>
         {/* CO₂ évité - Vert en mode sombre, vert clair en mode clair */}
         <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-emerald-600 text-white border border-emerald-500/30' : 'bg-emerald-50 border border-emerald-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>{t.dashboard.co2AvoidedLabel}</div>
+          <div className={`text-xs mb-1 ${isDark ? 'text-emerald-50' : 'text-black'}`}>{t.dashboard.co2AvoidedLabel}</div>
           <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-emerald-900'}`}>{stats.co2SavedKg.toFixed(1)} kg</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-emerald-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +18%
@@ -175,7 +175,7 @@ const DashboardPage = () => {
         </div>
         {/* Score éco moyen - Orange en mode sombre, beige/ambre clair en mode clair */}
         <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-orange-600 text-white border border-orange-500/30' : 'bg-amber-50 border border-amber-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-orange-50' : 'text-amber-600'}`}>{t.dashboard.avgEcoScore}</div>
+          <div className={`text-xs mb-1 ${isDark ? 'text-orange-50' : 'text-black'}`}>{t.dashboard.avgEcoScore}</div>
           <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-amber-900'}`}>{stats.ecoScore}/100</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-orange-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.score}%
@@ -183,7 +183,7 @@ const DashboardPage = () => {
         </div>
         {/* Points totaux - Orange en mode sombre, rose clair en mode clair */}
         <div className={`rounded-2xl px-4 py-4 shadow-sm ${isDark ? 'bg-orange-600 text-white border border-orange-500/30' : 'bg-pink-50 border border-pink-100'}`}>
-          <div className={`text-xs mb-1 ${isDark ? 'text-orange-50' : 'text-pink-600'}`}>{t.dashboard.totalPoints}</div>
+          <div className={`text-xs mb-1 ${isDark ? 'text-orange-50' : 'text-black'}`}>{t.dashboard.totalPoints}</div>
           <div className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-pink-900'}`}>{stats.points}</div>
           <div className={`text-[11px] mt-1 flex items-center gap-1 ${isDark ? 'text-orange-50' : 'text-emerald-600'}`}>
             <ArrowUpRight className="w-3 h-3" /> +{stats.improvement.points}%
@@ -196,8 +196,8 @@ const DashboardPage = () => {
         {/* Left column: recent trips + eco driving score */}
         <div className="space-y-6">
           <div className={`rounded-3xl p-5 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className={`text-base md:text-lg font-semibold ${isDark ? 'text-white' : ''}`}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className={`text-base md:text-lg font-semibold ${isDark ? 'text-white' : 'text-black'}`}>
                 {t.dashboard.recentTrips}
               </h2>
               <button
@@ -210,7 +210,7 @@ const DashboardPage = () => {
             </div>
 
             {recentTrips.length === 0 ? (
-              <div className={`text-sm ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
+              <div className={`text-sm ${isDark ? 'text-emerald-50' : 'text-black'}`}>
                 {t.dashboard.noTrips} {t.dashboard.startTrip}
               </div>
             ) : (
@@ -225,10 +225,10 @@ const DashboardPage = () => {
                         <Car className={`w-5 h-5 ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`} />
                       </div>
                       <div>
-                        <div className={`text-sm font-semibold ${isDark ? 'text-white' : ''}`}>
+                        <div className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-black'}`}>
                           {trip.startLocation} → {trip.endLocation}
                         </div>
-                        <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
+                        <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-black'}`}>
                           {formatDate(trip.createdAt)} ·{' '}
                           {trip.ecoTimeMin ? trip.ecoTimeMin.toFixed(0) : 0} min ·{' '}
                           {trip.distanceKm?.toFixed
@@ -240,13 +240,13 @@ const DashboardPage = () => {
                     </div>
                     <div className="flex items-center gap-4 md:text-right">
                       <div>
-                        <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>{t.dashboard.energySaved}</div>
+                        <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-black'}`}>{t.dashboard.energySaved}</div>
                         <div className={`text-sm font-semibold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
                           -{(trip.energySavedKwh || 0).toFixed(1)} kWh
                         </div>
                       </div>
                       <div>
-                        <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>{t.history.score}</div>
+                        <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-black'}`}>{t.history.score}</div>
                         <div className={`text-sm font-semibold ${isDark ? 'text-amber-200' : 'text-amber-600'}`}>
                           {trip.ecoScore}/100
                         </div>
@@ -263,10 +263,10 @@ const DashboardPage = () => {
 
           <div className={`rounded-3xl p-5 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className={`text-base md:text-lg font-semibold ${isDark ? 'text-white' : ''}`}>
+              <h2 className={`text-base md:text-lg font-semibold ${isDark ? 'text-white' : 'text-black'}`}>
                 {t.dashboard.ecoDrivingScore}
               </h2>
-              <span className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>{t.dashboard.level}</span>
+              <span className={`text-xs ${isDark ? 'text-emerald-50' : 'text-black'}`}>{t.dashboard.level}</span>
             </div>
             <div className="flex flex-col md:flex-row md:items-center gap-6">
               <div className="flex-1 flex flex-col items-center justify-center">
@@ -275,14 +275,14 @@ const DashboardPage = () => {
                     <span className={`text-2xl font-bold ${isDark ? 'text-white' : ''}`}>{stats.ecoScore}</span>
                   </div>
                 </div>
-                <div className={`mt-2 text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>/100 · À améliorer</div>
+                <div className={`mt-2 text-xs ${isDark ? 'text-emerald-50' : 'text-black'}`}>/100 · À améliorer</div>
               </div>
               <div className="flex-1 space-y-3 text-sm">
                 <div className="flex items-center gap-2">
                   <TrendingUp className={`w-4 h-4 ${isDark ? 'text-emerald-100' : 'text-emerald-600'}`} />
-                  <span className={`font-semibold ${isDark ? 'text-white' : ''}`}>+23% d&apos;économie d&apos;énergie</span>
+                  <span className={`font-semibold ${isDark ? 'text-white' : 'text-black'}`}>+23% d&apos;économie d&apos;énergie</span>
                 </div>
-                <p className={`text-xs md:text-sm ${isDark ? 'text-emerald-50' : 'text-slate-600'}`}>
+                <p className={`text-xs md:text-sm ${isDark ? 'text-emerald-50' : 'text-black'}`}>
                   Continuez à suivre les recommandations de vitesse ECOSPEED pour {t.dashboard.improveScore}
                 </p>
               </div>
@@ -294,11 +294,11 @@ const DashboardPage = () => {
         <div className="space-y-6">
           <div className={`rounded-3xl p-5 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className={`text-base md:text-lg font-semibold flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
+              <h2 className={`text-base md:text-lg font-semibold flex items-center gap-2 ${isDark ? 'text-white' : 'text-black'}`}>
                 <Award className={`w-4 h-4 ${isDark ? 'text-amber-200' : 'text-amber-500'}`} />
                 Badges
               </h2>
-              <span className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
+              <span className={`text-xs ${isDark ? 'text-emerald-50' : 'text-black'}`}>
                 {unlockedBadges.length} / {badges.length} badges
               </span>
             </div>
@@ -331,8 +331,8 @@ const DashboardPage = () => {
                         }`} 
                       />
                       <div className="flex-1">
-                        <div className={`font-semibold ${isDark ? 'text-white' : ''}`}>{badge.name}</div>
-                        <div className={`text-[10px] mt-0.5 ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
+                        <div className={`font-semibold ${isDark ? 'text-white' : 'text-black'}`}>{badge.name}</div>
+                        <div className={`text-[10px] mt-0.5 ${isDark ? 'text-emerald-50' : 'text-black'}`}>
                           {badge.description}
                         </div>
                       </div>
@@ -356,7 +356,7 @@ const DashboardPage = () => {
               })}
             </div>
             {unlockedBadges.length === 0 && (
-              <p className={`text-xs mt-3 text-center ${isDark ? 'text-emerald-100' : 'text-slate-500'}`}>
+              <p className={`text-xs mt-3 text-center ${isDark ? 'text-emerald-100' : 'text-black'}`}>
                 {t.dashboard.unlockBadges}
               </p>
             )}
@@ -364,7 +364,7 @@ const DashboardPage = () => {
 
           <div className={`rounded-3xl p-5 md:p-6 shadow-sm ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className={`text-base md:text-lg font-semibold flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
+              <h2 className={`text-base md:text-lg font-semibold flex items-center gap-2 ${isDark ? 'text-white' : 'text-black'}`}>
                 <Car className={`w-4 h-4 ${isDark ? 'text-emerald-100' : 'text-sky-600'}`} />
                 {t.dashboard.myVehicles}
               </h2>
@@ -384,8 +384,8 @@ const DashboardPage = () => {
                     className={`rounded-2xl border px-4 py-3 flex items-center justify-between gap-3 ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100 bg-slate-50/60'}`}
                   >
                     <div>
-                      <div className={`font-semibold ${isDark ? 'text-white' : ''}`}>{vehicle.name}</div>
-                      <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-slate-500'}`}>
+                      <div className={`font-semibold ${isDark ? 'text-white' : 'text-black'}`}>{vehicle.name}</div>
+                      <div className={`text-xs ${isDark ? 'text-emerald-50' : 'text-black'}`}>
                         {vehicle.battery_kwh} kWh · {vehicle.empty_mass} kg
                       </div>
                     </div>
@@ -396,12 +396,12 @@ const DashboardPage = () => {
                 ))
               ) : (
                 <div className={`rounded-2xl border px-4 py-3 text-center ${isDark ? 'border-emerald-300/30 bg-emerald-400/20' : 'border-slate-100 bg-slate-50/60'}`}>
-                  <div className={`text-sm ${isDark ? 'text-emerald-100' : 'text-slate-600'}`}>
+                  <div className={`text-sm ${isDark ? 'text-emerald-100' : 'text-black'}`}>
                     Aucun véhicule par défaut
                   </div>
                 </div>
               )}
-              <div className={`rounded-2xl border border-dashed px-4 py-3 flex items-center justify-between gap-3 text-xs ${isDark ? 'border-emerald-300/30 text-emerald-200' : 'border-slate-200 text-slate-500'}`}>
+              <div className={`rounded-2xl border border-dashed px-4 py-3 flex items-center justify-between gap-3 text-xs ${isDark ? 'border-emerald-300/30 text-emerald-200' : 'border-slate-200 text-black'}`}>
                 <span>Ajouter un véhicule populaire ou personnalisé</span>
                 <button
                   type="button"
