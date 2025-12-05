@@ -119,13 +119,23 @@ const RealTimeNavigation = ({
                 <StatusIcon className={`w-4 h-4 md:w-5 md:h-5 ${speedStatus.color}`} />
               </div>
             </div>
-            {aboveLimit && (
-              <div className="flex items-center gap-1 animate-pulse">
-                <span className="text-[10px] md:text-xs bg-red-600 text-white px-2 py-0.5 rounded-full font-semibold shadow-sm">
-                  {speedLimit} km/h
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-2 py-1">
+                <span className="text-[10px] md:text-xs text-emerald-200/90">
+                  {language === 'fr' ? 'Conseillée' : 'Recommended'}
+                </span>
+                <span className="text-sm md:text-base font-semibold text-emerald-100">
+                  {Math.round(ecoSpeed)} km/h
                 </span>
               </div>
-            )}
+              {aboveLimit && (
+                <div className="flex items-center gap-1 animate-pulse">
+                  <span className="text-[10px] md:text-xs bg-red-600 text-white px-2 py-0.5 rounded-full font-semibold shadow-sm">
+                    {speedLimit} km/h
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
           {/* Message détaillé (caché sur très petit écran pour gagner de la place) */}
           <div className={`hidden sm:inline-flex text-xs md:text-sm items-center gap-1 ${speedStatus.color} mt-1`}>
