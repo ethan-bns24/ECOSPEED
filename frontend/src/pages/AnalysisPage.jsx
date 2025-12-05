@@ -1040,7 +1040,7 @@ const AnalysisPage = () => {
                         />
                       </div>
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.frontalArea}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.frontalArea}</Label>
                         <Input
                           type="number"
                           step="0.1"
@@ -1050,7 +1050,7 @@ const AnalysisPage = () => {
                         />
                       </div>
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.rollingResistance}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.rollingResistance}</Label>
                         <Input
                           type="number"
                           step="0.001"
@@ -1060,7 +1060,7 @@ const AnalysisPage = () => {
                         />
                       </div>
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.motorEfficiency}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.motorEfficiency}</Label>
                         <Input
                           type="number"
                           step="0.01"
@@ -1070,7 +1070,7 @@ const AnalysisPage = () => {
                         />
                       </div>
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.regenEfficiency}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.regenEfficiency}</Label>
                         <Input
                           type="number"
                           step="0.01"
@@ -1080,7 +1080,7 @@ const AnalysisPage = () => {
                         />
                       </div>
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.auxPower}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.auxPower}</Label>
                         <Input
                           type="number"
                           step="0.1"
@@ -1090,7 +1090,7 @@ const AnalysisPage = () => {
                         />
                       </div>
                       <div>
-                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.battery}</Label>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.battery}</Label>
                         <Input
                           type="number"
                           step="1"
@@ -1104,7 +1104,7 @@ const AnalysisPage = () => {
                 )}
                 
                 {selectedProfile && selectedProfile !== 'Custom' && (
-                  <div className={`text-sm space-y-1 pt-2 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                  <div className={`text-sm space-y-1 pt-2 ${isDark ? 'text-emerald-200' : 'text-black'}`}>
                     {(() => {
                       const profile = VEHICLE_PROFILES.find(p => p.name === selectedProfile);
                       if (!profile) return null;
@@ -1131,7 +1131,7 @@ const AnalysisPage = () => {
                   <Label className={isDark ? "text-white" : "text-slate-700"}>👥 {t.loadPassengers}</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.numPassengers}</Label>
+                      <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.numPassengers}</Label>
                       <Input
                         type="number"
                         min="1"
@@ -1150,7 +1150,7 @@ const AnalysisPage = () => {
                       />
                     </div>
                     <div>
-                      <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.avgWeight}</Label>
+                      <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.avgWeight}</Label>
                       <Input
                         type="number"
                         min="0"
@@ -1188,7 +1188,7 @@ const AnalysisPage = () => {
                   </div>
                   {useClimate && (
                     <div>
-                      <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.climateIntensity}</Label>
+                    <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.climateIntensity}</Label>
                       <Input
                         type="number"
                         min="0"
@@ -1217,7 +1217,7 @@ const AnalysisPage = () => {
                 <div className="space-y-3">
                   <Label className={isDark ? "text-emerald-100" : "text-slate-700"}>🔋 {language === 'fr' ? 'État de la batterie' : 'Battery state'}</Label>
                   <div>
-                    <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.batteryStart}</Label>
+                    <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.batteryStart}</Label>
                     <Input
                       type="number"
                       min="20"
@@ -1235,7 +1235,7 @@ const AnalysisPage = () => {
                 <div className="space-y-3">
                   <Label className={isDark ? "text-emerald-100" : "text-slate-700"}>{language === 'fr' ? 'Options avancées' : 'Advanced options'}</Label>
                   <div>
-                    <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>{t.airDensity}</Label>
+                    <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.airDensity}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -1442,11 +1442,11 @@ const AnalysisPage = () => {
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                               <div className={`${isDark ? 'bg-white/5' : 'bg-slate-50'} rounded-lg p-4`}>
-                                <div className={`text-sm mb-2 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                <div className={`text-sm mb-2 ${isDark ? 'text-emerald-200' : 'text-black'}`}>
                                   {language === 'fr' ? 'Énergie à la limite' : 'Energy at Speed Limit'}
                                 </div>
                                 <div className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                  {totalLimitEnergy.toFixed(2)} <span className={`text-lg ${isDark ? 'text-emerald-200' : 'text-slate-500'}`}>kWh</span>
+                                  {totalLimitEnergy.toFixed(2)} <span className={`text-lg ${isDark ? 'text-emerald-200' : 'text-black'}`}>kWh</span>
                                 </div>
                               </div>
                               <div className={`${isDark ? 'bg-emerald-500/20 border-2 border-emerald-500/50' : 'bg-emerald-50 border-2 border-emerald-200'} rounded-lg p-4`}>
@@ -1461,18 +1461,18 @@ const AnalysisPage = () => {
                                 </div>
                               </div>
                               <div className={`${isDark ? 'bg-white/5' : 'bg-slate-50'} rounded-lg p-4`}>
-                                <div className={`text-sm mb-2 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                <div className={`text-sm mb-2 ${isDark ? 'text-emerald-200' : 'text-black'}`}>
                                   {language === 'fr' ? 'Énergie éco-conduite' : 'Eco-Driving Energy'}
                                 </div>
                                 <div className={`text-3xl font-bold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
-                                  {totalEcoEnergy.toFixed(2)} <span className={`text-lg ${isDark ? 'text-emerald-200' : 'text-slate-500'}`}>kWh</span>
+                                  {totalEcoEnergy.toFixed(2)} <span className={`text-lg ${isDark ? 'text-emerald-200' : 'text-black'}`}>kWh</span>
                                 </div>
                               </div>
                             </div>
                             <div className={`mt-6 pt-6 border-t ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
                               <div className="flex items-center justify-center gap-8 flex-wrap">
                                 <div className="text-center">
-                                  <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                  <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-black'}`}>
                                     {language === 'fr' ? 'Temps à la limite' : 'Time at Speed Limit'}
                                   </div>
                                   <div className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
@@ -1480,7 +1480,7 @@ const AnalysisPage = () => {
                                   </div>
                                 </div>
                                 <div className="text-center">
-                                  <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                  <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-black'}`}>
                                     {language === 'fr' ? 'Temps éco-conduite' : 'Eco-Driving Time'}
                                   </div>
                                   <div className={`text-xl font-bold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
@@ -1488,7 +1488,7 @@ const AnalysisPage = () => {
                                   </div>
                                 </div>
                                 <div className="text-center">
-                                  <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                  <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-black'}`}>
                                     {language === 'fr' ? 'Temps supplémentaire' : 'Extra Time'}
                                   </div>
                                   <div className={`text-xl font-bold ${extraTime > 0 ? (isDark ? 'text-yellow-300' : 'text-yellow-600') : (isDark ? 'text-emerald-100' : 'text-emerald-700')}`}>
@@ -1497,7 +1497,7 @@ const AnalysisPage = () => {
                                 </div>
                                 {batteryEndPct !== null && batteryKwh && (
                                   <div className="text-center">
-                                    <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                    <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-black'}`}>
                                       {language === 'fr' ? 'Batterie à l\'arrivée' : 'Battery at Arrival'}
                                     </div>
                                     <div className={`text-xl font-bold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
@@ -1507,11 +1507,11 @@ const AnalysisPage = () => {
                                 )}
                                 {chargingStops !== null && (
                                   <div className="text-center">
-                                    <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-slate-600'}`}>
+                                    <div className={`text-sm mb-1 ${isDark ? 'text-emerald-200' : 'text-black'}`}>
                                       {language === 'fr' ? 'Recharges nécessaires' : 'Charging Stops'}
                                     </div>
                                     <div className={`text-xl font-bold ${isDark ? 'text-emerald-100' : 'text-emerald-700'}`}>
-                                      {chargingStops} <span className={`text-sm ${isDark ? 'text-emerald-200' : 'text-slate-500'}`}>
+                                      {chargingStops} <span className={`text-sm ${isDark ? 'text-emerald-200' : 'text-black'}`}>
                                         {language === 'fr' ? (chargingStops > 1 ? 'recharges' : 'recharge') : (chargingStops > 1 ? 'stops' : 'stop')}
                                       </span>
                                     </div>
@@ -1541,7 +1541,7 @@ const AnalysisPage = () => {
                                             {chargingPoint.station?.operator || 'Opérateur inconnu'} · {chargingPoint.station?.powerKw || 0} kW
                                           </div>
                                           {chargingPoint.station?.address && (
-                                            <div className={`text-xs mt-1 ${isDark ? 'text-emerald-300/80' : 'text-slate-500'}`}>
+                                            <div className={`text-xs mt-1 ${isDark ? 'text-emerald-300/80' : 'text-black'}`}>
                                               {chargingPoint.station.address}
                                             </div>
                                           )}
