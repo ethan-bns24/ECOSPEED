@@ -4,7 +4,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 const TimeChart = ({ segments }) => {
   // Calculate totals in minutes
   const totalEcoTime = segments.reduce((sum, s) => sum + s.eco_time, 0) / 60;
-  const totalRealTime = segments.reduce((sum, s) => sum + s.real_time, 0) / 60;
   const totalLimitTime = segments.reduce((sum, s) => sum + s.limit_time, 0) / 60;
 
   const data = [
@@ -12,11 +11,6 @@ const TimeChart = ({ segments }) => {
       name: 'ECO',
       time: parseFloat(totalEcoTime.toFixed(2)),
       color: '#4ade80'
-    },
-    {
-      name: 'REAL',
-      time: parseFloat(totalRealTime.toFixed(2)),
-      color: '#3b82f6'
     },
     {
       name: 'LIMIT',

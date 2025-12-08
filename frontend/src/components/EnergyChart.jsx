@@ -4,7 +4,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 const EnergyChart = ({ segments }) => {
   // Calculate totals
   const totalEcoEnergy = segments.reduce((sum, s) => sum + s.eco_energy, 0);
-  const totalRealEnergy = segments.reduce((sum, s) => sum + s.real_energy, 0);
   const totalLimitEnergy = segments.reduce((sum, s) => sum + s.limit_energy, 0);
 
   const data = [
@@ -12,11 +11,6 @@ const EnergyChart = ({ segments }) => {
       name: 'ECO',
       energy: parseFloat(totalEcoEnergy.toFixed(2)),
       color: '#4ade80'
-    },
-    {
-      name: 'REAL',
-      energy: parseFloat(totalRealEnergy.toFixed(2)),
-      color: '#3b82f6'
     },
     {
       name: 'LIMIT',

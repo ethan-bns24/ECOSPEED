@@ -1668,9 +1668,10 @@ const AnalysisPage = () => {
                 <div className="text-[11px] text-emerald-200/80">
                   {language === 'fr' ? 'Énergie économisée' : 'Energy saved'}
                 </div>
-                <div className="text-xl font-semibold text-emerald-300">
-                  −{endSummary.energySavedKwh.toFixed(1)} kWh
-                </div>
+                  <div className="text-xl font-semibold text-emerald-300">
+                    {endSummary.energySavedKwh >= 0 ? '+' : '−'}
+                    {Math.abs(endSummary.energySavedKwh).toFixed(1)} kWh
+                  </div>
               </div>
               <div className="rounded-2xl bg-black/40 border border-emerald-400/40 p-3 col-span-2">
                 <div className="flex items-center justify-between text-[11px] text-emerald-200/80 mb-1">
