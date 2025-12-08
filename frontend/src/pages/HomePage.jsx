@@ -1,10 +1,75 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Leaf, Zap, Route, TrendingDown } from 'lucide-react';
+import { getAllTrips } from '../lib/tripStorage';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    avgEnergySavedPct: 18,
+    avgTimeExtraPct: 6,
+    avgEcoScore: 72,
+    totalDistanceKm: 0,
+    trips: 0,
+  });
+
+  useEffect(() => {
+    try {
+      const trips = getAllTrips();
+      if (!trips || trips.length === 0) return;
+
+      const totalTrips = trips.length;
+      const totalEnergySavedPct = trips.reduce((s, t) => s + (t.energySavedPercent || 0), 0);
+      const totalEnergySavedKwh = trips.reduce((s, t) => s + (t.energySavedKwh || 0), 0);
+      const totalEcoScore = trips.reduce((s, t) => s + (t.ecoScore || 0), 0);
+
+      const timeExtrasPct = trips.map((t) => {
+        const extraMin = (t.ecoTimeMin || 0) - (t.limitTimeMin || 0);
+        const denom = t.limitTimeMin || 1;
+        return (extraMin / denom) * 100;
+      });
+      const avgTimeExtraPct = timeExtrasPct.reduce((s, v) => s + v, 0) / totalTrips;
+
+      const totalDistanceKm = trips.reduce((s, t) => s + (t.distanceKm || 0), 0);
+
+      setStats({
+        avgEnergySavedPct: Math.max(0, totalEnergySavedPct / totalTrips),
+        avgTimeExtraPct: Math.max(0, avgTimeExtraPct),
+        avgEcoScore: Math.max(0, totalEcoScore / totalTrips),
+        totalDistanceKm,
+        trips: totalTrips,
+        energySavedKwh: totalEnergySavedKwh,
+      });
+    } catch (e) {
+      console.error('Failed to compute home stats', e);
+    }
+  }, []);
+
+  const statCards = useMemo(() => {
+    return [
+      {
+        title: 'Énergie économisée',
+        value: `${stats.avgEnergySavedPct.toFixed(1)}%`,
+        sub: stats.energySavedKwh !== undefined ? `${stats.energySavedKwh.toFixed(1)} kWh cumulés` : 'Estimé',
+      },
+      {
+        title: 'Temps supplémentaire',
+        value: `+${stats.avgTimeExtraPct.toFixed(1)}%`,
+        sub: 'vs. trajet à la limite',
+      },
+      {
+        title: 'Score éco moyen',
+        value: `${stats.avgEcoScore.toFixed(0)}/100`,
+        sub: `${stats.trips} trajets optimisés`,
+      },
+      {
+        title: 'Distance optimisée',
+        value: `${stats.totalDistanceKm.toFixed(1)} km`,
+        sub: 'cumul des trajets',
+      },
+    ];
+  }, [stats]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a2e1a] via-[#1a4d2e] to-[#0f3d20] text-white">
@@ -47,6 +112,20 @@ const HomePage = () => {
               Start Analysis
             </Button>
           </div>
+        </div>
+
+        {/* Snapshot KPIs */}
+        <div className="grid md:grid-cols-4 gap-4 mt-12 max-w-5xl mx-auto">
+          {statCards.map((card) => (
+            <div
+              key={card.title}
+              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5 space-y-2"
+            >
+              <div className="text-sm text-emerald-100/90">{card.title}</div>
+              <div className="text-3xl font-semibold">{card.value}</div>
+              <div className="text-xs text-emerald-200/80">{card.sub}</div>
+            </div>
+          ))}
         </div>
 
         {/* Features Grid */}
