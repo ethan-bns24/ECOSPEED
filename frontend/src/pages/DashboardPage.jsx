@@ -103,6 +103,11 @@ const DashboardPage = () => {
     },
   };
 
+  const ecoScoreValue = Math.max(0, Math.min(100, stats.ecoScore || 0));
+  const ecoRingFillDeg = `${(ecoScoreValue / 100) * 360}deg`;
+  const ecoRingTrack = isDark ? 'rgba(255,255,255,0.12)' : '#d1fae5';
+  const ecoRingFill = isDark ? '#ffffff' : '#10b981';
+
   const recentTrips = trips.slice(0, 3);
   const badges = calculateBadges(trips, language);
   const unlockedBadges = badges.filter(b => b.unlocked);
@@ -270,9 +275,14 @@ const DashboardPage = () => {
             </div>
             <div className="flex flex-col md:flex-row md:items-center gap-6">
               <div className="flex-1 flex flex-col items-center justify-center">
-                <div className="relative inline-flex items-center justify-center">
-                  <div className={`h-28 w-28 rounded-full border-[10px] flex items-center justify-center ${isDark ? 'border-emerald-300/50' : 'border-emerald-200'}`}>
-                    <span className={`text-2xl font-bold ${isDark ? 'text-white' : ''}`}>{stats.ecoScore}</span>
+                <div
+                  className="relative inline-flex items-center justify-center h-28 w-28 rounded-full"
+                  style={{
+                    backgroundImage: `conic-gradient(${ecoRingFill} ${ecoRingFillDeg}, ${ecoRingTrack} 0deg)`,
+                  }}
+                >
+                  <div className={`h-20 w-20 rounded-full flex items-center justify-center ${isDark ? 'bg-emerald-600/40' : 'bg-white'}`}>
+                    <span className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-emerald-700'}`}>{ecoScoreValue}</span>
                   </div>
                 </div>
                 <div className={`mt-2 text-xs ${isDark ? 'text-emerald-50' : 'text-black'}`}>/100 · À améliorer</div>
