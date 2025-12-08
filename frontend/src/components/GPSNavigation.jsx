@@ -59,7 +59,8 @@ const GPSNavigation = ({
   segments,
   currentSegmentIndex,
   distanceToNextTurn,
-  currentPosition
+  currentPosition,
+  navigationMode = 'eco'
 }) => {
   const [language, setLanguage] = useState('en');
 
@@ -159,7 +160,12 @@ const GPSNavigation = ({
       0
     );
     const totalRemainingTimeSec = remainingSegments.reduce(
-      (sum, seg) => sum + (seg.eco_time || seg.real_time || 0),
+      (sum, seg) => {
+        if (navigationMode === 'limit') {
+          return sum + (seg.limit_time || seg.eco_time || seg.real_time || 0);
+        }
+        return sum + (seg.eco_time || seg.real_time || 0);
+      },
       0
     );
     return {

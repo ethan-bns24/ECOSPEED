@@ -7,6 +7,7 @@ const RealTimeNavigation = ({
   currentSegment, 
   isNavigating,
   currentSpeed = 0,
+  navigationMode = 'eco',
 }) => {
   const [language, setLanguage] = useState('en');
 
@@ -38,16 +39,16 @@ const RealTimeNavigation = ({
 
   const speedLimit = currentSegment.speed_limit || 0;
   const ecoSpeed = currentSegment.eco_speed || 0;
-  const speedDiff = currentSpeed - ecoSpeed;
-  const speedDiffPercent = ecoSpeed > 0 ? (speedDiff / ecoSpeed) * 100 : 0;
+  const targetSpeed = navigationMode === 'limit' ? speedLimit : ecoSpeed;
+  const speedDiff = currentSpeed - targetSpeed;
 
   // Couleur principale de la vitesse en fonction de la vitesse éco
-  const isBelowEco = currentSpeed < ecoSpeed - 1;
-  const isAboveEco = currentSpeed > ecoSpeed + 1;
+  const isBelowTarget = currentSpeed < targetSpeed - 1;
+  const isAboveTarget = currentSpeed > targetSpeed + 1;
   const aboveLimit = currentSpeed > speedLimit + 1;
-  const speedColorClass = isBelowEco
+  const speedColorClass = isBelowTarget
     ? 'text-blue-400'
-    : isAboveEco
+    : isAboveTarget
     ? 'text-red-400'
     : 'text-emerald-300';
 
@@ -122,10 +123,10 @@ const RealTimeNavigation = ({
             <div className="flex items-center gap-2">
               <div className="hidden sm:flex items-center gap-2 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-2 py-1">
                 <span className="text-[10px] md:text-xs text-emerald-200/90">
-                  {language === 'fr' ? 'Conseillée' : 'Recommended'}
+              {language === 'fr' ? 'Conseillée' : 'Recommended'}
                 </span>
                 <span className="text-sm md:text-base font-semibold text-emerald-100">
-                  {Math.round(ecoSpeed)} km/h
+              {Math.round(targetSpeed)} km/h
                 </span>
               </div>
               {aboveLimit && (

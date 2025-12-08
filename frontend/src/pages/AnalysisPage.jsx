@@ -204,6 +204,7 @@ const AnalysisPage = () => {
   const [endBadges, setEndBadges] = useState([]);
   const [isRecalculatingRoute, setIsRecalculatingRoute] = useState(false);
   const [searchChargingStations, setSearchChargingStations] = useState(true);
+  const [navigationMode, setNavigationMode] = useState('eco'); // 'eco' ou 'limit'
   
   // Vehicle profiles: filtrées par les préférences (véhicules actifs)
   const [availableProfiles, setAvailableProfiles] = useState(
@@ -790,6 +791,7 @@ const AnalysisPage = () => {
           currentSegmentIndex={currentSegmentIndex}
           distanceToNextTurn={distanceToNextTurn}
           currentPosition={currentPosition}
+          navigationMode={navigationMode}
         />
         
         {/* Carte en plein écran */}
@@ -811,6 +813,7 @@ const AnalysisPage = () => {
           currentSegment={routeData.segments[currentSegmentIndex]}
           isNavigating={isNavigating}
           currentSpeed={currentSpeed}
+          navigationMode={navigationMode}
         />
         
         {/* Boutons de contrôle en overlay */}
@@ -1319,22 +1322,41 @@ const AnalysisPage = () => {
                       >
                         Navigation
                       </CardTitle>
-                      <div className={`flex items-center gap-2 text-xs ${isDark ? 'text-emerald-200/80' : 'text-black'}`}>
-                        <input
-                          id="demo-mode-toggle"
-                          type="checkbox"
-                          checked={demoMode}
-                          onChange={(e) => {
-                            setDemoMode(e.target.checked);
-                            if (e.target.checked) {
-                              setUseRealGps(false);
-                            }
-                          }}
-                          className="h-3 w-3 rounded border-emerald-400 bg-transparent"
-                        />
-                        <label htmlFor="demo-mode-toggle" className={isDark ? "" : "text-black"}>
-                          {language === 'fr' ? 'Mode démo (Z/S)' : 'Demo mode (Z/S)'}
-                        </label>
+                      <div className="flex items-center flex-wrap gap-3 text-xs">
+                        <div className={`flex items-center gap-2 ${isDark ? 'text-emerald-200/80' : 'text-black'}`}>
+                          <input
+                            id="demo-mode-toggle"
+                            type="checkbox"
+                            checked={demoMode}
+                            onChange={(e) => {
+                              setDemoMode(e.target.checked);
+                              if (e.target.checked) {
+                                setUseRealGps(false);
+                              }
+                            }}
+                            className="h-3 w-3 rounded border-emerald-400 bg-transparent"
+                          />
+                          <label htmlFor="demo-mode-toggle" className={isDark ? "" : "text-black"}>
+                            {language === 'fr' ? 'Mode démo (Z/S)' : 'Demo mode (Z/S)'}
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label className={`text-xs ${isDark ? 'text-emerald-100' : 'text-black'}`}>
+                            {language === 'fr' ? 'Vitesse cible' : 'Target speed'}
+                          </label>
+                          <select
+                            value={navigationMode}
+                            onChange={(e) => setNavigationMode(e.target.value)}
+                            className={`text-xs rounded-full px-3 py-1 border ${
+                              isDark
+                                ? 'bg-white/5 border-emerald-300/40 text-emerald-50'
+                                : 'bg-white border-slate-200 text-slate-900'
+                            }`}
+                          >
+                            <option value="eco">{language === 'fr' ? 'Éco (économies)' : 'Eco (savings)'}</option>
+                            <option value="limit">{language === 'fr' ? 'Limite (plus rapide)' : 'Limit (faster)'}</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                     <div className="flex gap-2">

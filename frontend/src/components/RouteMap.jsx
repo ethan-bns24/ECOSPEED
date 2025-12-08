@@ -149,6 +149,29 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
     ? [segments[currentSegmentIndex].lat_start, segments[currentSegmentIndex].lon_start]
     : null;
 
+  const computeBearing = (a, b) => {
+    if (!a || !b) return 0;
+    const [lat1, lon1] = a;
+    const [lat2, lon2] = b;
+    const toRad = (v) => (v * Math.PI) / 180;
+    const dLon = toRad(lon2 - lon1);
+    const y = Math.sin(dLon) * Math.cos(toRad(lat2));
+    const x =
+      Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+      Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+    let bearing = (Math.atan2(y, x) * 180) / Math.PI;
+    bearing = (bearing + 360) % 360;
+    return bearing;
+  };
+
+  const currentSegment = segments && currentSegmentIndex >= 0 ? segments[currentSegmentIndex] : null;
+  const segmentBearing = currentSegment
+    ? computeBearing(
+        [currentSegment.lat_start, currentSegment.lon_start],
+        [currentSegment.lat_end, currentSegment.lon_end]
+      )
+    : 0;
+
   // Default center (France)
   const defaultCenter = [46.6034, 1.8883];
   const center = currentPosition || startMarker || defaultCenter;
@@ -174,14 +197,15 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
     iconAnchor: [16, 16],
   });
 
-  const currentIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="10" fill="#3b82f6" stroke="white" stroke-width="2"/>
-    <circle cx="12" cy="12" r="4" fill="white"/>
+  const arrowIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+    <g transform="rotate(${segmentBearing} 16 16)">
+      <path d="M16 3 L23 20 L16 17 L9 20 Z" fill="#3b82f6" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+    </g>
   </svg>`;
   const currentIcon = new L.Icon({
-    iconUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(currentIconSvg),
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
+    iconUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(arrowIconSvg),
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
   });
 
   const chargingIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
