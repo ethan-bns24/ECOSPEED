@@ -203,6 +203,7 @@ const AnalysisPage = () => {
   const [endSummary, setEndSummary] = useState(null);
   const [endBadges, setEndBadges] = useState([]);
   const [isRecalculatingRoute, setIsRecalculatingRoute] = useState(false);
+  const [searchChargingStations, setSearchChargingStations] = useState(true);
   
   // Vehicle profiles: filtrées par les préférences (véhicules actifs)
   const [availableProfiles, setAvailableProfiles] = useState(
@@ -503,43 +504,48 @@ const AnalysisPage = () => {
       setCurrentSegmentIndex(0);
       setShowResults(true);
       
-      // Récupérer les bornes de recharge et trouver celles sur le trajet
+      // Récupérer les bornes de recharge si l'option est activée
       // On calcule les bornes pour les deux modes (éco-conduite et limite de vitesse)
-      try {
-        const stationsResponse = await axios.get(`${API}/charging-stations`, {
-          timeout: 60000,
-        });
-        const allStations = stationsResponse.data || [];
+      if (searchChargingStations) {
+        try {
+          const stationsResponse = await axios.get(`${API}/charging-stations`, {
+            timeout: 60000,
+          });
+          const allStations = stationsResponse.data || [];
 
-        const batteryKwh = vehicle?.battery_kwh || null;
-        if (batteryKwh && response.data.segments && response.data.route_coordinates) {
-          // Bornes pour le mode éco-conduite
-          const ecoStationsOnRoute = findChargingStationsOnRoute(
-            response.data.segments,
-            response.data.route_coordinates,
-            batteryKwh,
-            batteryStartPct,
-            allStations,
-            'eco_energy' // Mode éco-conduite
-          );
-          setRouteChargingStations(ecoStationsOnRoute);
-          
-          // Bornes pour le mode limite de vitesse
-          const limitStationsOnRoute = findChargingStationsOnRoute(
-            response.data.segments,
-            response.data.route_coordinates,
-            batteryKwh,
-            batteryStartPct,
-            allStations,
-            'limit_energy' // Mode limite de vitesse
-          );
-          setLimitChargingStations(limitStationsOnRoute);
-        } else {
+          const batteryKwh = vehicle?.battery_kwh || null;
+          if (batteryKwh && response.data.segments && response.data.route_coordinates) {
+            // Bornes pour le mode éco-conduite
+            const ecoStationsOnRoute = findChargingStationsOnRoute(
+              response.data.segments,
+              response.data.route_coordinates,
+              batteryKwh,
+              batteryStartPct,
+              allStations,
+              'eco_energy' // Mode éco-conduite
+            );
+            setRouteChargingStations(ecoStationsOnRoute);
+            
+            // Bornes pour le mode limite de vitesse
+            const limitStationsOnRoute = findChargingStationsOnRoute(
+              response.data.segments,
+              response.data.route_coordinates,
+              batteryKwh,
+              batteryStartPct,
+              allStations,
+              'limit_energy' // Mode limite de vitesse
+            );
+            setLimitChargingStations(limitStationsOnRoute);
+          } else {
+            setRouteChargingStations([]);
+            setLimitChargingStations([]);
+          }
+        } catch (error) {
+          console.error('Error fetching charging stations:', error);
           setRouteChargingStations([]);
           setLimitChargingStations([]);
         }
-      } catch (error) {
-        console.error('Error fetching charging stations:', error);
+      } else {
         setRouteChargingStations([]);
         setLimitChargingStations([]);
       }
@@ -969,6 +975,23 @@ const AnalysisPage = () => {
                 >
                   {loading ? t.calculating : t.calculate}
                 </Button>
+                <div className="flex items-center gap-2 text-xs mt-2">
+                  <input
+                    id="search-charging-stations"
+                    type="checkbox"
+                    checked={searchChargingStations}
+                    onChange={(e) => setSearchChargingStations(e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  <Label
+                    htmlFor="search-charging-stations"
+                    className={isDark ? 'text-emerald-100' : 'text-black'}
+                  >
+                    {language === 'fr'
+                      ? 'Chercher des bornes de recharge'
+                      : 'Find charging stations'}
+                  </Label>
+                </div>
               </CardContent>
             </Card>
 
