@@ -20,7 +20,7 @@ import NavigationPanel from '../components/NavigationPanel';
 import RealTimeNavigation from '../components/RealTimeNavigation';
 import GPSNavigation from '../components/GPSNavigation';
 import { toast } from 'sonner';
-import { persistTripFromRoute, calculateChargingStops, getAllTrips } from '../lib/tripStorage';
+import { persistTripFromRoute, calculateChargingStops, getAllTrips, computeKpisFromSegments } from '../lib/tripStorage';
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
 import { calculateBadges } from '../lib/badges';
 import { getVehicleSettings, updateVehicleSettings, getAppSettings, getCustomVehicles, getFavoriteLocations, updateFavoriteLocations } from '../lib/settingsStorage';
@@ -654,23 +654,21 @@ const AnalysisPage = () => {
     // Construire un récap de fin de trajet (surtout utile sur mobile)
     if (routeData && routeData.segments && routeData.segments.length > 0) {
       try {
-        const totalEcoEnergy = routeData.segments.reduce((sum, s) => sum + (s.eco_energy || 0), 0);
-        const totalLimitEnergy = routeData.segments.reduce((sum, s) => sum + (s.limit_energy || 0), 0);
-        const energySaved = totalLimitEnergy - totalEcoEnergy;
-        const totalDistanceKm = (routeData.total_distance ?? routeData.segments.reduce((sum, s) => sum + (s.distance || 0), 0)) / 1000;
-        const ecoTimeMin = routeData.segments.reduce((sum, s) => sum + (s.eco_time || 0), 0) / 60;
-        const limitTimeMin = routeData.segments.reduce((sum, s) => sum + (s.limit_time || 0), 0) / 60;
+        const kpis = computeKpisFromSegments(routeData.segments);
+        const totalDistanceKm = routeData.total_distance
+          ? routeData.total_distance / 1000
+          : kpis.totalDistanceKm;
 
         const trips = getAllTrips();
         const badges = calculateBadges(trips, language).filter((b) => b.unlocked);
 
         setEndSummary({
           distanceKm: totalDistanceKm,
-          ecoEnergyKwh: totalEcoEnergy,
-          limitEnergyKwh: totalLimitEnergy,
-          energySavedKwh: energySaved,
-          ecoTimeMin,
-          limitTimeMin,
+          ecoEnergyKwh: kpis.totalEcoEnergy,
+          limitEnergyKwh: kpis.totalLimitEnergy,
+          energySavedKwh: kpis.energySavedVsLimit,
+          ecoTimeMin: kpis.totalEcoTimeMin,
+          limitTimeMin: kpis.totalLimitTimeMin,
         });
         setEndBadges(badges);
         setShowEndScreen(true);
