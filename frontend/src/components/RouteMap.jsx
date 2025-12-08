@@ -197,15 +197,15 @@ const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, r
     iconAnchor: [16, 16],
   });
 
-  const arrowIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-    <g transform="rotate(${segmentBearing} 16 16)">
-      <path d="M16 3 L23 20 L16 17 L9 20 Z" fill="#3b82f6" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+  const arrowIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+    <g transform="rotate(${segmentBearing} 20 20)">
+      <path d="M20 4 L29 25 L20 21 L11 25 Z" fill="#3b82f6" stroke="white" stroke-width="2.2" stroke-linejoin="round"/>
     </g>
   </svg>`;
   const currentIcon = new L.Icon({
     iconUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(arrowIconSvg),
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
   });
 
   const chargingIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
