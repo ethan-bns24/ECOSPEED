@@ -100,7 +100,9 @@ const BadgesPage = () => {
                     <div
                       className={`h-full rounded-full transition-all ${
                         badge.unlocked
-                          ? 'bg-emerald-500'
+                          ? isDark
+                            ? 'bg-white'
+                            : 'bg-emerald-500'
                           : isDark
                             ? 'bg-emerald-400/50'
                             : 'bg-emerald-300'
