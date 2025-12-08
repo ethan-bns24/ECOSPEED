@@ -202,6 +202,7 @@ const AnalysisPage = () => {
   const [showEndScreen, setShowEndScreen] = useState(false);
   const [endSummary, setEndSummary] = useState(null);
   const [endBadges, setEndBadges] = useState([]);
+  const [isRecalculatingRoute, setIsRecalculatingRoute] = useState(false);
   
   // Vehicle profiles: filtrées par les préférences (véhicules actifs)
   const [availableProfiles, setAvailableProfiles] = useState(
@@ -395,19 +396,27 @@ const AnalysisPage = () => {
       }
     }
 
-    // Seuil : si on est à plus de 50 m de la trace, on considère qu'on a quitté l'itinéraire
-    // (0.05 km) pour un recalcul plus réactif en ville
-    if (minDistKm > 0.05 && Number.isFinite(minDistKm)) {
+    // Seuil : si on est à plus de 150 m de la trace, on considère qu'on a quitté l'itinéraire.
+    // On évite les recalculs en boucle en vérifiant si un calcul est déjà en cours.
+    if (minDistKm > 0.15 && Number.isFinite(minDistKm)) {
+      if (loading || isRecalculatingRoute) return;
+      const newStart = `${lat},${lon}`;
+      setStartLocation(newStart);
+      setIsRecalculatingRoute(true);
       toast.info(
         language === 'fr'
           ? 'Vous avez quitté le trajet, recalcul de l’itinéraire...'
           : 'You left the route, recalculating...'
       );
-      const newStart = `${lat},${lon}`;
-      setStartLocation(newStart);
-      performRouteCalculation(newStart);
+      (async () => {
+        try {
+          await performRouteCalculation(newStart);
+        } finally {
+          setIsRecalculatingRoute(false);
+        }
+      })();
     }
-  }, [currentPosition, isNavigating, useRealGps, routeData, endLocation, language]);
+  }, [currentPosition, isNavigating, useRealGps, routeData, endLocation, language, loading, isRecalculatingRoute]);
 
   const getSelectedVehicleData = () => {
     if (selectedProfile === 'Custom') {
