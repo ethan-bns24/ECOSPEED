@@ -64,22 +64,20 @@ const RealTimeNavigation = ({
     }
   }, [isNavigating, ensureAudioCtx]);
 
-  const playBeep = useCallback(async (frequency = 900, duration = 0.25, volume = 1.0, force = false) => {
-    if (!force && muteAlerts) return;
+  // Fonction Web Audio API
+  const playBeepWebAudio = useCallback(async (frequency = 900, duration = 0.25, volume = 1.0) => {
     const ctx = await ensureAudioCtx();
     if (!ctx) {
       console.warn('Audio context not available');
-      return;
+      return false;
     }
     
     if (ctx.state !== 'running') {
-      console.warn('Audio context state:', ctx.state);
       try {
         await ctx.resume();
-        console.log('Audio context resumed');
       } catch (e) {
         console.error('Failed to resume audio context:', e);
-        return;
+        return false;
       }
     }
     
@@ -88,25 +86,52 @@ const RealTimeNavigation = ({
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       
-      // Connecter d'abord avant de configurer
       osc.connect(gain);
       gain.connect(ctx.destination);
       
-      osc.type = 'sine';
+      osc.type = 'square';
       osc.frequency.value = frequency;
-      
-      // Volume constant puis fade out
       gain.gain.setValueAtTime(volume, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      gain.gain.linearRampToValueAtTime(0, now + duration);
       
       osc.start(now);
       osc.stop(now + duration);
       
-      console.log(`Playing beep: ${frequency}Hz, ${duration}s, volume ${volume}, ctx state: ${ctx.state}, destination:`, ctx.destination);
+      console.log(`Playing beep (Web Audio): ${frequency}Hz, ${duration}s, volume ${volume}`);
+      return true;
     } catch (e) {
       console.error('Failed to play beep:', e);
+      return false;
     }
-  }, [muteAlerts, ensureAudioCtx]);
+  }, [ensureAudioCtx]);
+
+  // Fonction alternative avec SpeechSynthesis (fallback)
+  const playBeepSpeech = useCallback((isLimit = false) => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance();
+      utterance.text = isLimit ? 'Bip' : 'Beep';
+      utterance.volume = 1.0;
+      utterance.rate = 10; // Très rapide pour faire un bip
+      utterance.pitch = isLimit ? 2 : 1.5;
+      speechSynthesis.speak(utterance);
+      console.log(`Playing beep (Speech): ${isLimit ? 'limit' : 'eco'}`);
+      return true;
+    }
+    return false;
+  }, []);
+
+  const playBeep = useCallback(async (frequency = 900, duration = 0.25, volume = 1.0, force = false) => {
+    if (!force && muteAlerts) return;
+    
+    // Essayer d'abord avec Web Audio API
+    const success = await playBeepWebAudio(frequency, duration, volume);
+    
+    // Si ça échoue, essayer avec SpeechSynthesis comme fallback
+    if (!success) {
+      const isLimit = frequency >= 1000;
+      playBeepSpeech(isLimit);
+    }
+  }, [muteAlerts, playBeepWebAudio, playBeepSpeech]);
 
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
