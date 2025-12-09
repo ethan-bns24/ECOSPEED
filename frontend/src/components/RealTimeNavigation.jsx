@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Gauge, TrendingUp, TrendingDown, CheckCircle, AlertCircle, Bell, BellOff } from 'lucide-react';
 import { getAppSettings } from '../lib/settingsStorage';
 import { TRANSLATIONS } from '../lib/translations';
@@ -12,8 +12,27 @@ const RealTimeNavigation = ({
   const [language, setLanguage] = useState('en');
   const [muteAlerts, setMuteAlerts] = useState(false);
   const [ecoWarned, setEcoWarned] = useState(false);
-  const [audioReady, setAudioReady] = useState(false);
   const audioCtxRef = React.useRef(null);
+  const limitIntervalRef = React.useRef(null);
+
+  const ensureAudioCtx = useCallback(async () => {
+    if (typeof window === 'undefined') return null;
+    if (!audioCtxRef.current) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) {
+        audioCtxRef.current = new Ctx();
+      }
+    }
+    const ctx = audioCtxRef.current;
+    if (ctx && ctx.state === 'suspended') {
+      try {
+        await ctx.resume();
+      } catch (e) {
+        console.warn('Failed to resume audio context:', e);
+      }
+    }
+    return ctx;
+  }, []);
 
   useEffect(() => {
     const { language: lang } = getAppSettings();
@@ -32,8 +51,39 @@ const RealTimeNavigation = ({
       if (typeof window !== 'undefined') {
         window.removeEventListener('ecospeed-settings-updated', handler);
       }
+      if (limitIntervalRef.current) {
+        clearInterval(limitIntervalRef.current);
+      }
     };
   }, []);
+
+  // Déverrouiller l'audio au démarrage de la navigation
+  useEffect(() => {
+    if (isNavigating) {
+      ensureAudioCtx();
+    }
+  }, [isNavigating, ensureAudioCtx]);
+
+  const playBeep = useCallback(async (frequency = 900, duration = 0.18, volume = 0.15) => {
+    if (muteAlerts) return;
+    const ctx = await ensureAudioCtx();
+    if (!ctx) return;
+    
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = frequency;
+      gain.gain.setValueAtTime(volume, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + duration);
+    } catch (e) {
+      console.warn('Failed to play beep:', e);
+    }
+  }, [muteAlerts, ensureAudioCtx]);
 
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
@@ -46,57 +96,14 @@ const RealTimeNavigation = ({
   const targetSpeed = navigationMode === 'limit' ? speedLimit : ecoSpeed;
   const speedDiff = currentSpeed - targetSpeed;
 
-  const ensureAudioCtx = () => {
-    if (typeof window === 'undefined') return null;
-    if (!audioCtxRef.current) {
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      if (Ctx) {
-        audioCtxRef.current = new Ctx();
-      }
-    }
-    return audioCtxRef.current;
-  };
-
-  const resumeAudio = () => {
-    const ctx = ensureAudioCtx();
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().then(() => setAudioReady(true)).catch(() => {});
-    } else if (ctx) {
-      setAudioReady(true);
-    }
-    return ctx;
-  };
-
-  const playBeep = (frequency = 900, duration = 0.18, volume = 0.12) => {
-    if (muteAlerts) return;
-    const ctx = resumeAudio();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = frequency;
-    gain.gain.value = volume;
-    osc.connect(gain).connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + duration);
-  };
-
   // Alertes sonores sur dépassement
   useEffect(() => {
-    if (!isNavigating || muteAlerts) return;
-    // Déverrouiller l'audio au premier geste utilisateur
-    if (typeof window !== 'undefined' && !audioReady) {
-      const unlock = () => {
-        resumeAudio();
-        setAudioReady(true);
-        window.removeEventListener('click', unlock);
-        window.removeEventListener('touchstart', unlock);
-        window.removeEventListener('keydown', unlock);
-      };
-      window.addEventListener('click', unlock, { once: true });
-      window.addEventListener('touchstart', unlock, { once: true });
-      window.addEventListener('keydown', unlock, { once: true });
+    if (!isNavigating || muteAlerts) {
+      if (limitIntervalRef.current) {
+        clearInterval(limitIntervalRef.current);
+        limitIntervalRef.current = null;
+      }
+      return;
     }
 
     const overLimit = currentSpeed > speedLimit + 1;
@@ -104,24 +111,34 @@ const RealTimeNavigation = ({
 
     // Avertissement ponctuel éco : une seule fois par dépassement, réarmé quand on repasse sous la cible
     if (overEco && !ecoWarned) {
-      playBeep(800, 0.16, 0.08);
+      playBeep(800, 0.2, 0.15);
       setEcoWarned(true);
     } else if (!overEco) {
       setEcoWarned(false);
     }
 
     // Avertissement récurrent limite : bip périodique tant qu'on est au-dessus
-    let intervalId;
     if (overLimit) {
-      const beep = () => playBeep(1100, 0.18, 0.1);
-      beep(); // bip immédiat
-      intervalId = setInterval(beep, 1200); // bip tant que > limite
+      if (!limitIntervalRef.current) {
+        playBeep(1100, 0.2, 0.2); // bip immédiat
+        limitIntervalRef.current = setInterval(() => {
+          playBeep(1100, 0.2, 0.2);
+        }, 1200); // bip toutes les 1.2s tant que > limite
+      }
+    } else {
+      if (limitIntervalRef.current) {
+        clearInterval(limitIntervalRef.current);
+        limitIntervalRef.current = null;
+      }
     }
 
     return () => {
-      if (intervalId) clearInterval(intervalId);
+      if (limitIntervalRef.current) {
+        clearInterval(limitIntervalRef.current);
+        limitIntervalRef.current = null;
+      }
     };
-  }, [currentSpeed, speedLimit, ecoSpeed, isNavigating, muteAlerts, ecoWarned]);
+  }, [currentSpeed, speedLimit, ecoSpeed, isNavigating, muteAlerts, ecoWarned, playBeep]);
 
   // Couleur principale de la vitesse en fonction de la vitesse éco
   const isBelowTarget = currentSpeed < targetSpeed - 1;
@@ -189,8 +206,12 @@ const RealTimeNavigation = ({
             <span>{language === 'fr' ? 'Vitesse actuelle' : 'Current speed'}</span>
             <button
               type="button"
-              onClick={() => {
-                resumeAudio();
+              onClick={async () => {
+                await ensureAudioCtx();
+                if (!muteAlerts) {
+                  // Test sonore pour vérifier que l'audio fonctionne
+                  await playBeep(600, 0.1, 0.1);
+                }
                 setMuteAlerts((v) => !v);
               }}
               className="ml-auto flex items-center gap-1 text-emerald-200/70 hover:text-emerald-100 transition"
