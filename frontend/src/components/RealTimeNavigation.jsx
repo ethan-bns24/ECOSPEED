@@ -12,6 +12,7 @@ const RealTimeNavigation = ({
   const [language, setLanguage] = useState('en');
   const [muteAlerts, setMuteAlerts] = useState(false);
   const [ecoWarned, setEcoWarned] = useState(false);
+  const [audioReady, setAudioReady] = useState(false);
   const audioCtxRef = React.useRef(null);
 
   useEffect(() => {
@@ -59,7 +60,9 @@ const RealTimeNavigation = ({
   const resumeAudio = () => {
     const ctx = ensureAudioCtx();
     if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
+      ctx.resume().then(() => setAudioReady(true)).catch(() => {});
+    } else if (ctx) {
+      setAudioReady(true);
     }
     return ctx;
   };
@@ -82,6 +85,19 @@ const RealTimeNavigation = ({
   // Alertes sonores sur dépassement
   useEffect(() => {
     if (!isNavigating || muteAlerts) return;
+    // Déverrouiller l'audio au premier geste utilisateur
+    if (typeof window !== 'undefined' && !audioReady) {
+      const unlock = () => {
+        resumeAudio();
+        setAudioReady(true);
+        window.removeEventListener('click', unlock);
+        window.removeEventListener('touchstart', unlock);
+        window.removeEventListener('keydown', unlock);
+      };
+      window.addEventListener('click', unlock, { once: true });
+      window.addEventListener('touchstart', unlock, { once: true });
+      window.addEventListener('keydown', unlock, { once: true });
+    }
 
     const overLimit = currentSpeed > speedLimit + 1;
     const overEco = !overLimit && currentSpeed > ecoSpeed + 1;
