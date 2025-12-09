@@ -11,8 +11,8 @@ const RealTimeNavigation = ({
 }) => {
   const [language, setLanguage] = useState('en');
   const [muteAlerts, setMuteAlerts] = useState(false);
+  const [ecoWarned, setEcoWarned] = useState(false);
   const audioCtxRef = React.useRef(null);
-  const lastBeepRef = React.useRef({ limit: 0, eco: 0 });
 
   useEffect(() => {
     const { language: lang } = getAppSettings();
@@ -56,9 +56,17 @@ const RealTimeNavigation = ({
     return audioCtxRef.current;
   };
 
-  const playBeep = (frequency = 900, duration = 0.15, volume = 0.08) => {
-    if (muteAlerts) return;
+  const resumeAudio = () => {
     const ctx = ensureAudioCtx();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+    return ctx;
+  };
+
+  const playBeep = (frequency = 900, duration = 0.18, volume = 0.12) => {
+    if (muteAlerts) return;
+    const ctx = resumeAudio();
     if (!ctx) return;
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
@@ -74,19 +82,30 @@ const RealTimeNavigation = ({
   // Alertes sonores sur dépassement
   useEffect(() => {
     if (!isNavigating || muteAlerts) return;
-    const now = Date.now();
-    const minIntervalMs = 5000;
+
     const overLimit = currentSpeed > speedLimit + 1;
     const overEco = !overLimit && currentSpeed > ecoSpeed + 1;
 
-    if (overLimit && now - lastBeepRef.current.limit > minIntervalMs) {
-      playBeep(1100, 0.18, 0.1); // beep aigu pour la limite
-      lastBeepRef.current.limit = now;
-    } else if (overEco && now - lastBeepRef.current.eco > minIntervalMs) {
-      playBeep(800, 0.16, 0.08); // beep spécifique éco
-      lastBeepRef.current.eco = now;
+    // Avertissement ponctuel éco : une seule fois par dépassement, réarmé quand on repasse sous la cible
+    if (overEco && !ecoWarned) {
+      playBeep(800, 0.16, 0.08);
+      setEcoWarned(true);
+    } else if (!overEco) {
+      setEcoWarned(false);
     }
-  }, [currentSpeed, speedLimit, ecoSpeed, isNavigating, muteAlerts]);
+
+    // Avertissement récurrent limite : bip périodique tant qu'on est au-dessus
+    let intervalId;
+    if (overLimit) {
+      const beep = () => playBeep(1100, 0.18, 0.1);
+      beep(); // bip immédiat
+      intervalId = setInterval(beep, 1200); // bip tant que > limite
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [currentSpeed, speedLimit, ecoSpeed, isNavigating, muteAlerts, ecoWarned]);
 
   // Couleur principale de la vitesse en fonction de la vitesse éco
   const isBelowTarget = currentSpeed < targetSpeed - 1;
@@ -154,7 +173,10 @@ const RealTimeNavigation = ({
             <span>{language === 'fr' ? 'Vitesse actuelle' : 'Current speed'}</span>
             <button
               type="button"
-              onClick={() => setMuteAlerts((v) => !v)}
+              onClick={() => {
+                resumeAudio();
+                setMuteAlerts((v) => !v);
+              }}
               className="ml-auto flex items-center gap-1 text-emerald-200/70 hover:text-emerald-100 transition"
               aria-label={muteAlerts ? 'Activer les alertes sonores' : 'Couper les alertes sonores'}
             >
