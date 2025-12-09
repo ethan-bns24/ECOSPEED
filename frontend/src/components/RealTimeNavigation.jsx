@@ -64,10 +64,24 @@ const RealTimeNavigation = ({
     }
   }, [isNavigating, ensureAudioCtx]);
 
-  const playBeep = useCallback(async (frequency = 900, duration = 0.18, volume = 0.15) => {
-    if (muteAlerts) return;
+  const playBeep = useCallback(async (frequency = 900, duration = 0.25, volume = 0.4, force = false) => {
+    if (!force && muteAlerts) return;
     const ctx = await ensureAudioCtx();
-    if (!ctx) return;
+    if (!ctx) {
+      console.warn('Audio context not available');
+      return;
+    }
+    
+    if (ctx.state !== 'running') {
+      console.warn('Audio context state:', ctx.state);
+      try {
+        await ctx.resume();
+        console.log('Audio context resumed');
+      } catch (e) {
+        console.error('Failed to resume audio context:', e);
+        return;
+      }
+    }
     
     try {
       const now = ctx.currentTime;
@@ -80,8 +94,9 @@ const RealTimeNavigation = ({
       osc.connect(gain).connect(ctx.destination);
       osc.start(now);
       osc.stop(now + duration);
+      console.log(`Playing beep: ${frequency}Hz, ${duration}s, volume ${volume}, ctx state: ${ctx.state}`);
     } catch (e) {
-      console.warn('Failed to play beep:', e);
+      console.error('Failed to play beep:', e);
     }
   }, [muteAlerts, ensureAudioCtx]);
 
@@ -111,7 +126,7 @@ const RealTimeNavigation = ({
 
     // Avertissement ponctuel éco : une seule fois par dépassement, réarmé quand on repasse sous la cible
     if (overEco && !ecoWarned) {
-      playBeep(800, 0.2, 0.15);
+      playBeep(800, 0.25, 0.4);
       setEcoWarned(true);
     } else if (!overEco) {
       setEcoWarned(false);
@@ -120,9 +135,9 @@ const RealTimeNavigation = ({
     // Avertissement récurrent limite : bip périodique tant qu'on est au-dessus
     if (overLimit) {
       if (!limitIntervalRef.current) {
-        playBeep(1100, 0.2, 0.2); // bip immédiat
+        playBeep(1100, 0.25, 0.5); // bip immédiat
         limitIntervalRef.current = setInterval(() => {
-          playBeep(1100, 0.2, 0.2);
+          playBeep(1100, 0.25, 0.5);
         }, 1200); // bip toutes les 1.2s tant que > limite
       }
     } else {
@@ -207,11 +222,10 @@ const RealTimeNavigation = ({
             <button
               type="button"
               onClick={async () => {
-                await ensureAudioCtx();
-                if (!muteAlerts) {
-                  // Test sonore pour vérifier que l'audio fonctionne
-                  await playBeep(600, 0.1, 0.1);
-                }
+                const ctx = await ensureAudioCtx();
+                console.log('Button clicked, audio context state:', ctx?.state);
+                // Toujours jouer un son de test pour vérifier que l'audio fonctionne
+                await playBeep(600, 0.3, 0.5, true);
                 setMuteAlerts((v) => !v);
               }}
               className="ml-auto flex items-center gap-1 text-emerald-200/70 hover:text-emerald-100 transition"
