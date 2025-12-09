@@ -82,8 +82,8 @@ const NavigationPanel = ({ currentSegment, totalSegments, totalDistance, allSegm
         </div>
       </div>
 
-      {/* Speed Comparison */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* Speed Comparison (without simulated real speed) */}
+      <div className="grid grid-cols-2 gap-4">
         <div className="bg-white/5 rounded-lg p-4 text-center">
           <div className="text-xs text-gray-400 mb-2">Speed Limit</div>
           <div className="text-xl font-bold text-red-400">
@@ -91,15 +91,7 @@ const NavigationPanel = ({ currentSegment, totalSegments, totalDistance, allSegm
           </div>
           <div className="text-xs text-gray-500">km/h</div>
         </div>
-        
-        <div className="bg-white/5 rounded-lg p-4 text-center">
-          <div className="text-xs text-gray-400 mb-2">Real (Simulated)</div>
-          <div className="text-xl font-bold text-blue-400">
-            {currentSegment.real_speed}
-          </div>
-          <div className="text-xs text-gray-500">km/h</div>
-        </div>
-        
+
         <div className="bg-white/5 rounded-lg p-4 text-center">
           <div className="text-xs text-gray-400 mb-2">Eco-Speed</div>
           <div className="text-xl font-bold text-[#4ade80]">

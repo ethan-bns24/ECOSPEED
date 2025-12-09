@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Gauge, TrendingUp, TrendingDown, CheckCircle, AlertCircle } from 'lucide-react';
+import { Gauge, TrendingUp, TrendingDown, CheckCircle, AlertCircle, Bell, BellOff } from 'lucide-react';
 import { getAppSettings } from '../lib/settingsStorage';
 import { TRANSLATIONS } from '../lib/translations';
 
@@ -10,6 +10,9 @@ const RealTimeNavigation = ({
   navigationMode = 'eco',
 }) => {
   const [language, setLanguage] = useState('en');
+  const [muteAlerts, setMuteAlerts] = useState(false);
+  const audioCtxRef = React.useRef(null);
+  const lastBeepRef = React.useRef({ limit: 0, eco: 0 });
 
   useEffect(() => {
     const { language: lang } = getAppSettings();
@@ -41,6 +44,49 @@ const RealTimeNavigation = ({
   const ecoSpeed = currentSegment.eco_speed || 0;
   const targetSpeed = navigationMode === 'limit' ? speedLimit : ecoSpeed;
   const speedDiff = currentSpeed - targetSpeed;
+
+  const ensureAudioCtx = () => {
+    if (typeof window === 'undefined') return null;
+    if (!audioCtxRef.current) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) {
+        audioCtxRef.current = new Ctx();
+      }
+    }
+    return audioCtxRef.current;
+  };
+
+  const playBeep = (frequency = 900, duration = 0.15, volume = 0.08) => {
+    if (muteAlerts) return;
+    const ctx = ensureAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = frequency;
+    gain.gain.value = volume;
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + duration);
+  };
+
+  // Alertes sonores sur dépassement
+  useEffect(() => {
+    if (!isNavigating || muteAlerts) return;
+    const now = Date.now();
+    const minIntervalMs = 5000;
+    const overLimit = currentSpeed > speedLimit + 1;
+    const overEco = !overLimit && currentSpeed > ecoSpeed + 1;
+
+    if (overLimit && now - lastBeepRef.current.limit > minIntervalMs) {
+      playBeep(1100, 0.18, 0.1); // beep aigu pour la limite
+      lastBeepRef.current.limit = now;
+    } else if (overEco && now - lastBeepRef.current.eco > minIntervalMs) {
+      playBeep(800, 0.16, 0.08); // beep spécifique éco
+      lastBeepRef.current.eco = now;
+    }
+  }, [currentSpeed, speedLimit, ecoSpeed, isNavigating, muteAlerts]);
 
   // Couleur principale de la vitesse en fonction de la vitesse éco
   const isBelowTarget = currentSpeed < targetSpeed - 1;
@@ -103,9 +149,22 @@ const RealTimeNavigation = ({
       <div className="max-w-4xl mx-auto">
         {/* Bulle Current speed uniquement */}
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl px-3 py-2 md:p-4 border border-white/10">
-          <div className="text-xs text-emerald-200/70 mb-2 flex items-center gap-2">
+          <div className="text-xs text-emerald-200/70 mb-2 flex items-center gap-3">
             <Gauge className="w-4 h-4" />
             <span>{language === 'fr' ? 'Vitesse actuelle' : 'Current speed'}</span>
+            <button
+              type="button"
+              onClick={() => setMuteAlerts((v) => !v)}
+              className="ml-auto flex items-center gap-1 text-emerald-200/70 hover:text-emerald-100 transition"
+              aria-label={muteAlerts ? 'Activer les alertes sonores' : 'Couper les alertes sonores'}
+            >
+              {muteAlerts ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+              <span className="hidden sm:inline">
+                {muteAlerts
+                  ? language === 'fr' ? 'Alertes coupées' : 'Alerts off'
+                  : language === 'fr' ? 'Alertes sonores' : 'Sound alerts'}
+              </span>
+            </button>
           </div>
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-baseline gap-3">
