@@ -528,7 +528,8 @@ const AnalysisPage = () => {
               batteryStartPct,
               allStations,
               'eco_energy', // Mode éco-conduite
-              targetArrivalPct
+              targetArrivalPct,
+              80
             );
             setRouteChargingStations(ecoStationsOnRoute);
             
@@ -540,7 +541,8 @@ const AnalysisPage = () => {
               batteryStartPct,
               allStations,
               'limit_energy', // Mode limite de vitesse
-              targetArrivalPct
+              targetArrivalPct,
+              80
             );
             setLimitChargingStations(limitStationsOnRoute);
           } else {

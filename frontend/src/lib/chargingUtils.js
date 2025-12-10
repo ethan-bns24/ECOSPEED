@@ -17,7 +17,7 @@ export function calculateDistance(lat1, lon1, lat2, lon2) {
  * Trouve la meilleure borne de recharge en combinant distance et puissance
  * Privilégie les bornes avec une grande puissance pour charger plus vite
  */
-export function findNearestStation(lat, lon, stations, maxDistanceKm = 30) {
+export function findNearestStation(lat, lon, stations, maxDistanceKm = 80) {
   if (!stations || stations.length === 0) return null;
   
   let bestStation = null;
@@ -69,7 +69,8 @@ export function findChargingStationsOnRoute(
   batteryStartPct,
   stations,
   energyType = 'eco_energy',
-  targetArrivalPct = 20
+  targetArrivalPct = 20,
+  maxDistanceKm = 80
 ) {
   if (!segments || segments.length === 0 || !batteryKwh || !stations || stations.length === 0) {
     return [];
@@ -130,7 +131,7 @@ export function findChargingStationsOnRoute(
       }
       
       // Trouver la borne la plus proche
-      const nearestStation = findNearestStation(chargeLat, chargeLon, stations);
+      const nearestStation = findNearestStation(chargeLat, chargeLon, stations, maxDistanceKm);
       
       if (nearestStation) {
         // Calculer le temps de charge nécessaire (de 20% à 80% = 60% de capacité)
