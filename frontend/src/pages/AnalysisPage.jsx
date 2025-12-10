@@ -104,6 +104,8 @@ const PAGE_TRANSLATIONS = {
     regenEfficiency: 'Regen Efficiency',
     auxPower: 'Aux Power (kW)',
     battery: 'Battery (kWh)',
+    usableBattery: 'Usable battery (kWh)',
+    nominalVoltage: 'Nominal voltage (V)',
   },
 };
 
@@ -171,7 +173,9 @@ const AnalysisPage = () => {
     motor_efficiency: 0.90,
     regen_efficiency: 0.60,
     aux_power_kw: 2.0,
-    battery_kwh: 60
+    battery_kwh: 60,
+    usable_battery_kwh: 55,
+    nominal_voltage: 400,
   });
   
   // Additional parameters
@@ -1129,6 +1133,26 @@ const AnalysisPage = () => {
                           step="1"
                           value={customVehicle.battery_kwh || 60}
                           onChange={(e) => setCustomVehicle({...customVehicle, battery_kwh: parseFloat(e.target.value)})}
+                          className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                        />
+                      </div>
+                      <div>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.usableBattery}</Label>
+                        <Input
+                          type="number"
+                          step="1"
+                          value={customVehicle.usable_battery_kwh || 55}
+                          onChange={(e) => setCustomVehicle({...customVehicle, usable_battery_kwh: parseFloat(e.target.value)})}
+                          className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                        />
+                      </div>
+                      <div>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.nominalVoltage}</Label>
+                        <Input
+                          type="number"
+                          step="10"
+                          value={customVehicle.nominal_voltage || 400}
+                          onChange={(e) => setCustomVehicle({...customVehicle, nominal_voltage: parseFloat(e.target.value)})}
                           className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>
