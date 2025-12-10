@@ -476,7 +476,8 @@ const AnalysisPage = () => {
     
     try {
       const vehicle = getSelectedVehicleData();
-      const targetBatteryEndPct = Math.max(0, Math.min(100, batteryEndPct ?? 20));
+      // Objectif d'arrivée clampé entre 20% et 80% pour rester réaliste
+      const targetArrivalPct = Math.max(20, Math.min(80, batteryEndPct ?? 20));
       
       const requestData = {
         start: resolvedStart,
@@ -488,7 +489,7 @@ const AnalysisPage = () => {
         use_climate: useClimate,
         climate_intensity: climateIntensity,
         battery_start_pct: batteryStartPct,
-        battery_end_pct: targetBatteryEndPct,
+        battery_end_pct: targetArrivalPct,
         rho_air: rhoAir
       };
       
@@ -1522,10 +1523,10 @@ const AnalysisPage = () => {
                       
                       // Calculer d'abord la batterie sans recharges
                       const energyRemainingWithoutCharges = energyAtStart - totalEcoEnergy;
-                      const batteryEndPctWithoutCharges = Math.max(0, Math.min(100, (energyRemainingWithoutCharges / batteryKwh) * 100));
+                      const batteryEndPctWithoutCharges = Math.max(20, Math.min(80, (energyRemainingWithoutCharges / batteryKwh) * 100));
                       
                       // Calculer le nombre de recharges nécessaires (objectif d'arrivée saisi par l'utilisateur)
-                      const targetEndPct = Math.max(0, Math.min(100, batteryEndPct || 20));
+                      const targetEndPct = Math.max(20, Math.min(80, batteryEndPct || 20));
                       chargingStops = calculateChargingStops(totalEcoEnergy, batteryKwh, batteryStartPct, targetEndPct);
                       
                       // Si on a besoin de recharges, recalculer la batterie finale
