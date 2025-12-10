@@ -106,6 +106,7 @@ const PAGE_TRANSLATIONS = {
     battery: 'Battery (kWh)',
     usableBattery: 'Usable battery (kWh)',
     nominalVoltage: 'Nominal voltage (V)',
+    batteryAge: 'Battery age (years)',
   },
 };
 
@@ -176,6 +177,7 @@ const AnalysisPage = () => {
     battery_kwh: 60,
     usable_battery_kwh: 55,
     nominal_voltage: 400,
+    battery_age_years: 0,
   });
   
   // Additional parameters
@@ -1131,6 +1133,17 @@ const AnalysisPage = () => {
                           step="1"
                           value={customVehicle.battery_kwh || 60}
                           onChange={(e) => setCustomVehicle({...customVehicle, battery_kwh: parseFloat(e.target.value)})}
+                          className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                        />
+                      </div>
+                      <div>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.batteryAge}</Label>
+                        <Input
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          value={customVehicle.battery_age_years || 0}
+                          onChange={(e) => setCustomVehicle({...customVehicle, battery_age_years: parseFloat(e.target.value) || 0})}
                           className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>

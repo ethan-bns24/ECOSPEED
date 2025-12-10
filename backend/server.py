@@ -53,6 +53,7 @@ class VehicleProfile(BaseModel):
     battery_kwh: float = 60.0  # kWh (battery capacity)
     usable_battery_kwh: float = 55.0  # kWh (usable capacity)
     nominal_voltage: float = 400.0  # V (battery pack nominal voltage)
+    battery_age_years: float = 0.0  # Battery age in years (optional)
 
 class RouteRequest(BaseModel):
     start: str

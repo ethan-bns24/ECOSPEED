@@ -270,6 +270,41 @@ const VehiclesPage = () => {
                   </div>
                   <div>
                     <label className={isDark ? 'text-emerald-50' : 'text-slate-700'}>
+                      {language === 'fr' ? 'Âge batterie (années)' : 'Battery age (years)'}
+                    </label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      className={`mt-1 w-full rounded-lg px-2 py-1.5 text-xs border ${isDark ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-50' : 'bg-white border-slate-300 text-slate-900'}`}
+                      value={editingVehicle.battery_age_years ?? 0}
+                      onChange={(e) => setEditingVehicle({ ...editingVehicle, battery_age_years: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div>
+                    <label className={isDark ? 'text-emerald-50' : 'text-slate-700'}>
+                      {language === 'fr' ? 'Batterie utilisable (kWh)' : 'Usable battery (kWh)'}
+                    </label>
+                    <input
+                      type="number"
+                      className={`mt-1 w-full rounded-lg px-2 py-1.5 text-xs border ${isDark ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-50' : 'bg-white border-slate-300 text-slate-900'}`}
+                      value={editingVehicle.usable_battery_kwh ?? editingVehicle.battery_kwh}
+                      onChange={(e) => setEditingVehicle({ ...editingVehicle, usable_battery_kwh: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div>
+                    <label className={isDark ? 'text-emerald-50' : 'text-slate-700'}>
+                      {language === 'fr' ? 'Tension nominale (V)' : 'Nominal voltage (V)'}
+                    </label>
+                    <input
+                      type="number"
+                      step="10"
+                      className={`mt-1 w-full rounded-lg px-2 py-1.5 text-xs border ${isDark ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-50' : 'bg-white border-slate-300 text-slate-900'}`}
+                      value={editingVehicle.nominal_voltage ?? 400}
+                      onChange={(e) => setEditingVehicle({ ...editingVehicle, nominal_voltage: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div>
+                    <label className={isDark ? 'text-emerald-50' : 'text-slate-700'}>
                       {t.vehicles.mass} (kg)
                     </label>
                     <input
