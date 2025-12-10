@@ -1547,6 +1547,11 @@ const AnalysisPage = () => {
                         batteryEndPct = batteryEndPctWithoutCharges;
                       }
                     }
+
+                    // Si on a déjà calculé des bornes sur le trajet, utiliser ce nombre pour l'affichage
+                    if (routeChargingStations && routeChargingStations.length > 0) {
+                      chargingStops = routeChargingStations.length;
+                    }
                     
                     return (
                       <Card className={`${isDark ? 'bg-white/5 backdrop-blur-sm border-emerald-700/30' : 'bg-white border-slate-200'} mt-6`} data-testid="final-summary">
