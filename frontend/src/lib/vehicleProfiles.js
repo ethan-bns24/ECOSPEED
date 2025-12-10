@@ -12,6 +12,8 @@ export const VEHICLE_PROFILES = [
     regen_efficiency: 0.85,
     aux_power_kw: 2.0,
     battery_kwh: 75,
+    usable_battery_kwh: 70,
+    nominal_voltage: 350,
   },
   {
     name: "Tesla Model Y",
@@ -24,6 +26,8 @@ export const VEHICLE_PROFILES = [
     regen_efficiency: 0.85,
     aux_power_kw: 2.2,
     battery_kwh: 75,
+    usable_battery_kwh: 70,
+    nominal_voltage: 400,
   },
   {
     name: "Audi Q4 e-tron",
@@ -36,6 +40,8 @@ export const VEHICLE_PROFILES = [
     regen_efficiency: 0.80,
     aux_power_kw: 2.5,
     battery_kwh: 82,
+    usable_battery_kwh: 77,
+    nominal_voltage: 400,
   },
   {
     name: "BMW iX3",
@@ -48,6 +54,8 @@ export const VEHICLE_PROFILES = [
     regen_efficiency: 0.82,
     aux_power_kw: 2.3,
     battery_kwh: 80,
+    usable_battery_kwh: 74,
+    nominal_voltage: 400,
   },
   {
     name: "Mercedes EQC",
@@ -60,6 +68,8 @@ export const VEHICLE_PROFILES = [
     regen_efficiency: 0.78,
     aux_power_kw: 2.8,
     battery_kwh: 80,
+    usable_battery_kwh: 76,
+    nominal_voltage: 400,
   },
   {
     name: "Volkswagen ID.4",
@@ -72,6 +82,8 @@ export const VEHICLE_PROFILES = [
     regen_efficiency: 0.75,
     aux_power_kw: 2.0,
     battery_kwh: 77,
+    usable_battery_kwh: 72,
+    nominal_voltage: 350,
   },
   {
     name: "Renault Zoe",
@@ -84,6 +96,8 @@ export const VEHICLE_PROFILES = [
     regen_efficiency: 0.70,
     aux_power_kw: 1.5,
     battery_kwh: 52,
+    usable_battery_kwh: 48,
+    nominal_voltage: 400,
   },
   {
     name: "BMW i3",
@@ -96,6 +110,8 @@ export const VEHICLE_PROFILES = [
     regen_efficiency: 0.80,
     aux_power_kw: 1.8,
     battery_kwh: 42,
+    usable_battery_kwh: 38,
+    nominal_voltage: 360,
   },
   {
     name: "Nissan Leaf",
@@ -108,6 +124,8 @@ export const VEHICLE_PROFILES = [
     regen_efficiency: 0.75,
     aux_power_kw: 1.7,
     battery_kwh: 40,
+    usable_battery_kwh: 36,
+    nominal_voltage: 360,
   },
   {
     name: "Hyundai IONIQ 5",
@@ -120,6 +138,8 @@ export const VEHICLE_PROFILES = [
     regen_efficiency: 0.83,
     aux_power_kw: 2.1,
     battery_kwh: 73,
+    usable_battery_kwh: 68,
+    nominal_voltage: 650,
   },
   {
     name: "Kia EV6",
@@ -132,6 +152,8 @@ export const VEHICLE_PROFILES = [
     regen_efficiency: 0.83,
     aux_power_kw: 2.1,
     battery_kwh: 77,
+    usable_battery_kwh: 72,
+    nominal_voltage: 650,
   },
   {
     name: "Custom",
@@ -144,6 +166,8 @@ export const VEHICLE_PROFILES = [
     regen_efficiency: 0.60,
     aux_power_kw: 2.0,
     battery_kwh: 60,
+    usable_battery_kwh: 55,
+    nominal_voltage: 400,
   },
 ];
 
