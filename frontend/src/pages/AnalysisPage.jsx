@@ -184,6 +184,7 @@ const AnalysisPage = () => {
   const [useClimate, setUseClimate] = useState(false);
   const [climateIntensity, setClimateIntensity] = useState(50);
   const [batteryStartPct, setBatteryStartPct] = useState(100);
+  const [batteryEndPct, setBatteryEndPct] = useState(20);
   const [rhoAir, setRhoAir] = useState(1.225);
   
   // Route and analysis state
@@ -476,9 +477,6 @@ const AnalysisPage = () => {
       
       // Calculer la batterie à l'arrivée estimée pour le calcul des recharges
       // On utilise une estimation basée sur l'énergie typique consommée
-      // Le backend utilisera cette valeur pour calculer les recharges nécessaires
-      const estimatedBatteryEndPct = 20; // Valeur par défaut pour le calcul des recharges
-      
       const requestData = {
         start: resolvedStart,
         end: endLocation,
@@ -488,8 +486,8 @@ const AnalysisPage = () => {
         avg_weight_kg: avgWeightKg,
         use_climate: useClimate,
         climate_intensity: climateIntensity,
-        battery_start_pct: batteryStartPct,
-        battery_end_pct: estimatedBatteryEndPct, // Utilisé uniquement pour le calcul des recharges
+      battery_start_pct: batteryStartPct,
+      battery_end_pct: batteryEndPct,
         rho_air: rhoAir
       };
       
@@ -1284,6 +1282,17 @@ const AnalysisPage = () => {
                     className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-black text-sm"}
                     />
                   </div>
+                  <div>
+                    <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.batteryEnd}</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={batteryEndPct}
+                      onChange={(e) => setBatteryEndPct(parseFloat(e.target.value) || 20)}
+                      className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-black text-sm"}
+                    />
+                  </div>
                 </div>
                 
                 <Separator className="my-4" />
@@ -1499,8 +1508,8 @@ const AnalysisPage = () => {
                       const energyRemainingWithoutCharges = energyAtStart - totalEcoEnergy;
                       const batteryEndPctWithoutCharges = Math.max(0, Math.min(100, (energyRemainingWithoutCharges / batteryKwh) * 100));
                       
-                      // Calculer le nombre de recharges nécessaires (on veut arriver avec au moins 20%)
-                      chargingStops = calculateChargingStops(totalEcoEnergy, batteryKwh, batteryStartPct, 20);
+                      // Calculer le nombre de recharges nécessaires (objectif d'arrivée saisi par l'utilisateur)
+                      chargingStops = calculateChargingStops(totalEcoEnergy, batteryKwh, batteryStartPct, batteryEndPct || 20);
                       
                       // Si on a besoin de recharges, recalculer la batterie finale
                       if (chargingStops > 0) {
