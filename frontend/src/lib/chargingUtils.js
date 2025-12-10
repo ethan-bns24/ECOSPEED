@@ -134,7 +134,14 @@ export function findChargingStationsOnRoute(
       // Trouver la borne la plus proche
       const nearestStation = findNearestStation(chargeLat, chargeLon, stations, maxDistanceKm);
       
-      if (nearestStation) {
+      // Eviter de dupliquer la même station
+      const isDuplicate = nearestStation && chargingPoints.some((cp) => {
+        const sameName = cp.station?.name === nearestStation.name;
+        const samePos = Math.abs((cp.lat || 0) - chargeLat) < 0.01 && Math.abs((cp.lon || 0) - chargeLon) < 0.01;
+        return sameName && samePos;
+      });
+      
+      if (nearestStation && !isDuplicate) {
         const batteryLevelPctAtCharge = Math.max(0, Math.min(100, (currentBatteryLevel / batteryKwh) * 100));
         // Énergie à ajouter pour revenir à l'objectif (max 60% de la capacité)
         const neededEnergy = Math.max(0, targetEnergy - currentBatteryLevel);
@@ -167,7 +174,7 @@ export function findChargingStationsOnRoute(
     const endLat = routeCoordinates[routeCoordinates.length - 1][0];
     const endLon = routeCoordinates[routeCoordinates.length - 1][1];
     const nearestStation = findNearestStation(endLat, endLon, stations, maxDistanceKm);
-    if (nearestStation) {
+    if (nearestStation && !chargingPoints.some((cp) => cp.station?.name === nearestStation.name)) {
       const neededEnergy = Math.max(0, targetEnergy - finalEnergy);
       const energyToCharge = Math.min(usableCapacity, neededEnergy);
       const chargingPowerKw = nearestStation.powerKw || 50;
