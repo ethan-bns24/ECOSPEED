@@ -120,7 +120,7 @@ const RealTimeNavigation = ({
     return false;
   }, []);
 
-  const playBeep = useCallback(async (frequency = 900, duration = 0.25, volume = 1.0, force = false) => {
+  const playBeep = useCallback(async (frequency = 900, duration = 0.25, volume = 0.6, force = false) => {
     if (!force && muteAlerts) return;
     
     // Essayer d'abord avec Web Audio API
@@ -152,6 +152,10 @@ const RealTimeNavigation = ({
   const limitEnergyKwh = currentSegment.limit_energy || 0;
   const ecoWhPerKm = distanceM > 0 ? (ecoEnergyKwh * 1_000_000) / distanceM : 0; // kWh -> Wh/km
   const limitWhPerKm = distanceM > 0 ? (limitEnergyKwh * 1_000_000) / distanceM : 0;
+  const selectedWhPerKm = navigationMode === 'limit' ? limitWhPerKm : ecoWhPerKm;
+  const selectedLabel = navigationMode === 'limit'
+    ? (language === 'fr' ? 'Conso limite' : 'Limit consumption')
+    : (language === 'fr' ? 'Conso éco' : 'Eco consumption');
 
   // Alertes sonores sur dépassement
   useEffect(() => {
@@ -168,7 +172,7 @@ const RealTimeNavigation = ({
 
     // Avertissement ponctuel éco : une seule fois par dépassement, réarmé quand on repasse sous la cible
     if (overEco && !ecoWarned) {
-      playBeep(800, 0.3, 1.0);
+      playBeep(800, 0.3, 0.6);
       setEcoWarned(true);
     } else if (!overEco) {
       setEcoWarned(false);
@@ -177,9 +181,9 @@ const RealTimeNavigation = ({
     // Avertissement récurrent limite : bip périodique tant qu'on est au-dessus
     if (overLimit) {
       if (!limitIntervalRef.current) {
-        playBeep(1100, 0.3, 1.0); // bip immédiat
+        playBeep(1100, 0.3, 0.7); // bip immédiat
         limitIntervalRef.current = setInterval(() => {
-          playBeep(1100, 0.3, 1.0);
+          playBeep(1100, 0.3, 0.7);
         }, 1200); // bip toutes les 1.2s tant que > limite
       }
     } else {
@@ -267,7 +271,7 @@ const RealTimeNavigation = ({
                 const ctx = await ensureAudioCtx();
                 console.log('Button clicked, audio context state:', ctx?.state);
                 // Toujours jouer un son de test pour vérifier que l'audio fonctionne
-                await playBeep(600, 0.4, 1.0, true);
+                await playBeep(600, 0.4, 0.6, true);
                 setMuteAlerts((v) => !v);
               }}
               className="ml-auto flex items-center gap-1 text-emerald-200/70 hover:text-emerald-100 transition"
@@ -316,21 +320,14 @@ const RealTimeNavigation = ({
           <div className={`hidden sm:inline-flex text-xs md:text-sm items-center gap-1 ${speedStatus.color} mt-1`}>
             <span>{speedStatus.message}</span>
           </div>
-          {/* Pente et conso segment */}
-          <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-emerald-100/80">
+          {/* Conso segment */}
+          <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-emerald-100/80">
             <div className="bg-white/5 border border-white/10 rounded-lg px-2 py-2">
-              <div className="text-[11px] text-emerald-100/70">Pente actuelle</div>
-              <div className="text-sm font-semibold">
-                {slopePercent > 0 ? '+' : ''}{slopePercent.toFixed(1)}%
+              <div className="text-[11px] text-emerald-100/70">
+                {language === 'fr' ? 'Consommation segment' : 'Segment consumption'}
               </div>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-lg px-2 py-2">
-              <div className="text-[11px] text-emerald-100/70">Conso segment</div>
-              <div className="text-[11px] leading-snug">
-                <span className="font-semibold">Éco :</span> {Math.round(ecoWhPerKm)} Wh/km
-              </div>
-              <div className="text-[11px] leading-snug">
-                <span className="font-semibold">Limite :</span> {Math.round(limitWhPerKm)} Wh/km
+              <div className="text-[11px] leading-snug font-semibold">
+                {selectedLabel} : {Math.round(selectedWhPerKm)} Wh/km
               </div>
             </div>
           </div>
