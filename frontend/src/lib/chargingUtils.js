@@ -62,7 +62,15 @@ export function findNearestStation(lat, lon, stations, maxDistanceKm = 30) {
  * Calcule où sur le trajet on a besoin de recharger et trouve les bornes les plus proches
  * @param {string} energyType - 'eco_energy' ou 'limit_energy' pour calculer les recharges selon le mode de conduite
  */
-export function findChargingStationsOnRoute(segments, routeCoordinates, batteryKwh, batteryStartPct, stations, energyType = 'eco_energy') {
+export function findChargingStationsOnRoute(
+  segments,
+  routeCoordinates,
+  batteryKwh,
+  batteryStartPct,
+  stations,
+  energyType = 'eco_energy',
+  targetArrivalPct = 20
+) {
   if (!segments || segments.length === 0 || !batteryKwh || !stations || stations.length === 0) {
     return [];
   }
@@ -70,6 +78,8 @@ export function findChargingStationsOnRoute(segments, routeCoordinates, batteryK
   const chargingPoints = [];
   const energyAtStart = batteryKwh * (batteryStartPct / 100);
   const usableCapacity = batteryKwh * 0.6; // 60% utilisable (de 20% à 80%)
+  const targetPct = Math.max(20, Math.min(80, targetArrivalPct || 20)); // objectif borne 20-80
+  const minAllowedEnergy = batteryKwh * (targetPct / 100);
   
   let cumulativeEnergy = 0;
   let currentBatteryLevel = energyAtStart;
@@ -83,10 +93,10 @@ export function findChargingStationsOnRoute(segments, routeCoordinates, batteryK
     cumulativeEnergy += segmentEnergy;
     currentBatteryLevel = energyAtStart - cumulativeEnergy + lastChargeEnergy;
     
-    // Si la batterie descend en dessous de 20%, on doit recharger
-    if (currentBatteryLevel < batteryKwh * 0.2) {
-      // Trouver la position sur le trajet où on arrive à 20%
-      // On cherche le segment où on passe sous 20%
+    // Si la batterie descend en dessous du seuil cible (au moins 20%), on doit recharger
+    if (currentBatteryLevel < minAllowedEnergy) {
+      // Trouver la position sur le trajet où on passe sous le seuil
+      const thresholdEnergy = minAllowedEnergy;
       const segmentStartEnergy = energyAtStart - (cumulativeEnergy - segmentEnergy) + lastChargeEnergy;
       const segmentEndEnergy = currentBatteryLevel;
       
@@ -97,7 +107,7 @@ export function findChargingStationsOnRoute(segments, routeCoordinates, batteryK
         // Utiliser les coordonnées de la route pour une meilleure précision
         // Estimer la position basée sur la proportion d'énergie consommée
         const energyRatio = segmentEnergy > 0 
-          ? (batteryKwh * 0.2 - segmentStartEnergy) / (segmentEndEnergy - segmentStartEnergy)
+          ? (thresholdEnergy - segmentStartEnergy) / (segmentEndEnergy - segmentStartEnergy)
           : 0.5;
         
         // Trouver l'index approximatif dans routeCoordinates
