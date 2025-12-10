@@ -316,9 +316,6 @@ const RealTimeNavigation = ({
           <div className={`hidden sm:inline-flex text-xs md:text-sm items-center gap-1 ${speedStatus.color} mt-1`}>
             <span>{speedStatus.message}</span>
           </div>
-        </div>
-      </div>
-    </div>
           {/* Pente et conso segment */}
           <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-emerald-100/80">
             <div className="bg-white/5 border border-white/10 rounded-lg px-2 py-2">
@@ -337,6 +334,9 @@ const RealTimeNavigation = ({
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
