@@ -1519,8 +1519,8 @@ const AnalysisPage = () => {
                     // Calculer la batterie à l'arrivée en tenant compte des recharges
                     const vehicle = getSelectedVehicleData();
                     const batteryKwh = vehicle?.battery_kwh || null;
-                    const desiredEndPct = Math.max(20, Math.min(80, batteryEndPct || 20));
-                    let batteryEndPct = null;
+                    const desiredArrivalPct = Math.max(20, Math.min(80, batteryEndPct || 20));
+                    let batteryEndPctCalc = null;
                     let chargingStops = null;
                     
                     if (batteryKwh && batteryStartPct) {
@@ -1531,7 +1531,7 @@ const AnalysisPage = () => {
                       const batteryEndPctWithoutCharges = Math.max(20, Math.min(80, (energyRemainingWithoutCharges / batteryKwh) * 100));
                       
                       // Calculer le nombre de recharges nécessaires (objectif d'arrivée saisi par l'utilisateur)
-                      chargingStops = calculateChargingStops(totalEcoEnergy, batteryKwh, batteryStartPct, desiredEndPct);
+                      chargingStops = calculateChargingStops(totalEcoEnergy, batteryKwh, batteryStartPct, desiredArrivalPct);
                       
                       // Si on a besoin de recharges, recalculer la batterie finale
                       if (chargingStops > 0) {
@@ -1541,10 +1541,10 @@ const AnalysisPage = () => {
                         
                         // Énergie finale = énergie au départ - énergie consommée + énergie rechargée
                         const finalEnergy = energyAtStart - totalEcoEnergy + totalEnergyAdded;
-                        batteryEndPct = Math.max(20, Math.min(80, (finalEnergy / batteryKwh) * 100));
+                        batteryEndPctCalc = Math.max(20, Math.min(80, (finalEnergy / batteryKwh) * 100));
                       } else {
                         // Pas de recharges nécessaires, utiliser le calcul direct
-                        batteryEndPct = batteryEndPctWithoutCharges;
+                        batteryEndPctCalc = batteryEndPctWithoutCharges;
                       }
                     }
 
@@ -1552,7 +1552,7 @@ const AnalysisPage = () => {
                     if (routeChargingStations && routeChargingStations.length > 0) {
                       chargingStops = routeChargingStations.length;
                       // Si des recharges sont planifiées, on considère l'objectif d'arrivée comme atteint
-                      batteryEndPct = desiredEndPct;
+                      batteryEndPctCalc = desiredArrivalPct;
                     }
                     
                     return (
