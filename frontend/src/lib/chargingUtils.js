@@ -80,7 +80,8 @@ export function findChargingStationsOnRoute(
   const energyAtStart = batteryKwh * (batteryStartPct / 100);
   const usableCapacity = batteryKwh * 0.6; // 60% utilisable (de 20% à 80%)
   const targetPct = Math.max(20, Math.min(80, targetArrivalPct || 20)); // objectif borne 20-80
-  const minAllowedEnergy = batteryKwh * (targetPct / 100);
+  const targetEnergy = batteryKwh * (targetPct / 100);
+  const minAllowedEnergy = targetEnergy; // seuil déclencheur (objectif d'arrivée)
   
   let cumulativeEnergy = 0;
   let currentBatteryLevel = energyAtStart;
@@ -134,8 +135,10 @@ export function findChargingStationsOnRoute(
       const nearestStation = findNearestStation(chargeLat, chargeLon, stations, maxDistanceKm);
       
       if (nearestStation) {
-        // Calculer le temps de charge nécessaire (de 20% à 80% = 60% de capacité)
-        const energyToCharge = usableCapacity; // 60% de la capacité
+        const batteryLevelPctAtCharge = Math.max(0, Math.min(100, (currentBatteryLevel / batteryKwh) * 100));
+        // Énergie à ajouter pour revenir à l'objectif (max 60% de la capacité)
+        const neededEnergy = Math.max(0, targetEnergy - currentBatteryLevel);
+        const energyToCharge = Math.min(usableCapacity, neededEnergy > 0 ? neededEnergy : usableCapacity);
         const chargingPowerKw = nearestStation.powerKw || 50; // Puissance de la borne en kW (défaut 50 kW)
         const chargingTimeHours = energyToCharge / chargingPowerKw; // Temps en heures
         const chargingTimeMinutes = chargingTimeHours * 60; // Temps en minutes
@@ -145,15 +148,40 @@ export function findChargingStationsOnRoute(
           lat: chargeLat,
           lon: chargeLon,
           station: nearestStation,
-          batteryLevelAtCharge: 20, // On recharge quand on arrive à 20%
+          batteryLevelAtCharge: batteryLevelPctAtCharge,
           chargingTimeMinutes: chargingTimeMinutes,
           energyToCharge: energyToCharge,
         });
         
-        // Après recharge, on remonte à 80%
-        lastChargeEnergy += usableCapacity;
-        currentBatteryLevel = batteryKwh * 0.8;
+        // Après recharge, on ajoute l'énergie chargée
+        lastChargeEnergy += energyToCharge;
+        currentBatteryLevel = Math.min(batteryKwh, currentBatteryLevel + energyToCharge);
       }
+    }
+  }
+
+  // Vérifier SOC à l'arrivée et ajouter une recharge finale si besoin
+  const totalEnergyConsumed = segments.reduce((sum, s) => sum + (s[energyType] || 0), 0);
+  const finalEnergy = energyAtStart - totalEnergyConsumed + lastChargeEnergy;
+  if (finalEnergy < targetEnergy && routeCoordinates && routeCoordinates.length > 0) {
+    const endLat = routeCoordinates[routeCoordinates.length - 1][0];
+    const endLon = routeCoordinates[routeCoordinates.length - 1][1];
+    const nearestStation = findNearestStation(endLat, endLon, stations, maxDistanceKm);
+    if (nearestStation) {
+      const neededEnergy = Math.max(0, targetEnergy - finalEnergy);
+      const energyToCharge = Math.min(usableCapacity, neededEnergy);
+      const chargingPowerKw = nearestStation.powerKw || 50;
+      const chargingTimeHours = energyToCharge / chargingPowerKw;
+      const chargingTimeMinutes = chargingTimeHours * 60;
+      chargingPoints.push({
+        segmentIndex: segments.length - 1,
+        lat: endLat,
+        lon: endLon,
+        station: nearestStation,
+        batteryLevelAtCharge: Math.max(0, Math.min(100, (finalEnergy / batteryKwh) * 100)),
+        chargingTimeMinutes,
+        energyToCharge,
+      });
     }
   }
   
