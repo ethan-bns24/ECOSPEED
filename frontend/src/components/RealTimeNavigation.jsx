@@ -143,6 +143,15 @@ const RealTimeNavigation = ({
   const ecoSpeed = currentSegment.eco_speed || 0;
   const targetSpeed = navigationMode === 'limit' ? speedLimit : ecoSpeed;
   const speedDiff = currentSpeed - targetSpeed;
+  const distanceM = currentSegment.distance || 0;
+  const elevationStart = currentSegment.elevation_start ?? currentSegment.elevationStart ?? 0;
+  const elevationEnd = currentSegment.elevation_end ?? currentSegment.elevationEnd ?? elevationStart;
+  const elevationDelta = elevationEnd - elevationStart;
+  const slopePercent = distanceM > 0 ? (elevationDelta / distanceM) * 100 : 0;
+  const ecoEnergyKwh = currentSegment.eco_energy || 0;
+  const limitEnergyKwh = currentSegment.limit_energy || 0;
+  const ecoWhPerKm = distanceM > 0 ? (ecoEnergyKwh * 1_000_000) / distanceM : 0; // kWh -> Wh/km
+  const limitWhPerKm = distanceM > 0 ? (limitEnergyKwh * 1_000_000) / distanceM : 0;
 
   // Alertes sonores sur dépassement
   useEffect(() => {
@@ -286,12 +295,12 @@ const RealTimeNavigation = ({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="hidden sm:flex items-center gap-2 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-2 py-1">
+              <div className="flex items-center gap-2 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-2 py-1">
                 <span className="text-[10px] md:text-xs text-emerald-200/90">
-              {language === 'fr' ? 'Conseillée' : 'Recommended'}
+                  {language === 'fr' ? 'Conseillée' : 'Recommended'}
                 </span>
                 <span className="text-sm md:text-base font-semibold text-emerald-100">
-              {Math.round(targetSpeed)} km/h
+                  {Math.round(targetSpeed)} km/h
                 </span>
               </div>
               {aboveLimit && (
@@ -310,6 +319,24 @@ const RealTimeNavigation = ({
         </div>
       </div>
     </div>
+          {/* Pente et conso segment */}
+          <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-emerald-100/80">
+            <div className="bg-white/5 border border-white/10 rounded-lg px-2 py-2">
+              <div className="text-[11px] text-emerald-100/70">Pente actuelle</div>
+              <div className="text-sm font-semibold">
+                {slopePercent > 0 ? '+' : ''}{slopePercent.toFixed(1)}%
+              </div>
+            </div>
+            <div className="bg-white/5 border border-white/10 rounded-lg px-2 py-2">
+              <div className="text-[11px] text-emerald-100/70">Conso segment</div>
+              <div className="text-[11px] leading-snug">
+                <span className="font-semibold">Éco :</span> {Math.round(ecoWhPerKm)} Wh/km
+              </div>
+              <div className="text-[11px] leading-snug">
+                <span className="font-semibold">Limite :</span> {Math.round(limitWhPerKm)} Wh/km
+              </div>
+            </div>
+          </div>
   );
 };
 
