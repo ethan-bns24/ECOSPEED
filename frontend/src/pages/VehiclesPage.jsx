@@ -282,6 +282,18 @@ const VehiclesPage = () => {
                   </div>
                   <div>
                     <label className={isDark ? 'text-emerald-50' : 'text-slate-700'}>
+                      {language === 'fr' ? 'Puissance de charge max (kW)' : 'Max charge power (kW)'}
+                    </label>
+                    <input
+                      type="number"
+                      step="10"
+                      className={`mt-1 w-full rounded-lg px-2 py-1.5 text-xs border ${isDark ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-50' : 'bg-white border-slate-300 text-slate-900'}`}
+                      value={editingVehicle.max_charge_kw ?? 150}
+                      onChange={(e) => setEditingVehicle({ ...editingVehicle, max_charge_kw: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div>
+                    <label className={isDark ? 'text-emerald-50' : 'text-slate-700'}>
                       {language === 'fr' ? 'Batterie utilisable (kWh)' : 'Usable battery (kWh)'}
                     </label>
                     <input

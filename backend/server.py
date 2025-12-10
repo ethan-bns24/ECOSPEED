@@ -54,6 +54,7 @@ class VehicleProfile(BaseModel):
     usable_battery_kwh: float = 55.0  # kWh (usable capacity)
     nominal_voltage: float = 400.0  # V (battery pack nominal voltage)
     battery_age_years: float = 0.0  # Battery age in years (optional)
+    max_charge_kw: float = 150.0  # kW (puissance de charge DC max véhicule)
 
 class RouteRequest(BaseModel):
     start: str

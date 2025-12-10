@@ -107,6 +107,7 @@ const PAGE_TRANSLATIONS = {
     usableBattery: 'Usable battery (kWh)',
     nominalVoltage: 'Nominal voltage (V)',
     batteryAge: 'Battery age (years)',
+    maxChargePower: 'Max DC charge power (kW)',
   },
 };
 
@@ -178,6 +179,7 @@ const AnalysisPage = () => {
     usable_battery_kwh: 55,
     nominal_voltage: 400,
     battery_age_years: 0,
+    max_charge_kw: 150,
   });
   
   // Additional parameters
@@ -1148,6 +1150,17 @@ const AnalysisPage = () => {
                           min="0"
                           value={customVehicle.battery_age_years || 0}
                           onChange={(e) => setCustomVehicle({...customVehicle, battery_age_years: parseFloat(e.target.value) || 0})}
+                          className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
+                        />
+                      </div>
+                      <div>
+                        <Label className={`text-xs ${isDark ? 'text-emerald-200' : 'text-black'}`}>{t.maxChargePower}</Label>
+                        <Input
+                          type="number"
+                          step="10"
+                          min="20"
+                          value={customVehicle.max_charge_kw || 150}
+                          onChange={(e) => setCustomVehicle({...customVehicle, max_charge_kw: parseFloat(e.target.value) || 0})}
                           className={isDark ? "bg-white/5 border-emerald-700/30 text-emerald-100 text-sm" : "bg-white border-slate-300 text-slate-900 text-sm"}
                         />
                       </div>

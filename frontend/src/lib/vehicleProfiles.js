@@ -15,6 +15,7 @@ export const VEHICLE_PROFILES = [
     usable_battery_kwh: 70,
     nominal_voltage: 350,
     battery_age_years: 0,
+    max_charge_kw: 250,
   },
   {
     name: "Tesla Model Y",
@@ -30,6 +31,7 @@ export const VEHICLE_PROFILES = [
     usable_battery_kwh: 70,
     nominal_voltage: 400,
     battery_age_years: 0,
+    max_charge_kw: 250,
   },
   {
     name: "Audi Q4 e-tron",
@@ -45,6 +47,7 @@ export const VEHICLE_PROFILES = [
     usable_battery_kwh: 77,
     nominal_voltage: 400,
     battery_age_years: 0,
+    max_charge_kw: 135,
   },
   {
     name: "BMW iX3",
@@ -60,6 +63,7 @@ export const VEHICLE_PROFILES = [
     usable_battery_kwh: 74,
     nominal_voltage: 400,
     battery_age_years: 0,
+    max_charge_kw: 155,
   },
   {
     name: "Mercedes EQC",
@@ -75,6 +79,7 @@ export const VEHICLE_PROFILES = [
     usable_battery_kwh: 76,
     nominal_voltage: 400,
     battery_age_years: 0,
+    max_charge_kw: 110,
   },
   {
     name: "Volkswagen ID.4",
@@ -90,6 +95,7 @@ export const VEHICLE_PROFILES = [
     usable_battery_kwh: 72,
     nominal_voltage: 350,
     battery_age_years: 0,
+    max_charge_kw: 125,
   },
   {
     name: "Renault Zoe",
@@ -105,6 +111,7 @@ export const VEHICLE_PROFILES = [
     usable_battery_kwh: 48,
     nominal_voltage: 400,
     battery_age_years: 0,
+    max_charge_kw: 50,
   },
   {
     name: "BMW i3",
@@ -120,6 +127,7 @@ export const VEHICLE_PROFILES = [
     usable_battery_kwh: 38,
     nominal_voltage: 360,
     battery_age_years: 0,
+    max_charge_kw: 50,
   },
   {
     name: "Nissan Leaf",
@@ -135,6 +143,7 @@ export const VEHICLE_PROFILES = [
     usable_battery_kwh: 36,
     nominal_voltage: 360,
     battery_age_years: 0,
+    max_charge_kw: 50,
   },
   {
     name: "Hyundai IONIQ 5",
@@ -150,6 +159,7 @@ export const VEHICLE_PROFILES = [
     usable_battery_kwh: 68,
     nominal_voltage: 650,
     battery_age_years: 0,
+    max_charge_kw: 230,
   },
   {
     name: "Kia EV6",
@@ -165,6 +175,7 @@ export const VEHICLE_PROFILES = [
     usable_battery_kwh: 72,
     nominal_voltage: 650,
     battery_age_years: 0,
+    max_charge_kw: 230,
   },
   {
     name: "Custom",
@@ -180,6 +191,7 @@ export const VEHICLE_PROFILES = [
     usable_battery_kwh: 55,
     nominal_voltage: 400,
     battery_age_years: 0,
+    max_charge_kw: 150,
   },
 ];
 

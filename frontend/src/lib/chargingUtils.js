@@ -70,7 +70,8 @@ export function findChargingStationsOnRoute(
   stations,
   energyType = 'eco_energy',
   targetArrivalPct = 20,
-  maxDistanceKm = 80
+  maxDistanceKm = 80,
+  vehicleMaxChargeKw = 150
 ) {
   if (!segments || segments.length === 0 || !batteryKwh || !stations || stations.length === 0) {
     return [];
@@ -146,7 +147,8 @@ export function findChargingStationsOnRoute(
         // Énergie à ajouter pour revenir à l'objectif (max 60% de la capacité)
         const neededEnergy = Math.max(0, targetEnergy - currentBatteryLevel);
         const energyToCharge = Math.min(usableCapacity, neededEnergy > 0 ? neededEnergy : usableCapacity);
-        const chargingPowerKw = nearestStation.powerKw || 50; // Puissance de la borne en kW (défaut 50 kW)
+        const stationPowerKw = nearestStation.powerKw || 50;
+        const chargingPowerKw = Math.max(20, Math.min(stationPowerKw, vehicleMaxChargeKw || stationPowerKw)); // borne par la voiture
         const chargingTimeHours = energyToCharge / chargingPowerKw; // Temps en heures
         const chargingTimeMinutes = chargingTimeHours * 60; // Temps en minutes
         
@@ -177,7 +179,8 @@ export function findChargingStationsOnRoute(
     if (nearestStation && !chargingPoints.some((cp) => cp.station?.name === nearestStation.name)) {
       const neededEnergy = Math.max(0, targetEnergy - finalEnergy);
       const energyToCharge = Math.min(usableCapacity, neededEnergy);
-      const chargingPowerKw = nearestStation.powerKw || 50;
+      const stationPowerKw = nearestStation.powerKw || 50;
+      const chargingPowerKw = Math.max(20, Math.min(stationPowerKw, vehicleMaxChargeKw || stationPowerKw));
       const chargingTimeHours = energyToCharge / chargingPowerKw;
       const chargingTimeMinutes = chargingTimeHours * 60;
       chargingPoints.push({
