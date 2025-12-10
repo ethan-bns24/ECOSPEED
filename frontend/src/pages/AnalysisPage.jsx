@@ -1551,6 +1551,8 @@ const AnalysisPage = () => {
                     // Si on a déjà calculé des bornes sur le trajet, utiliser ce nombre pour l'affichage
                     if (routeChargingStations && routeChargingStations.length > 0) {
                       chargingStops = routeChargingStations.length;
+                      // Si des recharges sont planifiées, on considère l'objectif d'arrivée comme atteint
+                      batteryEndPct = targetEndPct;
                     }
                     
                     return (
