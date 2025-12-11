@@ -685,6 +685,10 @@ const AnalysisPage = () => {
       try {
         const kpis = computeKpisFromSegments(routeData.segments);
         const vehicle = getSelectedVehicleData();
+        const batteryKwh = vehicle?.battery_kwh || null;
+        const startPct = Number.isFinite(parseFloat(batteryStartPct))
+          ? parseFloat(batteryStartPct)
+          : null;
         const totalDistanceKm = routeData.total_distance
           ? routeData.total_distance / 1000
           : kpis.totalDistanceKm;
@@ -694,10 +698,11 @@ const AnalysisPage = () => {
 
         // Estimation SOC prévu par l'appli (mode éco) à l'arrivée
         let predictedArrivalPct = null;
-        if (vehicle?.battery_kwh && batteryStartPct !== null && batteryStartPct !== undefined) {
-          const energyAtStart = vehicle.battery_kwh * (batteryStartPct / 100);
-          const energyRemaining = energyAtStart - (kpis.totalEcoEnergy || 0);
-          predictedArrivalPct = Math.max(0, Math.min(100, (energyRemaining / vehicle.battery_kwh) * 100));
+        if (batteryKwh && startPct !== null) {
+          const energyAtStart = batteryKwh * (startPct / 100);
+          const energyConsumed = Number.isFinite(kpis.totalEcoEnergy) ? kpis.totalEcoEnergy : 0;
+          const energyRemaining = energyAtStart - energyConsumed;
+          predictedArrivalPct = Math.max(0, Math.min(100, (energyRemaining / batteryKwh) * 100));
         }
 
         setEndSummary({
@@ -707,6 +712,7 @@ const AnalysisPage = () => {
           energySavedKwh: kpis.energySavedVsLimit,
           ecoTimeMin: kpis.totalEcoTimeMin,
           limitTimeMin: kpis.totalLimitTimeMin,
+          batteryKwh,
           predictedArrivalPct,
         });
         setEndBadges(badges);
@@ -1829,56 +1835,67 @@ const AnalysisPage = () => {
             {/* Bloc comparaison SOC prévu vs réel */}
             {(endSummary?.predictedArrivalPct !== null && endSummary?.predictedArrivalPct !== undefined) && (
               <div className="grid grid-cols-1 gap-3 text-sm">
-                <div className="rounded-2xl bg-black/40 border border-emerald-400/40 p-3">
-                  <div className="text-[11px] text-emerald-200/80 mb-1">
-                    {language === 'fr' ? 'Batterie prévue (appli)' : 'Predicted battery (app)'}
-                  </div>
-                  <div className="text-xl font-semibold">
-                    {endSummary.predictedArrivalPct.toFixed(1)}%
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-black/40 border border-emerald-400/40 p-3 space-y-2">
+                <div className="rounded-2xl bg-black/40 border border-emerald-400/40 p-3 space-y-3">
                   <div className="text-[11px] text-emerald-200/80">
-                    {language === 'fr' ? 'Votre batterie réelle à l’arrivée (%)' : 'Your actual battery at arrival (%)'}
+                    {language === 'fr' ? 'Comparaison batterie arrivée' : 'Arrival battery comparison'}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.5"
-                      value={endActualSoc}
-                      onChange={(e) => {
-                        const val = parseFloat(e.target.value);
-                        if (Number.isNaN(val)) {
-                          setEndActualSoc('');
-                        } else {
-                          setEndActualSoc(Math.max(0, Math.min(100, val)));
-                        }
-                      }}
-                      className="w-24 rounded-lg bg-[#0b1726] border border-emerald-400/50 text-emerald-50 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/60"
-                      placeholder="--"
-                    />
-                    <span className="text-xs text-emerald-200/80">
-                      {language === 'fr'
-                        ? 'Comparez avec la valeur prévue.'
-                        : 'Compare with predicted value.'}
-                    </span>
-                  </div>
-                  {endActualSoc !== '' && (
-                    <div className="rounded-xl bg-emerald-500/10 border border-emerald-400/30 px-3 py-2 flex items-center justify-between">
-                      <span className="text-[11px] text-emerald-200/90">
-                        {language === 'fr' ? 'Écart réel vs prévu' : 'Actual vs predicted delta'}
-                      </span>
-                      <span
-                        className={`text-base font-semibold ${
-                          endActualSoc - endSummary.predictedArrivalPct >= 0
+                  <div className="grid grid-cols-3 gap-3 text-center text-xs">
+                    <div className="rounded-xl bg-white/5 border border-emerald-400/20 p-2">
+                      <div className="text-emerald-200/80 mb-1">
+                        {language === 'fr' ? 'Prévu (appli)' : 'Predicted'}
+                      </div>
+                      <div className="text-lg font-semibold">
+                        {endSummary.predictedArrivalPct.toFixed(1)}%
+                      </div>
+                    </div>
+                    <div className="rounded-xl bg-white/5 border border-emerald-400/20 p-2">
+                      <div className="text-emerald-200/80 mb-1">
+                        {language === 'fr' ? 'Rentré (réel)' : 'Actual (entered)'}
+                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        value={endActualSoc}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          if (Number.isNaN(val)) {
+                            setEndActualSoc('');
+                          } else {
+                            setEndActualSoc(Math.max(0, Math.min(100, val)));
+                          }
+                        }}
+                        className="w-full rounded-lg bg-[#0b1726] border border-emerald-400/40 text-emerald-50 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/60 text-center"
+                        placeholder="--"
+                      />
+                    </div>
+                    <div className="rounded-xl bg-white/5 border border-emerald-400/20 p-2">
+                      <div className="text-emerald-200/80 mb-1">
+                        {language === 'fr' ? 'Écart (pts)' : 'Delta (pts)'}
+                      </div>
+                      <div
+                        className={`text-lg font-semibold ${
+                          endActualSoc !== '' && (endActualSoc - endSummary.predictedArrivalPct) >= 0
                             ? 'text-emerald-300'
                             : 'text-red-300'
                         }`}
                       >
-                        {endActualSoc - endSummary.predictedArrivalPct >= 0 ? '+' : ''}
-                        {(endActualSoc - endSummary.predictedArrivalPct).toFixed(1)} pts
+                        {endActualSoc === ''
+                          ? '--'
+                          : `${endActualSoc - endSummary.predictedArrivalPct >= 0 ? '+' : ''}${(endActualSoc - endSummary.predictedArrivalPct).toFixed(1)}`}
+                      </div>
+                    </div>
+                  </div>
+                  {endActualSoc !== '' && (
+                    <div className="rounded-xl bg-emerald-500/10 border border-emerald-400/30 px-3 py-2 text-xs flex items-center justify-between">
+                      <span className="text-emerald-200/90">
+                        {language === 'fr'
+                          ? 'Erreur absolue (points de SOC)'
+                          : 'Absolute error (SOC pts)'}
+                      </span>
+                      <span className="text-sm font-semibold text-emerald-100">
+                        {Math.abs(endActualSoc - endSummary.predictedArrivalPct).toFixed(1)} pts
                       </span>
                     </div>
                   )}
