@@ -140,9 +140,10 @@ export function persistTripFromRoute(routeData, meta = {}) {
   const chargingStops = batteryKwh ? calculateChargingStops(totalEcoEnergy, batteryKwh, batteryStartPct, batteryEndPct) : null;
 
   // Vitesses moyennes pondérées par distance (km/h)
-  const totalDistanceKm = routeData.total_distance
+  const distanceKmFromRoute = routeData.total_distance
     ? routeData.total_distance / 1000
     : totalDistanceKm;
+  const totalDistanceKmComputed = distanceKmFromRoute;
   let avgLimitSpeedKmh = null;
   let avgEcoSpeedKmh = null;
   if (Array.isArray(routeData.segments) && routeData.segments.length > 0) {
@@ -150,7 +151,7 @@ export function persistTripFromRoute(routeData, meta = {}) {
       (s, seg) => s + ((seg.distance || seg.distance_m || 0) / 1000),
       0
     );
-    const denom = distKmSum > 0 ? distKmSum : totalDistanceKm || 0;
+    const denom = distKmSum > 0 ? distKmSum : totalDistanceKmComputed || 0;
     if (denom > 0) {
       const limitWeighted = routeData.segments.reduce(
         (s, seg) => s + ((seg.limit_speed || 0) * ((seg.distance || seg.distance_m || 0) / 1000)),
@@ -170,7 +171,7 @@ export function persistTripFromRoute(routeData, meta = {}) {
     createdAt: Date.now(),
     startLocation: routeData.start_location,
     endLocation: routeData.end_location,
-    distanceKm: routeData.total_distance ?? totalDistanceKm,
+    distanceKm: distanceKmFromRoute,
     ecoEnergyKwh: totalEcoEnergy,
     energySavedKwh: energySavedVsLimit,
     energySavedPercent: energySavedVsLimitPercent,
