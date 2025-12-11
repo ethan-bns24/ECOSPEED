@@ -114,7 +114,7 @@ const StatsPage = () => {
                   <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Erreur (%)' : 'Error (%)'}</th>
                   <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Conso réelle (kWh)' : 'Real energy (kWh)'}</th>
                   <th className="text-right pb-2 whitespace-nowrap">{language === 'fr' ? 'Conso éco (kWh)' : 'Eco energy (kWh)'}</th>
-                  <th className="text-right pb-2 whitespace-nowrap">{language === 'fr' ? 'Delta réel-Éco (kWh)' : 'Delta real-eco (kWh)'}</th>
+                  <th className="text-right pb-2 whitespace-nowrap">{language === 'fr' ? 'Delta réel-Éco (%)' : 'Delta real-eco (%)'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -156,9 +156,11 @@ const StatsPage = () => {
                         : batteryDropEnergyKwh !== null
                           ? batteryDropEnergyKwh
                           : null;
-                  const deltaRealVsEco =
-                    realEnergyKwh !== null && trip.ecoEnergyKwh !== undefined
-                      ? realEnergyKwh - trip.ecoEnergyKwh
+                  const deltaRealVsEcoPct =
+                    realEnergyKwh !== null &&
+                    trip.ecoEnergyKwh !== undefined &&
+                    trip.ecoEnergyKwh > 0
+                      ? ((realEnergyKwh - trip.ecoEnergyKwh) / trip.ecoEnergyKwh) * 100
                       : null;
                   return (
                     <tr key={trip.id} className={`${isDark ? 'border-emerald-300/30' : 'border-slate-100'} border-b last:border-0`}>
@@ -171,7 +173,11 @@ const StatsPage = () => {
                       </td>
                       <td className="py-2 pr-4 text-right">{realEnergyKwh !== null ? realEnergyKwh.toFixed(2) : '--'}</td>
                       <td className="py-2 pr-4 text-right">{trip.ecoEnergyKwh !== undefined ? trip.ecoEnergyKwh.toFixed(2) : '--'}</td>
-                      <td className="py-2 text-right">{deltaRealVsEco !== null ? `${deltaRealVsEco >= 0 ? '+' : ''}${deltaRealVsEco.toFixed(2)}` : '--'}</td>
+                      <td className="py-2 text-right">
+                        {deltaRealVsEcoPct !== null
+                          ? `${deltaRealVsEcoPct >= 0 ? '+' : ''}${deltaRealVsEcoPct.toFixed(1)}%`
+                          : '--'}
+                      </td>
                     </tr>
                   );
                 })}
