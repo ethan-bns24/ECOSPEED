@@ -702,6 +702,12 @@ const AnalysisPage = () => {
           parsePct(routeData?.batteryStartPct) ??
           parsePct(routeData?.summary?.battery_start_pct) ??
           null;
+        const summaryArrivalPct =
+          parsePct(routeData?.summary?.battery_end_pct) ??
+          parsePct(routeData?.summary?.battery_at_arrival) ??
+          parsePct(routeData?.battery_end_pct) ??
+          parsePct(routeData?.batteryEndPct) ??
+          null;
         const totalDistanceKm = routeData.total_distance
           ? routeData.total_distance / 1000
           : kpis.totalDistanceKm;
@@ -716,6 +722,10 @@ const AnalysisPage = () => {
           const energyConsumed = Number.isFinite(kpis.totalEcoEnergy) ? kpis.totalEcoEnergy : 0;
           const energyRemaining = energyAtStart - energyConsumed;
           predictedArrivalPct = Math.max(0, Math.min(100, (energyRemaining / batteryKwh) * 100));
+        }
+        // Fallback si le backend a déjà un SOC d'arrivée calculé
+        if ((predictedArrivalPct === null || Number.isNaN(predictedArrivalPct)) && summaryArrivalPct !== null) {
+          predictedArrivalPct = summaryArrivalPct;
         }
 
         setEndSummary({
