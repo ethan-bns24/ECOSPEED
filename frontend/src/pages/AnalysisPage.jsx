@@ -211,6 +211,7 @@ const AnalysisPage = () => {
   const [showEndScreen, setShowEndScreen] = useState(false);
   const [endSummary, setEndSummary] = useState(null);
   const [endBadges, setEndBadges] = useState([]);
+  const [endActualSoc, setEndActualSoc] = useState('');
   const [isRecalculatingRoute, setIsRecalculatingRoute] = useState(false);
   const [searchChargingStations, setSearchChargingStations] = useState(true);
   const [navigationMode, setNavigationMode] = useState('eco'); // 'eco' ou 'limit'
@@ -683,12 +684,21 @@ const AnalysisPage = () => {
     if (routeData && routeData.segments && routeData.segments.length > 0) {
       try {
         const kpis = computeKpisFromSegments(routeData.segments);
+        const vehicle = getSelectedVehicleData();
         const totalDistanceKm = routeData.total_distance
           ? routeData.total_distance / 1000
           : kpis.totalDistanceKm;
 
         const trips = getAllTrips();
         const badges = calculateBadges(trips, language).filter((b) => b.unlocked);
+
+        // Estimation SOC prévu par l'appli (mode éco) à l'arrivée
+        let predictedArrivalPct = null;
+        if (vehicle?.battery_kwh && batteryStartPct !== null && batteryStartPct !== undefined) {
+          const energyAtStart = vehicle.battery_kwh * (batteryStartPct / 100);
+          const energyRemaining = energyAtStart - (kpis.totalEcoEnergy || 0);
+          predictedArrivalPct = Math.max(0, Math.min(100, (energyRemaining / vehicle.battery_kwh) * 100));
+        }
 
         setEndSummary({
           distanceKm: totalDistanceKm,
@@ -697,8 +707,10 @@ const AnalysisPage = () => {
           energySavedKwh: kpis.energySavedVsLimit,
           ecoTimeMin: kpis.totalEcoTimeMin,
           limitTimeMin: kpis.totalLimitTimeMin,
+          predictedArrivalPct,
         });
         setEndBadges(badges);
+        setEndActualSoc('');
         setShowEndScreen(true);
       } catch (e) {
         console.error('Failed to build end-of-trip summary', e);
@@ -1813,6 +1825,66 @@ const AnalysisPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Bloc comparaison SOC prévu vs réel */}
+            {(endSummary?.predictedArrivalPct !== null && endSummary?.predictedArrivalPct !== undefined) && (
+              <div className="grid grid-cols-1 gap-3 text-sm">
+                <div className="rounded-2xl bg-black/40 border border-emerald-400/40 p-3">
+                  <div className="text-[11px] text-emerald-200/80 mb-1">
+                    {language === 'fr' ? 'Batterie prévue (appli)' : 'Predicted battery (app)'}
+                  </div>
+                  <div className="text-xl font-semibold">
+                    {endSummary.predictedArrivalPct.toFixed(1)}%
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-black/40 border border-emerald-400/40 p-3 space-y-2">
+                  <div className="text-[11px] text-emerald-200/80">
+                    {language === 'fr' ? 'Votre batterie réelle à l’arrivée (%)' : 'Your actual battery at arrival (%)'}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.5"
+                      value={endActualSoc}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        if (Number.isNaN(val)) {
+                          setEndActualSoc('');
+                        } else {
+                          setEndActualSoc(Math.max(0, Math.min(100, val)));
+                        }
+                      }}
+                      className="w-24 rounded-lg bg-[#0b1726] border border-emerald-400/50 text-emerald-50 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/60"
+                      placeholder="--"
+                    />
+                    <span className="text-xs text-emerald-200/80">
+                      {language === 'fr'
+                        ? 'Comparez avec la valeur prévue.'
+                        : 'Compare with predicted value.'}
+                    </span>
+                  </div>
+                  {endActualSoc !== '' && (
+                    <div className="rounded-xl bg-emerald-500/10 border border-emerald-400/30 px-3 py-2 flex items-center justify-between">
+                      <span className="text-[11px] text-emerald-200/90">
+                        {language === 'fr' ? 'Écart réel vs prévu' : 'Actual vs predicted delta'}
+                      </span>
+                      <span
+                        className={`text-base font-semibold ${
+                          endActualSoc - endSummary.predictedArrivalPct >= 0
+                            ? 'text-emerald-300'
+                            : 'text-red-300'
+                        }`}
+                      >
+                        {endActualSoc - endSummary.predictedArrivalPct >= 0 ? '+' : ''}
+                        {(endActualSoc - endSummary.predictedArrivalPct).toFixed(1)} pts
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {endBadges && endBadges.length > 0 && (
               <div className="rounded-2xl bg-black/40 border border-emerald-400/30 p-3 max-h-40 overflow-y-auto">
