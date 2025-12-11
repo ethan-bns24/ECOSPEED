@@ -689,12 +689,19 @@ const AnalysisPage = () => {
         const batteryKwh =
           selectedVehicle?.battery_kwh ??
           vehicleFromRoute?.battery_kwh ??
+          selectedVehicle?.usable_battery_kwh ??
+          vehicleFromRoute?.usable_battery_kwh ??
           null;
-        const startPct = Number.isFinite(parseFloat(batteryStartPct))
-          ? parseFloat(batteryStartPct)
-          : Number.isFinite(parseFloat(routeData?.battery_start_pct))
-            ? parseFloat(routeData?.battery_start_pct)
-            : null;
+        const parsePct = (val) => {
+          const n = parseFloat(val);
+          return Number.isFinite(n) ? n : null;
+        };
+        const startPct =
+          parsePct(batteryStartPct) ??
+          parsePct(routeData?.battery_start_pct) ??
+          parsePct(routeData?.batteryStartPct) ??
+          parsePct(routeData?.summary?.battery_start_pct) ??
+          null;
         const totalDistanceKm = routeData.total_distance
           ? routeData.total_distance / 1000
           : kpis.totalDistanceKm;
@@ -1851,7 +1858,9 @@ const AnalysisPage = () => {
                         {language === 'fr' ? 'Prévu (appli)' : 'Predicted'}
                       </div>
                       <div className="text-lg font-semibold">
-                        {endSummary.predictedArrivalPct.toFixed(1)}%
+                        {endSummary.predictedArrivalPct === null || endSummary.predictedArrivalPct === undefined
+                          ? '--'
+                          : `${endSummary.predictedArrivalPct.toFixed(1)}%`}
                       </div>
                     </div>
                     <div className="rounded-xl bg-white/5 border border-emerald-400/20 p-2">
