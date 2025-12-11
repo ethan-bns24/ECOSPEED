@@ -582,7 +582,8 @@ const AnalysisPage = () => {
           numPassengers: numPassengers,
           batteryKwh: batteryKwh,
           batteryStartPct: batteryStartPct,
-          batteryEndPct: calculatedBatteryEndPct,
+          // On stocke la cible saisie par l'utilisateur, pas la batterie calculée
+          batteryEndPct: batteryEndPct,
           actualArrivalSoc: null,
         });
         if (persisted?.id) {
