@@ -1983,6 +1983,10 @@ const AnalysisPage = () => {
             <button
               type="button"
               onClick={() => {
+                // Sauvegarder le SOC réel si saisi
+                if (lastTripId && endActualSoc !== '' && Number.isFinite(parseFloat(endActualSoc))) {
+                  updateTripActualSoc(lastTripId, parseFloat(endActualSoc));
+                }
                 setShowEndScreen(false);
                 setShowResults(true);
               }}

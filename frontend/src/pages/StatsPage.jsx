@@ -108,7 +108,6 @@ const StatsPage = () => {
               <thead>
                 <tr className={`${isDark ? 'text-emerald-50' : 'text-slate-700'}`}>
                   <th className="text-left pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Trajet' : 'Trip'}</th>
-                  <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Vit. limite moy. (km/h)' : 'Avg limit speed (km/h)'}</th>
                   <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Vit. éco moy. (km/h)' : 'Avg eco speed (km/h)'}</th>
                   <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Batterie cible (%)' : 'Battery target (%)'}</th>
                   <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Batterie réelle (%)' : 'Battery actual (%)'}</th>
@@ -129,7 +128,6 @@ const StatsPage = () => {
                   return (
                     <tr key={trip.id} className={`${isDark ? 'border-emerald-300/30' : 'border-slate-100'} border-b last:border-0`}>
                       <td className="py-2 pr-4 whitespace-nowrap">{trip.startLocation} → {trip.endLocation}</td>
-                      <td className="py-2 pr-4 text-right">{trip.avgLimitSpeedKmh ? trip.avgLimitSpeedKmh.toFixed(1) : '--'}</td>
                       <td className="py-2 pr-4 text-right">{trip.avgEcoSpeedKmh ? trip.avgEcoSpeedKmh.toFixed(1) : '--'}</td>
                       <td className="py-2 pr-4 text-right">{trip.batteryTargetPct !== null && trip.batteryTargetPct !== undefined ? trip.batteryTargetPct.toFixed(1) : '--'}</td>
                       <td className="py-2 pr-4 text-right">{trip.actualArrivalSoc !== null && trip.actualArrivalSoc !== undefined ? trip.actualArrivalSoc.toFixed(1) : '--'}</td>
