@@ -14,6 +14,18 @@ export function updateTripActualSoc(tripId, actualArrivalSoc) {
   return trips[idx];
 }
 
+export function updateTripActualEnergy(tripId, actualEnergyKwh) {
+  const trips = loadTrips();
+  const idx = trips.findIndex((t) => t.id === tripId);
+  if (idx === -1) return null;
+  trips[idx].actualEnergyKwh =
+    actualEnergyKwh === null || actualEnergyKwh === undefined
+      ? null
+      : Math.max(0, actualEnergyKwh);
+  saveTrips(trips);
+  return trips[idx];
+}
+
 function loadTrips() {
   if (typeof window === 'undefined') return [];
   try {
@@ -189,6 +201,7 @@ export function persistTripFromRoute(routeData, meta = {}) {
     batteryStartPct,
     batteryKwh,
     chargingEnergyKwh: meta.chargingEnergyKwh ?? null,
+    actualEnergyKwh: meta.actualEnergyKwh ?? null,
   };
 
   const trips = loadTrips();

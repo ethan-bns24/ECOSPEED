@@ -20,7 +20,7 @@ import NavigationPanel from '../components/NavigationPanel';
 import RealTimeNavigation from '../components/RealTimeNavigation';
 import GPSNavigation from '../components/GPSNavigation';
 import { toast } from 'sonner';
-import { persistTripFromRoute, calculateChargingStops, getAllTrips, computeKpisFromSegments, updateTripActualSoc } from '../lib/tripStorage';
+import { persistTripFromRoute, calculateChargingStops, getAllTrips, computeKpisFromSegments, updateTripActualSoc, updateTripActualEnergy } from '../lib/tripStorage';
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
 import { calculateBadges } from '../lib/badges';
 import { getVehicleSettings, updateVehicleSettings, getAppSettings, getCustomVehicles, getFavoriteLocations, updateFavoriteLocations } from '../lib/settingsStorage';
@@ -213,6 +213,7 @@ const AnalysisPage = () => {
   const [endBadges, setEndBadges] = useState([]);
   const [lastTripId, setLastTripId] = useState(null);
   const [endActualSoc, setEndActualSoc] = useState('');
+  const [endActualEnergy, setEndActualEnergy] = useState('');
   const [isRecalculatingRoute, setIsRecalculatingRoute] = useState(false);
   const [searchChargingStations, setSearchChargingStations] = useState(true);
   const [navigationMode, setNavigationMode] = useState('eco'); // 'eco' ou 'limit'
@@ -596,6 +597,7 @@ const AnalysisPage = () => {
           chargingEnergyKwh: Array.isArray(routeChargingStations)
             ? routeChargingStations.reduce((sum, st) => sum + (st.energyToCharge || 0), 0)
             : null,
+          actualEnergyKwh: null,
         });
         if (persisted?.id) {
           setLastTripId(persisted.id);
@@ -1972,6 +1974,41 @@ const AnalysisPage = () => {
               </div>
             )}
 
+            {/* Saisie énergie réelle consommée */}
+            <div className="grid grid-cols-1 gap-3 text-sm">
+              <div className="rounded-2xl bg-black/40 border border-emerald-400/40 p-3 space-y-2">
+                <div className="text-[11px] text-emerald-200/80">
+                  {language === 'fr' ? 'Énergie réelle consommée (kWh)' : 'Real energy used (kWh)'}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={endActualEnergy}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (Number.isNaN(val)) {
+                        setEndActualEnergy('');
+                        if (lastTripId) updateTripActualEnergy(lastTripId, null);
+                      } else {
+                        const clamped = Math.max(0, val);
+                        setEndActualEnergy(clamped);
+                        if (lastTripId) updateTripActualEnergy(lastTripId, clamped);
+                      }
+                    }}
+                    className="w-28 rounded-lg bg-[#0b1726] border border-emerald-400/40 text-emerald-50 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/60 text-center"
+                    placeholder="--"
+                  />
+                  <span className="text-xs text-emerald-200/80">
+                    {language === 'fr'
+                      ? 'Inclure la recharge réelle si différente du calcul'
+                      : 'Include real charging if different from calc'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {endBadges && endBadges.length > 0 && (
               <div className="rounded-2xl bg-black/40 border border-emerald-400/30 p-3 max-h-40 overflow-y-auto">
                 <div className="text-[11px] text-emerald-200/80 mb-1">
@@ -1998,6 +2035,9 @@ const AnalysisPage = () => {
                 // Sauvegarder le SOC réel si saisi
                 if (lastTripId && endActualSoc !== '' && Number.isFinite(parseFloat(endActualSoc))) {
                   updateTripActualSoc(lastTripId, parseFloat(endActualSoc));
+                }
+                if (lastTripId && endActualEnergy !== '' && Number.isFinite(parseFloat(endActualEnergy))) {
+                  updateTripActualEnergy(lastTripId, parseFloat(endActualEnergy));
                 }
                 setShowEndScreen(false);
                 setShowResults(true);

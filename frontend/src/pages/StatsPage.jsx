@@ -149,11 +149,13 @@ const StatsPage = () => {
                       ? chargingEnergyKwhFromTrip
                       : chargingEnergyFallback;
                   const realEnergyKwh =
-                    batteryDropEnergyKwh !== null && chargingEnergyUsed !== null
-                      ? batteryDropEnergyKwh + chargingEnergyUsed
-                      : batteryDropEnergyKwh !== null
-                        ? batteryDropEnergyKwh
-                      : null;
+                    trip.actualEnergyKwh !== null && trip.actualEnergyKwh !== undefined
+                      ? trip.actualEnergyKwh
+                      : batteryDropEnergyKwh !== null && chargingEnergyUsed !== null
+                        ? batteryDropEnergyKwh + chargingEnergyUsed
+                        : batteryDropEnergyKwh !== null
+                          ? batteryDropEnergyKwh
+                          : null;
                   const deltaRealVsEco =
                     realEnergyKwh !== null && trip.ecoEnergyKwh !== undefined
                       ? realEnergyKwh - trip.ecoEnergyKwh
