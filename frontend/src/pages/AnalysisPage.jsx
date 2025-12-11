@@ -537,6 +537,10 @@ const AnalysisPage = () => {
               vehicle?.max_charge_kw
             );
             setRouteChargingStations(ecoStationsOnRoute);
+            const totalEcoChargingEnergyKwh = ecoStationsOnRoute.reduce(
+              (sum, st) => sum + (st.energyToCharge || 0),
+              0
+            );
             
             // Bornes pour le mode limite de vitesse
             const limitStationsOnRoute = findChargingStationsOnRoute(
@@ -551,6 +555,10 @@ const AnalysisPage = () => {
               vehicle?.max_charge_kw
             );
             setLimitChargingStations(limitStationsOnRoute);
+            const totalLimitChargingEnergyKwh = limitStationsOnRoute.reduce(
+              (sum, st) => sum + (st.energyToCharge || 0),
+              0
+            );
           } else {
             setRouteChargingStations([]);
             setLimitChargingStations([]);
@@ -585,6 +593,9 @@ const AnalysisPage = () => {
           // On stocke la cible saisie par l'utilisateur, pas la batterie calculée
           batteryEndPct: batteryEndPct,
           actualArrivalSoc: null,
+          chargingEnergyKwh: Array.isArray(routeChargingStations)
+            ? routeChargingStations.reduce((sum, st) => sum + (st.energyToCharge || 0), 0)
+            : null,
         });
         if (persisted?.id) {
           setLastTripId(persisted.id);
