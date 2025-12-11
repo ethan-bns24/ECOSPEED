@@ -112,6 +112,7 @@ const StatsPage = () => {
                   <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Batterie cible (%)' : 'Battery target (%)'}</th>
                   <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Batterie réelle (%)' : 'Battery actual (%)'}</th>
                   <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Erreur (%)' : 'Error (%)'}</th>
+                  <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Conso réelle (kWh)' : 'Real energy (kWh)'}</th>
                   <th className="text-right pb-2 whitespace-nowrap">{language === 'fr' ? 'Conso éco (kWh)' : 'Eco energy (kWh)'}</th>
                 </tr>
               </thead>
@@ -125,6 +126,19 @@ const StatsPage = () => {
                     trip.batteryTargetPct > 0
                       ? ((trip.actualArrivalSoc - trip.batteryTargetPct) / trip.batteryTargetPct) * 100
                       : null;
+                  const realEnergyKwh =
+                    trip.batteryKwh !== null &&
+                    trip.batteryKwh !== undefined &&
+                    trip.batteryStartPct !== null &&
+                    trip.batteryStartPct !== undefined &&
+                    trip.actualArrivalSoc !== null &&
+                    trip.actualArrivalSoc !== undefined
+                      ? trip.batteryKwh * ((trip.batteryStartPct - trip.actualArrivalSoc) / 100)
+                      : null;
+                  const deltaRealVsEco =
+                    realEnergyKwh !== null && trip.ecoEnergyKwh !== undefined
+                      ? realEnergyKwh - trip.ecoEnergyKwh
+                      : null;
                   return (
                     <tr key={trip.id} className={`${isDark ? 'border-emerald-300/30' : 'border-slate-100'} border-b last:border-0`}>
                       <td className="py-2 pr-4 whitespace-nowrap">{trip.startLocation} → {trip.endLocation}</td>
@@ -134,6 +148,7 @@ const StatsPage = () => {
                       <td className={`py-2 pr-4 text-right ${errorPct !== null ? (errorPct >= 0 ? (isDark ? 'text-emerald-100' : 'text-emerald-700') : 'text-red-500') : ''}`}>
                         {errorPct === null ? '--' : `${errorPct >= 0 ? '+' : ''}${errorPct.toFixed(1)}%`}
                       </td>
+                      <td className="py-2 pr-4 text-right">{realEnergyKwh !== null ? realEnergyKwh.toFixed(2) : '--'}</td>
                       <td className="py-2 text-right">{trip.ecoEnergyKwh !== undefined ? trip.ecoEnergyKwh.toFixed(2) : '--'}</td>
                     </tr>
                   );

@@ -186,6 +186,8 @@ export function persistTripFromRoute(routeData, meta = {}) {
     avgEcoSpeedKmh,
     batteryTargetPct: batteryEndPct,
     actualArrivalSoc: meta.actualArrivalSoc ?? null,
+    batteryStartPct,
+    batteryKwh,
   };
 
   const trips = loadTrips();
