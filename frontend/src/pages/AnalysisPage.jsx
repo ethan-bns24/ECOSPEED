@@ -684,11 +684,17 @@ const AnalysisPage = () => {
     if (routeData && routeData.segments && routeData.segments.length > 0) {
       try {
         const kpis = computeKpisFromSegments(routeData.segments);
-        const vehicle = getSelectedVehicleData();
-        const batteryKwh = vehicle?.battery_kwh || null;
+        const selectedVehicle = getSelectedVehicleData();
+        const vehicleFromRoute = routeData?.vehicle_profile || {};
+        const batteryKwh =
+          selectedVehicle?.battery_kwh ??
+          vehicleFromRoute?.battery_kwh ??
+          null;
         const startPct = Number.isFinite(parseFloat(batteryStartPct))
           ? parseFloat(batteryStartPct)
-          : null;
+          : Number.isFinite(parseFloat(routeData?.battery_start_pct))
+            ? parseFloat(routeData?.battery_start_pct)
+            : null;
         const totalDistanceKm = routeData.total_distance
           ? routeData.total_distance / 1000
           : kpis.totalDistanceKm;
@@ -1925,7 +1931,10 @@ const AnalysisPage = () => {
 
             <button
               type="button"
-              onClick={() => setShowEndScreen(false)}
+              onClick={() => {
+                setShowEndScreen(false);
+                setShowResults(true);
+              }}
               className="w-full rounded-full bg-emerald-500 text-[#022c22] font-semibold text-sm py-2.5 shadow-lg hover:bg-emerald-400 transition"
             >
               {language === 'fr' ? 'Fermer le récap' : 'Close summary'}
