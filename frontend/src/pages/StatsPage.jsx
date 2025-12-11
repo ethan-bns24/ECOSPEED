@@ -113,8 +113,8 @@ const StatsPage = () => {
                   <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Batterie réelle (%)' : 'Battery actual (%)'}</th>
                   <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Erreur (%)' : 'Error (%)'}</th>
                   <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Conso réelle (kWh)' : 'Real energy (kWh)'}</th>
-                  <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Delta réel-Éco (kWh)' : 'Delta real-eco (kWh)'}</th>
                   <th className="text-right pb-2 whitespace-nowrap">{language === 'fr' ? 'Conso éco (kWh)' : 'Eco energy (kWh)'}</th>
+                  <th className="text-right pb-2 whitespace-nowrap">{language === 'fr' ? 'Delta réel-Éco (kWh)' : 'Delta real-eco (kWh)'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -127,10 +127,10 @@ const StatsPage = () => {
                     trip.batteryTargetPct > 0
                       ? ((trip.actualArrivalSoc - trip.batteryTargetPct) / trip.batteryTargetPct) * 100
                       : null;
-                  const chargingEnergyKwhSafe =
+                  const chargingEnergyKwhFromTrip =
                     trip.chargingEnergyKwh !== null && trip.chargingEnergyKwh !== undefined
                       ? trip.chargingEnergyKwh
-                      : 0;
+                      : null;
                   const batteryDropEnergyKwh =
                     trip.batteryKwh !== null &&
                     trip.batteryKwh !== undefined &&
@@ -140,9 +140,19 @@ const StatsPage = () => {
                     trip.actualArrivalSoc !== undefined
                       ? trip.batteryKwh * ((trip.batteryStartPct - trip.actualArrivalSoc) / 100)
                       : null;
+                  const chargingEnergyFallback =
+                    batteryDropEnergyKwh !== null && trip.ecoEnergyKwh !== undefined
+                      ? Math.max(0, trip.ecoEnergyKwh - batteryDropEnergyKwh)
+                      : null;
+                  const chargingEnergyUsed =
+                    chargingEnergyKwhFromTrip !== null && chargingEnergyKwhFromTrip !== undefined
+                      ? chargingEnergyKwhFromTrip
+                      : chargingEnergyFallback;
                   const realEnergyKwh =
-                    batteryDropEnergyKwh !== null
-                      ? batteryDropEnergyKwh + chargingEnergyKwhSafe
+                    batteryDropEnergyKwh !== null && chargingEnergyUsed !== null
+                      ? batteryDropEnergyKwh + chargingEnergyUsed
+                      : batteryDropEnergyKwh !== null
+                        ? batteryDropEnergyKwh
                       : null;
                   const deltaRealVsEco =
                     realEnergyKwh !== null && trip.ecoEnergyKwh !== undefined
@@ -158,8 +168,8 @@ const StatsPage = () => {
                         {errorPct === null ? '--' : `${errorPct >= 0 ? '+' : ''}${errorPct.toFixed(1)}%`}
                       </td>
                       <td className="py-2 pr-4 text-right">{realEnergyKwh !== null ? realEnergyKwh.toFixed(2) : '--'}</td>
-                      <td className="py-2 pr-4 text-right">{deltaRealVsEco !== null ? `${deltaRealVsEco >= 0 ? '+' : ''}${deltaRealVsEco.toFixed(2)}` : '--'}</td>
-                      <td className="py-2 text-right">{trip.ecoEnergyKwh !== undefined ? trip.ecoEnergyKwh.toFixed(2) : '--'}</td>
+                      <td className="py-2 pr-4 text-right">{trip.ecoEnergyKwh !== undefined ? trip.ecoEnergyKwh.toFixed(2) : '--'}</td>
+                      <td className="py-2 text-right">{deltaRealVsEco !== null ? `${deltaRealVsEco >= 0 ? '+' : ''}${deltaRealVsEco.toFixed(2)}` : '--'}</td>
                     </tr>
                   );
                 })}
