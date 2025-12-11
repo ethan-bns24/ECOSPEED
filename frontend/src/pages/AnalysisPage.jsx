@@ -1906,18 +1906,25 @@ const AnalysisPage = () => {
                     </div>
                     <div className="rounded-xl bg-white/5 border border-emerald-400/20 p-2">
                       <div className="text-emerald-200/80 mb-1">
-                        {language === 'fr' ? 'Écart (pts)' : 'Delta (pts)'}
+                        {language === 'fr' ? 'Écart (%)' : 'Delta (%)'}
                       </div>
                       <div
                         className={`text-lg font-semibold ${
-                          endActualSoc !== '' && (endActualSoc - endSummary.predictedArrivalPct) >= 0
+                          endActualSoc !== '' &&
+                          endSummary.predictedArrivalPct !== null &&
+                          endSummary.predictedArrivalPct !== undefined &&
+                          endSummary.predictedArrivalPct > 0 &&
+                          ((endActualSoc - endSummary.predictedArrivalPct) / endSummary.predictedArrivalPct) * 100 >= 0
                             ? 'text-emerald-300'
                             : 'text-red-300'
                         }`}
                       >
-                        {endActualSoc === ''
+                        {endActualSoc === '' ||
+                        endSummary.predictedArrivalPct === null ||
+                        endSummary.predictedArrivalPct === undefined ||
+                        endSummary.predictedArrivalPct <= 0
                           ? '--'
-                          : `${endActualSoc - endSummary.predictedArrivalPct >= 0 ? '+' : ''}${(endActualSoc - endSummary.predictedArrivalPct).toFixed(1)}`}
+                          : `${((endActualSoc - endSummary.predictedArrivalPct) / endSummary.predictedArrivalPct) >= 0 ? '+' : ''}${(((endActualSoc - endSummary.predictedArrivalPct) / endSummary.predictedArrivalPct) * 100).toFixed(1)}%`}
                       </div>
                     </div>
                   </div>
@@ -1925,11 +1932,15 @@ const AnalysisPage = () => {
                     <div className="rounded-xl bg-emerald-500/10 border border-emerald-400/30 px-3 py-2 text-xs flex items-center justify-between">
                       <span className="text-emerald-200/90">
                         {language === 'fr'
-                          ? 'Erreur absolue (points de SOC)'
-                          : 'Absolute error (SOC pts)'}
+                          ? 'Erreur absolue (%)'
+                          : 'Absolute error (%)'}
                       </span>
                       <span className="text-sm font-semibold text-emerald-100">
-                        {Math.abs(endActualSoc - endSummary.predictedArrivalPct).toFixed(1)} pts
+                        {endSummary.predictedArrivalPct === null ||
+                        endSummary.predictedArrivalPct === undefined ||
+                        endSummary.predictedArrivalPct <= 0
+                          ? '--'
+                          : `${Math.abs(((endActualSoc - endSummary.predictedArrivalPct) / endSummary.predictedArrivalPct) * 100).toFixed(1)}%`}
                       </span>
                     </div>
                   )}
