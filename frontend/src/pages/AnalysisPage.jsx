@@ -702,6 +702,12 @@ const AnalysisPage = () => {
           parsePct(routeData?.batteryStartPct) ??
           parsePct(routeData?.summary?.battery_start_pct) ??
           null;
+        // Valeur saisie par l'utilisateur pour la batterie à l'arrivée (on veut l'afficher en priorité)
+        const desiredArrivalInputPct = (() => {
+          const n = parsePct(batteryEndPct);
+          if (n === null) return null;
+          return Math.max(0, Math.min(100, n));
+        })();
         const summaryArrivalPct =
           parsePct(routeData?.summary?.battery_end_pct) ??
           parsePct(routeData?.summary?.battery_at_arrival) ??
@@ -717,14 +723,17 @@ const AnalysisPage = () => {
 
         // Estimation SOC prévu par l'appli (mode éco) à l'arrivée
         let predictedArrivalPct = null;
-        if (batteryKwh && startPct !== null) {
+        // Priorité : valeur demandée par l'utilisateur (champ "Battery at end (%)")
+        if (desiredArrivalInputPct !== null) {
+          predictedArrivalPct = desiredArrivalInputPct;
+        } else if (batteryKwh && startPct !== null) {
+          // Sinon calcul éco simple
           const energyAtStart = batteryKwh * (startPct / 100);
           const energyConsumed = Number.isFinite(kpis.totalEcoEnergy) ? kpis.totalEcoEnergy : 0;
           const energyRemaining = energyAtStart - energyConsumed;
           predictedArrivalPct = Math.max(0, Math.min(100, (energyRemaining / batteryKwh) * 100));
-        }
-        // Fallback si le backend a déjà un SOC d'arrivée calculé
-        if ((predictedArrivalPct === null || Number.isNaN(predictedArrivalPct)) && summaryArrivalPct !== null) {
+        } else if (summaryArrivalPct !== null) {
+          // Fallback : valeur renvoyée par le backend (dashboard)
           predictedArrivalPct = summaryArrivalPct;
         }
 
