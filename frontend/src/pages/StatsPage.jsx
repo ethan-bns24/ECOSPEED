@@ -92,6 +92,60 @@ const StatsPage = () => {
         )}
       </div>
 
+      <div className={`rounded-3xl p-5 md:p-6 shadow-sm mb-6 ${isDark ? 'bg-emerald-500 text-white border border-emerald-400/30' : 'bg-white border border-slate-100'}`}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className={`text-base md:text-lg font-semibold flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
+            {language === 'fr' ? 'Détails trajets (vitesses & batterie)' : 'Trip details (speeds & battery)'}
+          </h2>
+        </div>
+        {trips.length === 0 ? (
+          <div className={`text-sm ${isDark ? 'text-emerald-50' : 'text-slate-600'}`}>
+            {language === 'fr' ? 'Aucune donnée.' : 'No data.'}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className={`${isDark ? 'text-emerald-50' : 'text-slate-700'}`}>
+                  <th className="text-left pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Trajet' : 'Trip'}</th>
+                  <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Vit. limite moy. (km/h)' : 'Avg limit speed (km/h)'}</th>
+                  <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Vit. éco moy. (km/h)' : 'Avg eco speed (km/h)'}</th>
+                  <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Batterie cible (%)' : 'Battery target (%)'}</th>
+                  <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Batterie réelle (%)' : 'Battery actual (%)'}</th>
+                  <th className="text-right pb-2 pr-4 whitespace-nowrap">{language === 'fr' ? 'Erreur (%)' : 'Error (%)'}</th>
+                  <th className="text-right pb-2 whitespace-nowrap">{language === 'fr' ? 'Conso éco (kWh)' : 'Eco energy (kWh)'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {trips.map((trip) => {
+                  const errorPct =
+                    trip.actualArrivalSoc !== null &&
+                    trip.actualArrivalSoc !== undefined &&
+                    trip.batteryTargetPct !== null &&
+                    trip.batteryTargetPct !== undefined &&
+                    trip.batteryTargetPct > 0
+                      ? ((trip.actualArrivalSoc - trip.batteryTargetPct) / trip.batteryTargetPct) * 100
+                      : null;
+                  return (
+                    <tr key={trip.id} className={`${isDark ? 'border-emerald-300/30' : 'border-slate-100'} border-b last:border-0`}>
+                      <td className="py-2 pr-4 whitespace-nowrap">{trip.startLocation} → {trip.endLocation}</td>
+                      <td className="py-2 pr-4 text-right">{trip.avgLimitSpeedKmh ? trip.avgLimitSpeedKmh.toFixed(1) : '--'}</td>
+                      <td className="py-2 pr-4 text-right">{trip.avgEcoSpeedKmh ? trip.avgEcoSpeedKmh.toFixed(1) : '--'}</td>
+                      <td className="py-2 pr-4 text-right">{trip.batteryTargetPct !== null && trip.batteryTargetPct !== undefined ? trip.batteryTargetPct.toFixed(1) : '--'}</td>
+                      <td className="py-2 pr-4 text-right">{trip.actualArrivalSoc !== null && trip.actualArrivalSoc !== undefined ? trip.actualArrivalSoc.toFixed(1) : '--'}</td>
+                      <td className={`py-2 pr-4 text-right ${errorPct !== null ? (errorPct >= 0 ? (isDark ? 'text-emerald-100' : 'text-emerald-700') : 'text-red-500') : ''}`}>
+                        {errorPct === null ? '--' : `${errorPct >= 0 ? '+' : ''}${errorPct.toFixed(1)}%`}
+                      </td>
+                      <td className="py-2 text-right">{trip.ecoEnergyKwh !== undefined ? trip.ecoEnergyKwh.toFixed(2) : '--'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4">
         <div className="bg-emerald-600 text-white rounded-2xl px-4 py-4 shadow-sm">
           <div className="text-xs text-emerald-100 mb-1">{t.stats.energySavedLabel}</div>

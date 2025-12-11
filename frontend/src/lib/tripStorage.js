@@ -2,6 +2,18 @@
 
 const STORAGE_KEY = 'ecospeed_trips_v1';
 
+export function updateTripActualSoc(tripId, actualArrivalSoc) {
+  const trips = loadTrips();
+  const idx = trips.findIndex((t) => t.id === tripId);
+  if (idx === -1) return null;
+  trips[idx].actualArrivalSoc =
+    actualArrivalSoc === null || actualArrivalSoc === undefined
+      ? null
+      : Math.max(0, Math.min(100, actualArrivalSoc));
+  saveTrips(trips);
+  return trips[idx];
+}
+
 function loadTrips() {
   if (typeof window === 'undefined') return [];
   try {
@@ -127,6 +139,32 @@ export function persistTripFromRoute(routeData, meta = {}) {
   const batteryEndPct = meta.batteryEndPct || 20;
   const chargingStops = batteryKwh ? calculateChargingStops(totalEcoEnergy, batteryKwh, batteryStartPct, batteryEndPct) : null;
 
+  // Vitesses moyennes pondérées par distance (km/h)
+  const totalDistanceKm = routeData.total_distance
+    ? routeData.total_distance / 1000
+    : totalDistanceKm;
+  let avgLimitSpeedKmh = null;
+  let avgEcoSpeedKmh = null;
+  if (Array.isArray(routeData.segments) && routeData.segments.length > 0) {
+    const distKmSum = routeData.segments.reduce(
+      (s, seg) => s + ((seg.distance || seg.distance_m || 0) / 1000),
+      0
+    );
+    const denom = distKmSum > 0 ? distKmSum : totalDistanceKm || 0;
+    if (denom > 0) {
+      const limitWeighted = routeData.segments.reduce(
+        (s, seg) => s + ((seg.limit_speed || 0) * ((seg.distance || seg.distance_m || 0) / 1000)),
+        0
+      );
+      const ecoWeighted = routeData.segments.reduce(
+        (s, seg) => s + ((seg.eco_speed || 0) * ((seg.distance || seg.distance_m || 0) / 1000)),
+        0
+      );
+      avgLimitSpeedKmh = limitWeighted / denom;
+      avgEcoSpeedKmh = ecoWeighted / denom;
+    }
+  }
+
   const trip = {
     id: routeData.route_id || `${Date.now()}`,
     createdAt: Date.now(),
@@ -143,6 +181,10 @@ export function persistTripFromRoute(routeData, meta = {}) {
     vehicleName: meta.vehicleName || null,
     numPassengers: meta.numPassengers ?? null,
     chargingStops,
+    avgLimitSpeedKmh,
+    avgEcoSpeedKmh,
+    batteryTargetPct: batteryEndPct,
+    actualArrivalSoc: meta.actualArrivalSoc ?? null,
   };
 
   const trips = loadTrips();

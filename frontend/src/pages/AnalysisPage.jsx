@@ -20,7 +20,7 @@ import NavigationPanel from '../components/NavigationPanel';
 import RealTimeNavigation from '../components/RealTimeNavigation';
 import GPSNavigation from '../components/GPSNavigation';
 import { toast } from 'sonner';
-import { persistTripFromRoute, calculateChargingStops, getAllTrips, computeKpisFromSegments } from '../lib/tripStorage';
+import { persistTripFromRoute, calculateChargingStops, getAllTrips, computeKpisFromSegments, updateTripActualSoc } from '../lib/tripStorage';
 import { VEHICLE_PROFILES } from '../lib/vehicleProfiles';
 import { calculateBadges } from '../lib/badges';
 import { getVehicleSettings, updateVehicleSettings, getAppSettings, getCustomVehicles, getFavoriteLocations, updateFavoriteLocations } from '../lib/settingsStorage';
@@ -211,6 +211,7 @@ const AnalysisPage = () => {
   const [showEndScreen, setShowEndScreen] = useState(false);
   const [endSummary, setEndSummary] = useState(null);
   const [endBadges, setEndBadges] = useState([]);
+  const [lastTripId, setLastTripId] = useState(null);
   const [endActualSoc, setEndActualSoc] = useState('');
   const [isRecalculatingRoute, setIsRecalculatingRoute] = useState(false);
   const [searchChargingStations, setSearchChargingStations] = useState(true);
@@ -576,13 +577,17 @@ const AnalysisPage = () => {
           calculatedBatteryEndPct = Math.max(0, Math.min(100, (energyRemaining / batteryKwh) * 100));
         }
         
-        persistTripFromRoute(response.data, {
+        const persisted = persistTripFromRoute(response.data, {
           vehicleName: vehicle.name,
           numPassengers: numPassengers,
           batteryKwh: batteryKwh,
           batteryStartPct: batteryStartPct,
           batteryEndPct: calculatedBatteryEndPct,
+          actualArrivalSoc: null,
         });
+        if (persisted?.id) {
+          setLastTripId(persisted.id);
+        }
       } catch (e) {
         console.error('Failed to persist trip summary', e);
       }
@@ -1896,8 +1901,15 @@ const AnalysisPage = () => {
                           const val = parseFloat(e.target.value);
                           if (Number.isNaN(val)) {
                             setEndActualSoc('');
+                            if (lastTripId) {
+                              updateTripActualSoc(lastTripId, null);
+                            }
                           } else {
-                            setEndActualSoc(Math.max(0, Math.min(100, val)));
+                            const clamped = Math.max(0, Math.min(100, val));
+                            setEndActualSoc(clamped);
+                            if (lastTripId) {
+                              updateTripActualSoc(lastTripId, clamped);
+                            }
                           }
                         }}
                         className="w-full rounded-lg bg-[#0b1726] border border-emerald-400/40 text-emerald-50 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/60 text-center"
