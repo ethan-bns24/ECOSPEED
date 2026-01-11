@@ -5,7 +5,11 @@
     "buildCommand": "pip install -r requirements.txt"
   },
   "deploy": {
+<<<<<<< HEAD
     "startCommand": "streamlit run app.py --server.port=$PORT --server.address=0.0.0.0",
+=======
+    "startCommand": "uvicorn server:app --host 0.0.0.0 --port $PORT",
+>>>>>>> 018ff94d0e65396f3b8a19e8d636cc76b471c791
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

@@ -1,0 +1,281 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{float}
+\usepackage{fancyhdr}
+\geometry{margin=2.5cm}
+
+\title{Ecospeed -- Eco-Friendly Navigation Application for Electric Vehicles}
+\author{Engineering Project - Team 5813}
+\date{\today}
+
+% Header with logo on the top-right of each page
+\pagestyle{fancy}
+\fancyhf{}%
+\fancyhead[R]{\includegraphics[height=1.2cm]{logo.png}}
+\renewcommand{\headrulewidth}{0pt}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{fancy}
+
+\section{Context and objectives}
+
+Ecospeed is a web navigation application for electric vehicles whose goal is to help the driver adopt an \textbf{energy-efficient speed} while keeping a reasonable travel time.
+
+The project pursues two main objectives:
+\begin{itemize}
+  \item Realistically model the \textbf{energy consumption} of an electric vehicle as a function of speed, elevation profile and vehicle parameters.
+  \item Provide a \textbf{real-time GPS interface} showing the actual vehicle speed, the recommended eco-speed and the legal speed limit, with clear visual feedback (colors, limit panel, etc.).
+\end{itemize}
+
+The global architecture is full-stack:
+\begin{itemize}
+  \item \textbf{Backend}: FastAPI (Python) + MongoDB, responsible for physics calculations and splitting the route into segments.
+  \item \textbf{Frontend}: React, Tailwind CSS and Leaflet for the map display and the GPS interface.
+  \item \textbf{External API}: OpenRouteService, used to compute the route, retrieve speed limits and GPS coordinates.
+\end{itemize}
+
+\section{Functional architecture}
+
+\subsection{Main data flow}
+
+The application workflow can be summarized as follows:
+\begin{enumerate}
+  \item The user enters a \textbf{start address} and a \textbf{destination}. If the start is left empty, the application tries to use the smartphone's \textbf{GPS position}.
+  \item The frontend sends an HTTP request \texttt{/api/route} to the backend, including the chosen \textbf{vehicle profile} (mass, frontal area, CdA, Crr, battery, etc.).
+  \item The backend calls OpenRouteService to obtain a detailed route, then:
+  \begin{itemize}
+    \item rebuilds GPS points and altitudes,
+    \item splits the itinerary into homogeneous \textbf{speed segments},
+    \item computes, for each segment, energy consumption and travel time for the LIMIT (legal speeds) and ECO (optimized speed) scenarios.
+  \end{itemize}
+  \item The frontend receives the response and:
+  \begin{itemize}
+    \item displays the \textbf{route map} (Leaflet polyline),
+    \item fills in the \textbf{global KPIs} (total energy, total time, CO\textsubscript{2} avoided),
+    \item allows starting a \textbf{GPS navigation mode} with real-time speed display.
+  \end{itemize}
+\end{enumerate}
+
+\subsection{Main frontend components}
+
+The key components are:
+\begin{itemize}
+  \item \texttt{AnalysisPage.jsx}: ``New trip'' page, handles forms, API calls, navigation start and demo mode.
+  \item \texttt{RouteMap.jsx}: Leaflet map, displays the route, start/end markers and centers the view on the current position.
+  \item \texttt{GPSNavigation.jsx}: top GPS-style bar, with instructions like ``Turn right in 200~m'', remaining distance and time.
+  \item \texttt{RealTimeNavigation.jsx}: bottom bar with the \emph{Current speed} bubble (real speed), color code and speed-limit badge.
+  \item \texttt{SpeedChart / EnergyChart / TimeChart.jsx}: charts comparing LIMIT and ECO.
+\end{itemize}
+
+A set of three dashboard screenshots can be inserted as follows (the \texttt{[H]} option forces them to stay together, without interleaving text):
+%
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{screenshot-dashboard-1.png}
+  \caption{Screenshot~1 -- New trip configuration and route map.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{screenshot-dashboard-2.png}
+  \caption{Screenshot~2 -- Results dashboard with KPIs and comparison charts.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{screenshot-dashboard-3.png}
+  \caption{Screenshot~3 -- Results dashboard with KPIs and comparison charts.}
+\end{figure}
+
+\section{Physical model and computation of eco speed}
+
+\subsection{Forces modelled}
+
+For each elementary segment between two consecutive GPS points, the backend knows:
+\begin{itemize}
+  \item the segment distance $d$ (in m),
+  \item the start and end altitudes ($h_\mathrm{start}$, $h_\mathrm{end}$),
+  \item the speed limit $v_\mathrm{lim}$ (in km/h),
+  \item the vehicle parameters: mass $m$ (vehicle + load), aerodynamic drag coefficient $C_dA$, rolling resistance coefficient $C_\mathrm{rr}$, motor and regeneration efficiencies.
+\end{itemize}
+
+There is \textbf{no averaging of slopes over longer chunks}: we compute
+\[
+  \mathrm{slope} = \frac{h_\mathrm{end} - h_\mathrm{start}}{d}
+\]
+for each elementary segment, which preserves uphill and downhill effects separately (a +3\% then -3\% sequence does not cancel out).
+
+The main forces per elementary segment are then:
+\begin{itemize}
+  \item \textbf{Gravitational force} (slope):
+  \[
+    F_\mathrm{grav} = m g \times \mathrm{slope}
+  \]
+  \item \textbf{Rolling resistance}:
+  \[
+    F_\mathrm{roll} = C_\mathrm{rr} \, m g \cos(\theta)
+  \]
+  where $\theta$ is the slope angle.
+  \item \textbf{Aerodynamic drag}:
+  \[
+    F_\mathrm{aero} = \frac{1}{2} \rho \, C_dA \, v^2
+  \]
+  with $\rho$ the air density and $v$ the speed in m/s.
+\end{itemize}
+
+The total force is:
+\[
+  F_\mathrm{tot} = F_\mathrm{grav} + F_\mathrm{roll} + F_\mathrm{aero}
+\]
+
+From this we derive power and energy:
+\[
+  P = F_\mathrm{tot} \times v, \qquad
+  t = \frac{d}{v}, \qquad
+  E_\mathrm{brut} = P \times t
+\]
+
+In kWh, taking efficiencies into account (positive for consumption, negative for regeneration):
+\[
+  E_\mathrm{kWh} =
+  \begin{cases}
+    \dfrac{E_\mathrm{brut}}{\eta_\mathrm{moteur}} & \text{si } E_\mathrm{brut} > 0 \quad (\text{consommation}) \\
+    E_\mathrm{brut} \times \eta_\mathrm{regen} & \text{si } E_\mathrm{brut} < 0 \quad (\text{régénération})
+  \end{cases}
+\]
+
+\paragraph{Aggregation.}
+Energies of all elementary segments are simply summed (including negative values from regeneration); slopes are never averaged.
+
+\subsection{Determining the ECO speed}
+
+The general idea is to choose, for each segment, a speed $v_\mathrm{eco}$ that:
+\begin{itemize}
+  \item significantly reduces the aerodynamic component (which grows as $v^2$),
+  \item takes the slope into account (uphill or downhill),
+  \item stays close to the legal limit in order not to explode total travel time.
+\end{itemize}
+
+The implemented strategy is the following (simplified pseudo-code):
+%
+\begin{verbatim}
+if slope > +2 % (montée)
+    v_eco = max(60 km/h, 0.65 * v_limit)
+elif slope < -2 % (descente)
+    v_eco = min(0.85 * v_limit, 110 km/h)
+else (terrain quasi plat)
+    v_eco = 0.88 * v_limit
+\end{verbatim}
+
+\paragraph{Uphill ($\mathrm{slope} > 2\%$).}
+Reducing speed lowers the required power:
+\[
+  P = (F_\mathrm{grav} + F_\mathrm{roll} + F_\mathrm{aero}) \times v
+\]
+Even a small reduction in $v$ strongly decreases $F_\mathrm{aero}$ and thus $P$, enabling significant energy savings for a moderate extra time.
+
+\paragraph{Downhill ($\mathrm{slope} < -2\%$).}
+We target a moderate speed that maximizes regeneration:  
+if speed is too high, the driver must use mechanical braking and not all potential energy is recovered; if speed is too low, we under-use gravity.
+
+\paragraph{Flat terrain.}
+We drive slightly below the legal limit:
+\[
+  v_\mathrm{eco} \approx 0{,}88 \, v_\mathrm{lim}
+\]
+This 10–15\% reduction already significantly reduces $F_\mathrm{aero}$ (and thus consumption), while keeping a travel time very close to the LIMIT scenario.
+
+The full ECO scenario is built by concatenating the speeds $v_\mathrm{eco}$ of all segments and recomputing the associated energies and times.
+
+\subsection{Eco-driving score (displayed in the app)}
+
+For each trip, we compute an eco-driving score:
+\[
+\mathrm{score} = \max(0,\min(100,\, 50 + \mathrm{energySavedPercent}))
+\]
+where $\mathrm{energySavedPercent}$ is the percentage of energy saved by ECO vs.\ LIMIT (capped at +50). The dashboard shows the average of these scores over all trips.
+
+\section{Real-time navigation and visualization}
+
+\subsection{Real GPS tracking}
+
+When the user clicks on \textbf{Start}, the application activates geolocation:
+%
+\begin{verbatim}
+navigator.geolocation.watchPosition(
+  (pos) => {
+    currentPosition = [lat, lon]
+    currentSpeed    = speed * 3.6   // m/s -> km/h
+  }
+)
+\end{verbatim}
+
+The Leaflet map is automatically centered on \texttt{currentPosition} with a zoom level adapted to driving (15--16). If the user does not physically move, the map remains fixed (no automatic simulation).
+
+In \textbf{demo} mode (for classroom presentations), \texttt{watchPosition} is disabled, the map is frozen, and the speed is controlled from the keyboard (keys \texttt{Z}/\texttt{S}).
+
+\subsection{Speed bubble and color codes}
+
+At the bottom of the screen, a bubble displays the \textbf{real speed} with:
+\begin{itemize}
+  \item highly readable text (e.g.\ 52~km/h),
+  \item a color code:
+  \begin{itemize}
+    \item blue: speed below ECO speed,
+    \item green: speed in the optimal zone around ECO,
+    \item red: speed above ECO speed.
+  \end{itemize}
+  \item a small icon (up/down arrow or check mark) visually indicating whether to accelerate, slow down or stay as is.
+\end{itemize}
+
+Figure~\ref{fig:bulle_vitesse} shows the bubble when the recommended speed is exceeded:
+%
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.9\textwidth]{screenshot-speed-bubble.png}
+  \caption{Example of a ``Current speed'' bubble: speed in red because it is above the ECO speed.}
+  \label{fig:bulle_vitesse}
+\end{figure}
+
+\subsection{Speed limit alert}
+
+The legal speed limit is shown as a small red badge inside the bubble. When the real speed exceeds the limit by more than 1~km/h, this badge flashes:
+\begin{itemize}
+  \item round red badge with ``50~km/h'' for example,
+  \item pulsing animation to draw attention,
+  \item allows the driver to immediately spot a speed-limit violation, similar to Waze.
+\end{itemize}
+
+\section{Demo mode and educational use}
+
+The demo mode is designed for presentations and project defenses without a real vehicle:
+\begin{itemize}
+  \item the position remains fixed on the map,
+  \item the initial speed is set to roughly 2~km/h below the ECO speed,
+  \item key \texttt{Z} increases speed by 1~km/h, key \texttt{S} decreases it,
+  \item all visual reactions (color code, speed-limit badge) behave exactly as in real driving.
+\end{itemize}
+
+This mode makes it possible to \textbf{demonstrate live} the interest of eco-driving:
+\begin{itemize}
+  \item by staying at the ECO speed (green), the limit alert disappears and consumption is minimized,
+  \item by accelerating above the limit, the red badge immediately reminds the regulatory constraint.
+\end{itemize}
+
+\section*{Conclusion}
+
+Ecospeed combines detailed physical modelling and a modern GPS interface to make eco-driving concepts concrete. The ECO speed is not arbitrary: it directly results from the forces at play (slope, rolling resistance, aerodynamics) and from an explicit trade-off between energy and time.
+
+The user is guided in real time toward this optimal speed, with clear visualization of the impact of their behavior (colors, limit badge, final KPIs). The demo mode finally allows these concepts to be presented interactively without needing to actually drive.
+
+\end{document}
+
+

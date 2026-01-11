@@ -1,0 +1,363 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix for default marker icons in Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+  iconUrl: require('leaflet/dist/images/marker-icon.png'),
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+});
+
+// Component to adjust map view to fit route bounds
+function MapBounds({ coordinates }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (coordinates && coordinates.length > 0) {
+      // Create bounds from all coordinates
+      const bounds = L.latLngBounds(coordinates);
+      // Fit map to bounds with padding
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+  }, [coordinates, map]);
+  
+  return null;
+}
+
+// Component to follow current position during navigation
+function FollowPosition({ position, zoomLevel = 16, enabled = true }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (!enabled) return;
+    if (position && Array.isArray(position) && position.length === 2) {
+      const [lat, lon] = position;
+      if (typeof lat === 'number' && typeof lon === 'number' && !isNaN(lat) && !isNaN(lon)) {
+        // Vue centrée sur la voiture avec un zoom élevé pour la conduite
+        const targetZoom = Math.max(14, zoomLevel);
+        map.setView([lat, lon], targetZoom, { animate: true, duration: 0.5 });
+      }
+    }
+  }, [position, map]);
+  
+  return null;
+}
+
+// Boutons de contrôle personnalisés (zoom + recentrage) pour le mode GPS
+function GpsControls({ isNavigating, currentPosition, onRecenter }) {
+  const map = useMap();
+
+  if (!isNavigating) return null;
+
+  const handleZoomIn = () => {
+    if (!map) return;
+    map.zoomIn();
+  };
+
+  const handleZoomOut = () => {
+    if (!map) return;
+    map.zoomOut();
+  };
+
+  const handleRecenter = () => {
+    if (!map || !currentPosition || !Array.isArray(currentPosition)) return;
+    const [lat, lon] = currentPosition;
+    if (typeof lat !== 'number' || typeof lon !== 'number') return;
+    const targetZoom = Math.max(15, map.getZoom ? map.getZoom() : 15);
+    if (onRecenter) {
+      onRecenter();
+    }
+    map.setView([lat, lon], targetZoom, { animate: true, duration: 0.3 });
+  };
+
+  return (
+    <div className="pointer-events-auto absolute left-3 top-24 md:top-28 z-[1000] flex flex-col gap-2 items-center">
+      <button
+        type="button"
+        onClick={handleZoomIn}
+        className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/70 text-white text-xl font-semibold flex items-center justify-center shadow-lg border border-white/20"
+      >
+        +
+      </button>
+      <button
+        type="button"
+        onClick={handleZoomOut}
+        className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/70 text-white text-xl font-semibold flex items-center justify-center shadow-lg border border-white/20"
+      >
+        −
+      </button>
+      {currentPosition && Array.isArray(currentPosition) && (
+        <button
+          type="button"
+          onClick={handleRecenter}
+          className="mt-1 w-9 h-9 md:w-10 md:h-10 rounded-full bg-emerald-500 text-[#022c22] text-sm font-semibold flex items-center justify-center shadow-lg border border-emerald-300/80"
+        >
+          ◎
+        </button>
+      )}
+    </div>
+  );
+}
+
+const RouteMap = ({ segments, currentSegmentIndex, startLocation, endLocation, routeCoordinates, chargingStations = [], currentPosition = null, isNavigating = false }) => {
+  const mapRef = useRef(null);
+  const [followEnabled, setFollowEnabled] = useState(true);
+
+  // À chaque lancement d'une navigation, on réactive le suivi automatique
+  useEffect(() => {
+    if (isNavigating) {
+      setFollowEnabled(true);
+    }
+  }, [isNavigating]);
+
+  // Use route_coordinates if available (full route path), otherwise fallback to segments
+  const polylineCoords = routeCoordinates && routeCoordinates.length > 0
+    ? routeCoordinates
+    : segments.length > 0
+    ? (() => {
+        const coords = [];
+        // Add the start point of the first segment
+        coords.push([segments[0].lat_start, segments[0].lon_start]);
+        // Add the end point of each segment (which connects to the next segment)
+        segments.forEach(segment => {
+          coords.push([segment.lat_end, segment.lon_end]);
+        });
+        return coords;
+      })()
+    : [];
+
+  // Start and end markers - use route coordinates if available
+  const startMarker = routeCoordinates && routeCoordinates.length > 0
+    ? routeCoordinates[0]
+    : segments.length > 0
+    ? [segments[0].lat_start, segments[0].lon_start]
+    : null;
+    
+  const endMarker = routeCoordinates && routeCoordinates.length > 0
+    ? routeCoordinates[routeCoordinates.length - 1]
+    : segments.length > 0
+    ? [segments[segments.length - 1].lat_end, segments[segments.length - 1].lon_end]
+    : null;
+  
+  // Current position marker - utiliser currentPosition si fourni (navigation temps réel), sinon utiliser le segment
+  const currentMarker = currentPosition 
+    ? currentPosition
+    : segments.length > 0 && currentSegmentIndex >= 0 && currentSegmentIndex < segments.length
+    ? [segments[currentSegmentIndex].lat_start, segments[currentSegmentIndex].lon_start]
+    : null;
+
+  const computeBearing = (a, b) => {
+    if (!a || !b) return 0;
+    const [lat1, lon1] = a;
+    const [lat2, lon2] = b;
+    const toRad = (v) => (v * Math.PI) / 180;
+    const dLon = toRad(lon2 - lon1);
+    const y = Math.sin(dLon) * Math.cos(toRad(lat2));
+    const x =
+      Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+      Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+    let bearing = (Math.atan2(y, x) * 180) / Math.PI;
+    bearing = (bearing + 360) % 360;
+    return bearing;
+  };
+
+  const currentSegment = segments && currentSegmentIndex >= 0 ? segments[currentSegmentIndex] : null;
+  const segmentBearing = currentSegment
+    ? computeBearing(
+        [currentSegment.lat_start, currentSegment.lon_start],
+        [currentSegment.lat_end, currentSegment.lon_end]
+      )
+    : 0;
+
+  // Default center (France)
+  const defaultCenter = [46.6034, 1.8883];
+  const center = currentPosition || startMarker || defaultCenter;
+
+  // Custom icons - utiliser encodeURIComponent au lieu de btoa pour éviter les problèmes avec les caractères spéciaux
+  const startIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+    <circle cx="16" cy="16" r="14" fill="#4ade80" stroke="#0a2e1a" stroke-width="2"/>
+    <text x="16" y="22" font-size="18" font-weight="bold" text-anchor="middle" fill="#0a2e1a">S</text>
+  </svg>`;
+  const startIcon = new L.Icon({
+    iconUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(startIconSvg),
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+  });
+
+  const endIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+    <circle cx="16" cy="16" r="14" fill="#ef4444" stroke="#7f1d1d" stroke-width="2"/>
+    <text x="16" y="22" font-size="18" font-weight="bold" text-anchor="middle" fill="white">E</text>
+  </svg>`;
+  const endIcon = new L.Icon({
+    iconUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(endIconSvg),
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+  });
+
+  const arrowIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+    <g transform="rotate(${segmentBearing} 20 20)">
+      <path d="M20 4 L29 25 L20 21 L11 25 Z" fill="#3b82f6" stroke="white" stroke-width="2.2" stroke-linejoin="round"/>
+    </g>
+  </svg>`;
+  const currentIcon = new L.Icon({
+    iconUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(arrowIconSvg),
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+  });
+
+  const chargingIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+    <circle cx="14" cy="14" r="12" fill="#f59e0b" stroke="white" stroke-width="2"/>
+    <text x="14" y="19" font-size="16" font-weight="bold" text-anchor="middle" fill="white">+</text>
+  </svg>`;
+  const chargingIcon = new L.Icon({
+    iconUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(chargingIconSvg),
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+  });
+
+  return (
+    <div className="relative h-full w-full">
+      <MapContainer
+        center={center}
+        zoom={isNavigating ? 15 : 9}
+        style={{ height: '100%', width: '100%', borderRadius: '8px' }}
+        zoomControl={!isNavigating} // on masque les contrôles natifs en mode GPS
+        whenCreated={(mapInstance) => {
+          mapRef.current = mapInstance;
+          mapInstance.on('dragstart', () => setFollowEnabled(false));
+          mapInstance.on('zoomstart', () => setFollowEnabled(false));
+        }}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        
+        {/* Auto-adjust map bounds à l'affichage carte standard uniquement */}
+        {polylineCoords.length > 0 && !currentPosition && !isNavigating && <MapBounds coordinates={polylineCoords} />}
+        
+        {/* Suivre la position en temps réel pendant la navigation */}
+        {currentPosition && (
+          <FollowPosition
+            position={currentPosition}
+            zoomLevel={isNavigating ? 16 : 12}
+            enabled={followEnabled}
+          />
+        )}
+        
+        {/* Route polyline – double tracé pour plus de visibilité (contour sombre + centre vert) */}
+        {polylineCoords.length > 0 && (
+          <>
+            {/* Contour large sombre */}
+            <Polyline
+              positions={polylineCoords}
+              color="#022c22"
+              weight={10}
+              opacity={0.9}
+            />
+            {/* Tracé principal vert vif */}
+            <Polyline
+              positions={polylineCoords}
+              color="#4ade80"
+              weight={6}
+              opacity={0.95}
+            />
+          </>
+        )}
+        
+        {/* Start marker - on le masque pendant la navigation pour alléger la vue */}
+        {startMarker && !isNavigating && (
+          <Marker position={startMarker} icon={startIcon}>
+            <Popup>
+              <strong>Start:</strong> {startLocation || 'Start location'}
+            </Popup>
+          </Marker>
+        )}
+        
+        {/* End marker - visible en navigation pour voir la destination */}
+        {endMarker && (
+          <Marker position={endMarker} icon={endIcon}>
+            <Popup>
+              <strong>End:</strong> {endLocation || 'End location'}
+            </Popup>
+          </Marker>
+        )}
+        
+        {/* Current position marker - afficher si navigation active ou si on a dépassé le premier segment */}
+        {currentMarker && (currentPosition || currentSegmentIndex > 0) && (
+          <Marker position={currentMarker} icon={currentIcon}>
+            <Popup>
+              <strong>Current Position</strong><br />
+              Segment {currentSegmentIndex + 1} of {segments.length}
+            </Popup>
+          </Marker>
+        )}
+        
+        {/* Charging station markers */}
+        {chargingStations && chargingStations.length > 0 && chargingStations.map((chargingPoint, index) => {
+          if (!chargingPoint.station || !chargingPoint.station.latitude || !chargingPoint.station.longitude) {
+            return null;
+          }
+          
+          return (
+            <Marker
+              key={`charging-${index}`}
+              position={[chargingPoint.station.latitude, chargingPoint.station.longitude]}
+              icon={chargingIcon}
+            >
+              <Popup>
+                <div style={{ minWidth: '200px' }}>
+                  <strong>{chargingPoint.station.name || 'Borne de recharge'}</strong>
+                  <br />
+                  <span style={{ fontSize: '12px', color: '#666' }}>
+                    {chargingPoint.station.operator || 'Opérateur inconnu'}
+                  </span>
+                  <br />
+                  <span style={{ fontSize: '12px' }}>
+                    {chargingPoint.station.powerKw || 0} kW
+                  </span>
+                  {chargingPoint.station.address && (
+                    <>
+                      <br />
+                      <span style={{ fontSize: '11px', color: '#888' }}>
+                        {chargingPoint.station.address}
+                      </span>
+                    </>
+                  )}
+                  {chargingPoint.station.price && (
+                    <>
+                      <br />
+                      <span style={{ fontSize: '11px', color: '#4ade80', fontWeight: 'bold' }}>
+                        {chargingPoint.station.price}
+                      </span>
+                    </>
+                  )}
+                  {chargingPoint.distanceKm && (
+                    <>
+                      <br />
+                      <span style={{ fontSize: '11px', color: '#666' }}>
+                        Distance: {chargingPoint.distanceKm.toFixed(1)} km
+                      </span>
+                    </>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
+
+      {/* Contrôles GPS (zoom + recentrer) par-dessus la carte en mode navigation */}
+      <GpsControls
+        isNavigating={isNavigating}
+        currentPosition={currentPosition}
+        onRecenter={() => setFollowEnabled(true)}
+      />
+      </MapContainer>
+    </div>
+  );
+};
+
+export default RouteMap;

@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hide Emergent badge if it's injected dynamically */
+#emergent-badge,
+a[href*="emergent"],
+a[href*="emergentagent"],
+[data-emergent-badge],
+.emergent-badge {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+:root {
+  --background: 135 60% 8%;
+  --foreground: 120 30% 92%;
+  --card: 135 50% 12%;
+  --card-foreground: 120 25% 90%;
+  --popover: 135 50% 10%;
+  --popover-foreground: 120 25% 90%;
+  --primary: 142 76% 45%;
+  --primary-foreground: 144 80% 15%;
+  --secondary: 150 40% 25%;
+  --secondary-foreground: 120 25% 90%;
+  --muted: 135 30% 20%;
+  --muted-foreground: 120 15% 65%;
+  --accent: 142 76% 45%;
+  --accent-foreground: 144 80% 15%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 135 30% 22%;
+  --input: 135 30% 22%;
+  --ring: 142 76% 45%;
+  --radius: 0.5rem;
+}

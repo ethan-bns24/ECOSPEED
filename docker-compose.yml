@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: ecospeed-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: ecospeed_db
+    restart: unless-stopped
+    networks:
+      - ecospeed-network
+
+  backend:
+    build: ./backend
+    container_name: ecospeed-backend
+    ports:
+      - "8001:8001"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=ecospeed_db
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:80,https://votre-domaine.com
+      - ORS_API_KEY=${ORS_API_KEY}
+      - PORT=8001
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - ecospeed-network
+
+  frontend:
+    build: ./frontend
+    container_name: ecospeed-frontend
+    ports:
+      - "80:80"
+    environment:
+      - REACT_APP_BACKEND_URL=http://localhost:8001
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - ecospeed-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  ecospeed-network:
+    driver: bridge
+
