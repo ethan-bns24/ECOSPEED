@@ -17,11 +17,12 @@ os.environ['PYTHONPATH'] = str(backend_dir)
 from server import app
 
 # Vercel expects a handler function
-# For FastAPI, we use Mangum adapter or direct ASGI
+# For FastAPI, we use Mangum adapter
 try:
     from mangum import Mangum
     handler = Mangum(app, lifespan="off")
 except ImportError:
-    # Fallback: direct ASGI (Vercel supports this)
-    handler = app
+    # If mangum is not available, create a simple handler
+    async def handler(request):
+        return await app(request.scope, request.receive, request.send)
 

@@ -32,6 +32,11 @@
       "dest": "/frontend/build/index.html"
     }
   ],
+  "functions": {
+    "api/index.py": {
+      "runtime": "python3.9"
+    }
+  },
   "env": {
     "PYTHONPATH": "backend"
   }
