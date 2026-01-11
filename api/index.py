@@ -18,11 +18,8 @@ from server import app
 
 # Vercel expects a handler function
 # For FastAPI, we use Mangum adapter
-try:
-    from mangum import Mangum
-    handler = Mangum(app, lifespan="off")
-except ImportError:
-    # If mangum is not available, create a simple handler
-    async def handler(request):
-        return await app(request.scope, request.receive, request.send)
+from mangum import Mangum
+
+# Create the handler - Vercel will call this function
+handler = Mangum(app, lifespan="off")
 
